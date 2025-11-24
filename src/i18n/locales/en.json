@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "Math Generator",
+    "subtitle": {
+      "addition": "Addition",
+      "practice": "Practice"
+    }
+  },
+  "controls": {
+    "howMany": "How Many?",
+    "operation": "Operation",
+    "difficulty": "Difficulty",
+    "options": "Options",
+    "showAnswers": "Show Answers",
+    "varySecondNumber": "Uneven Digits",
+    "generateQuestions": "Generate Questions",
+    "printMe": "Print me",
+    "enterNumber": "Enter number (1-500)"
+  },
+  "operation": {
+    "addition": "Addition (+)",
+    "subtraction": "Subtraction (-)",
+    "multiplication": "Multiplication (×)",
+    "division": "Division (÷)"
+  },
+  "missingOperation": {
+    "addition": "Missing Addends",
+    "subtraction": "Missing Minuend",
+    "all": "All operations"
+  },
+  "difficulty": {
+    "easy": "Easy (0-10)",
+    "medium": "Medium (10-100)",
+    "hard": "Hard (100-900)"
+  },
+  "questions": {
+    "count": {
+      "10": "10 Questions",
+      "20": "20 Questions",
+      "30": "30 Questions",
+      "50": "50 Questions",
+      "custom": "Custom..."
+    }
+  },
+  "emptyState": {
+    "title": "Ready to Practice?",
+    "message": "Click \"Generate Questions\" to start!"
+  },
+  "answerKey": {
+    "title": "Answers"
+  },
+  "tabs": {
+    "simple": "Simple",
+    "complex": "Missing Number"
+  }
+}

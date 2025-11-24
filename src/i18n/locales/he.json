@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "תרגילים במתמטיקה",
+    "subtitle": {
+      "addition": "חיבור",
+      "practice": "תרגול"
+    }
+  },
+  "controls": {
+    "howMany": "כמות",
+    "operation": "פעולה",
+    "difficulty": "רמת קושי",
+    "options": "אפשרויות",
+    "showAnswers": "הצג תשובות",
+    "varySecondNumber": "ערבוב ספרות",
+    "generateQuestions": "צור תרגילים",
+    "printMe": "הדפס אותי",
+    "enterNumber": "הזן מספר (1-500)"
+  },
+  "operation": {
+    "addition": "חיבור (+)",
+    "subtraction": "חיסור (-)",
+    "multiplication": "כפל (×)",
+    "division": "חילוק (÷)"
+  },
+  "missingOperation": {
+    "addition": "נעלמים בחיבור",
+    "subtraction": "נעלמים בחיסור",
+    "all": "כל הפעולות"
+  },
+  "difficulty": {
+    "easy": "קל (0-10)",
+    "medium": "בינוני (10-100)",
+    "hard": "קשה (100-900)"
+  },
+  "questions": {
+    "count": {
+      "10": "10 תרגילים",
+      "20": "20 תרגילים",
+      "30": "30 תרגילים",
+      "50": "50 תרגילים",
+      "custom": "בחירה..."
+    }
+  },
+  "emptyState": {
+    "title": "מוכנים לתרגל?",
+    "message": "לחץ על \"צור תרגילים\" כדי להתחיל!"
+  },
+  "answerKey": {
+    "title": "תשובות"
+  },
+  "tabs": {
+    "simple": "חשבון בסיסי",
+    "complex": "נעלמים"
+  }
+}

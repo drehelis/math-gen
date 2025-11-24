@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&family=Architects+Daughter&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --color-primary: #FFD93D;
+  --color-secondary: #FF6B35;
+  --color-accent-1: #FF8B94;
+  --color-accent-2: #6BCB77;
+  --color-accent-3: #4D96FF;
+  --color-accent-4: #9D4EDD;
+  --color-dark: #1A1A2E;
+  --color-bg: #FFF8E7;
+
+  --color-sunshine: var(--color-primary);
+  --color-orange: var(--color-secondary);
+  --color-coral: var(--color-accent-1);
+  --color-mint: var(--color-accent-2);
+  --color-sky: var(--color-accent-3);
+  --color-purple: var(--color-accent-4);
+  --color-deep: var(--color-dark);
+  --color-cream: var(--color-bg);
+
+  --font-heading: 'Fredoka', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-heading);
+  background: var(--color-bg);
+  transition: background-color 0.3s ease;
+}
+
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.8) rotate(-5deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.question-card {
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.question-card:nth-child(even) {
+  animation-delay: 0.05s;
+}
+
+.question-card:nth-child(3n) {
+  animation-delay: 0.1s;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: letter;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:break-before-page {
+    break-before: page;
+  }
+
+  .print\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .print\:grid-cols-10 {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .print\:gap-4 {
+    gap: 1rem;
+  }
+
+  .print\:text-black {
+    color: black !important;
+  }
+
+  .print\:bg-white {
+    background-color: white !important;
+  }
+
+  .print\:border {
+    border-width: 1px;
+  }
+
+  .print\:border-gray-300 {
+    border-color: #d1d5db;
+  }
+
+  .print\:border-black {
+    border-color: black;
+  }
+
+  .print\:rounded-none {
+    border-radius: 0;
+  }
+
+  .print\:text-base {
+    font-size: 1rem;
+  }
+
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+
+  .question-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: transparent !important;
+  }
+
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+  }
+}
