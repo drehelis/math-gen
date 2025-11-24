@@ -33,7 +33,7 @@
         <div class="print:mb-4">
           <h2 class="text-xl font-bold" style="color: black;">{{ $t('app.title') }}</h2>
         </div>
-        <div class="print:grid print:grid-cols-2 print:gap-4 print:auto-flow-column" :style="getPageGridStyle(page.length)">
+        <div class="print:grid print:grid-cols-2 print:gap-4 print:auto-flow-column" :style="getPageGridStyle(page.length)" dir="ltr">
           <div
             v-for="question in page"
             :key="'print-' + question.id"
@@ -54,7 +54,7 @@
         <div class="print:mb-4">
           <h2 class="text-xl font-bold" style="color: black;">{{ $t('answerKey.title') }}</h2>
         </div>
-        <div class="print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-1 print:auto-flow-column" :style="getPageGridStyle(page.length)">
+        <div class="print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-1 print:auto-flow-column" :style="getPageGridStyle(page.length)" dir="ltr">
           <div
             v-for="question in page"
             :key="'answer-print-' + question.id"
