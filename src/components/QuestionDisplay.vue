@@ -1,6 +1,5 @@
 <template>
   <div v-if="questions.length > 0">
-    <!-- Screen view -->
     <div class="print:hidden">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" dir="ltr">
         <div
@@ -23,47 +22,23 @@
       </div>
     </div>
 
-    <!-- Print view -->
-    <div class="hidden print:block">
-      <div
-        v-for="(page, pageIndex) in questionPages"
-        :key="'page-' + pageIndex"
-        :class="{ 'print:break-before-page': pageIndex > 0 }"
-      >
-        <div class="print:mb-4">
-          <h2 class="text-xl font-bold" style="color: black;">{{ $t('app.title') }}</h2>
-        </div>
-        <div class="print:grid print:grid-cols-2 print:gap-4 print:auto-flow-column" :style="getPageGridStyle(page.length)" dir="ltr">
-          <div
-            v-for="question in page"
-            :key="'print-' + question.id"
-            class="print:text-base print:text-black print:p-2"
-            style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-          >{{ formatPrintQuestion(question.displayIndex, question.num1, question.num2, question.operation) }}</div>
-        </div>
-      </div>
-    </div>
+    <PrintLayout :items="questions" :title="$t('app.title')" page-key-prefix="question">
+      <template #item="{ item }">
+        <div
+          class="print:text-base print:text-black print:p-2"
+          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
+        >{{ formatPrintQuestion(item.displayIndex, item.num1, item.num2, item.operation) }}</div>
+      </template>
+    </PrintLayout>
 
-    <!-- Answer key print view -->
-    <div v-if="showAnswers" class="hidden print:block">
-      <div
-        v-for="(page, pageIndex) in answerPages"
-        :key="'answer-page-' + pageIndex"
-        :class="{ 'print:break-before-page': true }"
-      >
-        <div class="print:mb-4">
-          <h2 class="text-xl font-bold" style="color: black;">{{ $t('answerKey.title') }}</h2>
-        </div>
-        <div class="print:grid print:grid-cols-2 print:gap-x-8 print:gap-y-1 print:auto-flow-column" :style="getPageGridStyle(page.length)" dir="ltr">
-          <div
-            v-for="question in page"
-            :key="'answer-print-' + question.id"
-            class="print:text-base print:text-black"
-            style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-          >{{ formatPrintAnswer(question.displayIndex, question.num1, question.num2, question.operation, question.answer) }}</div>
-        </div>
-      </div>
-    </div>
+    <PrintLayout v-if="showAnswers" :items="questions" :title="$t('answerKey.title')" page-key-prefix="answer" gap-class="print:gap-x-8 print:gap-y-1">
+      <template #item="{ item }">
+        <div
+          class="print:text-base print:text-black"
+          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
+        >{{ formatPrintAnswer(item.displayIndex, item.num1, item.num2, item.operation, item.answer) }}</div>
+      </template>
+    </PrintLayout>
   </div>
 
   <div v-else class="text-center py-20 no-print">
@@ -73,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import PrintLayout from './PrintLayout.vue'
 
 const props = defineProps({
   questions: {
@@ -86,44 +61,11 @@ const props = defineProps({
   }
 })
 
-const QUESTIONS_PER_PAGE = 30
-
-const paginateQuestions = (questions) => {
-  const pages = []
-  const questionsWithIndex = questions.map((q, index) => ({
-    ...q,
-    displayIndex: index + 1
-  }))
-
-  for (let i = 0; i < questionsWithIndex.length; i += QUESTIONS_PER_PAGE) {
-    pages.push(questionsWithIndex.slice(i, i + QUESTIONS_PER_PAGE))
-  }
-
-  return pages
-}
-
-const questionPages = computed(() => paginateQuestions(props.questions))
-const answerPages = computed(() => paginateQuestions(props.questions))
-
-const getPageGridStyle = (itemCount) => {
-  const rowCount = Math.ceil(itemCount / 2)
-  return {
-    'grid-template-rows': `repeat(${rowCount}, auto)`
-  }
-}
-
 const cardColors = [
   'var(--color-sunshine)',
   'var(--color-coral)',
   'var(--color-mint)',
   'var(--color-sky)',
-]
-
-const operatorColors = [
-  'var(--color-orange)',
-  'var(--color-purple)',
-  'var(--color-sky)',
-  'var(--color-mint)',
 ]
 
 const getCardStyle = (index) => {
@@ -144,10 +86,6 @@ const getBadgeStyle = (index) => {
   }
 }
 
-const getOperatorColor = (index) => {
-  return operatorColors[index % operatorColors.length]
-}
-
 const formatPrintQuestion = (questionNum, num1, num2, operation) => {
   const numStr = String(questionNum).padStart(3, ' ')
   const num1Str = String(num1).padStart(3, ' ')
@@ -163,11 +101,3 @@ const formatPrintAnswer = (questionNum, num1, num2, operation, answer) => {
   return `${numStr})  ${num1Str} ${operation} ${num2Str}  =  ${answerStr}`
 }
 </script>
-
-<style>
-@media print {
-  .print\:auto-flow-column {
-    grid-auto-flow: column;
-  }
-}
-</style>
