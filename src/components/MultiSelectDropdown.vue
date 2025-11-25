@@ -30,12 +30,15 @@
           class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 hover:translate-x-1 flex items-center gap-3"
           :style="optionStyle"
         >
-          <input
-            type="checkbox"
-            :checked="isSelected(option.value)"
-            class="w-6 h-6 sm:w-5 sm:h-5 rounded flex-shrink-0 pointer-events-none"
-            :style="{ accentColor: textColor }"
-          />
+          <div
+            class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
+            :style="{
+              borderColor: textColor,
+              backgroundColor: isSelected(option.value) ? textColor : 'transparent'
+            }"
+          >
+            <span v-if="isSelected(option.value)" class="text-white font-bold text-lg sm:text-base">✓</span>
+          </div>
           <span>{{ option.label }}</span>
         </div>
       </div>
