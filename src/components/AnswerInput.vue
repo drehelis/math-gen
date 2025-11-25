@@ -11,7 +11,7 @@
       style="color: var(--color-deep);"
     />
     <span
-      v-if="showFeedback"
+      v-if="showFeedback && !hideFeedback"
       class="absolute -right-8 top-1/2 -translate-y-1/2 font-bold"
       :style="{ color: feedbackColor, fontSize: '2rem' }"
     >
@@ -27,8 +27,14 @@ const props = defineProps({
   correctAnswer: {
     type: Number,
     required: true
+  },
+  hideFeedback: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits(['feedback'])
 
 const userAnswer = ref('')
 const isCorrect = ref(false)
@@ -52,11 +58,13 @@ const validateAnswer = () => {
   if (userAnswer.value === '' || isNaN(answer)) {
     showFeedback.value = false
     isCorrect.value = false
+    emit('feedback', { show: false, isCorrect: false })
     return
   }
 
   showFeedback.value = true
   isCorrect.value = answer === props.correctAnswer
+  emit('feedback', { show: true, isCorrect: isCorrect.value })
 }
 
 const feedbackIcon = computed(() => {
@@ -82,6 +90,7 @@ watch(() => props.correctAnswer, () => {
   userAnswer.value = ''
   isCorrect.value = false
   showFeedback.value = false
+  emit('feedback', { show: false, isCorrect: false })
 })
 </script>
 
