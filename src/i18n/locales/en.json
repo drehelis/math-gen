@@ -24,8 +24,8 @@
     "division": "Division (÷)"
   },
   "missingOperation": {
-    "addition": "Missing Addends",
-    "subtraction": "Missing Minuend",
+    "addition": "Missing Addends (+)",
+    "subtraction": "Missing Minuend (-)",
     "all": "All operations"
   },
   "difficulty": {
