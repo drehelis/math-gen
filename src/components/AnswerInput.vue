@@ -6,7 +6,7 @@
       type="text"
       inputmode="numeric"
       maxlength="4"
-      class="w-full bg-transparent text-center font-bold outline-none appearance-none px-0 leading-none"
+      class="w-full bg-transparent text-center font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
       :class="inputClasses"
       style="color: var(--color-deep);"
     />
@@ -104,5 +104,10 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Override global cursor style for answer inputs */
+.answer-input {
+  cursor: default !important;
 }
 </style>
