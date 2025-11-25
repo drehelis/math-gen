@@ -122,6 +122,27 @@ export function useSimpleQuestionGenerator() {
       operation: 'addition',
       check: (q) => q.operation === '+' && (q.num2 === 1 || q.num1 === 1),
       key: 'oneAddition'
+    },
+    {
+      operation: 'subtraction',
+      check: (q) => q.operation === '-' && q.num1 === 0 && q.num2 === 0,
+      key: 'zeroZeroSubtraction',
+      skip: true
+    },
+    {
+      operation: 'subtraction',
+      check: (q) => q.operation === '-' && q.num2 === 0,
+      key: 'zeroSubtraction'
+    },
+    {
+      operation: 'subtraction',
+      check: (q) => q.operation === '-' && q.num2 === 1,
+      key: 'oneSubtraction'
+    },
+    {
+      operation: 'subtraction',
+      check: (q) => q.operation === '-' && q.num1 === q.num2 && q.num1 !== 0,
+      key: 'equalSubtraction'
     }
   ]
 
