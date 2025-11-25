@@ -144,6 +144,21 @@ const props = defineProps({
   }
 })
 
+// Watch for hideOperation changes and filter invalid operations
+watch(() => props.hideOperation, (isHidden) => {
+  if (isHidden) {
+    // Filter out multiplication and division for missing number tab
+    const validOps = localSettings.operations.filter(op =>
+      op === 'addition' || op === 'subtraction'
+    )
+    if (validOps.length === 0) {
+      localSettings.operations = ['addition']
+    } else {
+      localSettings.operations = validOps
+    }
+  }
+}, { immediate: true })
+
 const emit = defineEmits(['update:settings', 'generate', 'print'])
 
 const localSettings = reactive({

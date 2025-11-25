@@ -16,17 +16,17 @@
           <div class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
             <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               <template v-if="question.missingPosition === 'first'">
-                <span class="inline-block align-bottom border-b-4 min-w-[3rem] sm:min-w-[3.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
-                  <span v-if="showAnswers" class="opacity-40">{{ question.answer }}</span>
-                  <span v-else>&#8203;</span>
+                <AnswerInput v-if="!showAnswers" :correct-answer="question.answer" />
+                <span v-else class="inline-block align-bottom border-b-4 min-w-[3rem] sm:min-w-[3.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+                  <span class="opacity-40">{{ question.answer }}</span>
                 </span>
                 {{ ' ' + question.operation + ' ' + question.num2 + ' = ' + question.result }}
               </template>
               <template v-else>
                 {{ question.num1 + ' ' + question.operation + ' ' }}
-                <span class="inline-block align-bottom border-b-4 min-w-[3rem] sm:min-w-[3.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
-                  <span v-if="showAnswers" class="opacity-40">{{ question.answer }}</span>
-                  <span v-else>&#8203;</span>
+                <AnswerInput v-if="!showAnswers" :correct-answer="question.answer" />
+                <span v-else class="inline-block align-bottom border-b-4 min-w-[3rem] sm:min-w-[3.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+                  <span class="opacity-40">{{ question.answer }}</span>
                 </span>
                 {{ ' = ' + question.result }}
               </template>
@@ -68,6 +68,7 @@
 
 <script setup>
 import PrintLayout from './PrintLayout.vue'
+import AnswerInput from './AnswerInput.vue'
 
 defineProps({
   questions: {

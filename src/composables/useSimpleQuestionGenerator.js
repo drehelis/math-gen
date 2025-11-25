@@ -104,6 +104,11 @@ export function useSimpleQuestionGenerator() {
     },
     {
       operation: 'division',
+      check: (q) => q.operation === '÷' && q.num2 === 1,
+      key: 'divideByOne'
+    },
+    {
+      operation: 'division',
       check: (q) => q.operation === '÷' && q.num1 === q.num2,
       key: 'oneDivision'
     },
