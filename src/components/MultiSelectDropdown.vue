@@ -33,7 +33,7 @@
           <input
             type="checkbox"
             :checked="isSelected(option.value)"
-            class="w-5 h-5 rounded flex-shrink-0 pointer-events-none"
+            class="w-6 h-6 sm:w-5 sm:h-5 rounded flex-shrink-0 pointer-events-none"
             :style="{ accentColor: textColor }"
           />
           <span>{{ option.label }}</span>
