@@ -3,7 +3,7 @@
     <div
       v-for="(page, pageIndex) in paginatedItems"
       :key="`${pageKeyPrefix}-${pageIndex}`"
-      :class="{ 'print:break-before-page': pageIndex > 0 }"
+      :class="{ 'print:break-before-page': pageIndex > 0 || forcePageBreak }"
     >
       <div class="print:mb-4">
         <h2 class="text-xl font-bold" style="color: black;">
@@ -45,6 +45,10 @@ const props = defineProps({
   gapClass: {
     type: String,
     default: 'print:gap-4'
+  },
+  forcePageBreak: {
+    type: Boolean,
+    default: false
   }
 })
 

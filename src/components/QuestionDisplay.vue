@@ -31,7 +31,7 @@
       </template>
     </PrintLayout>
 
-    <PrintLayout v-if="showAnswers" :items="questions" :title="$t('answerKey.title')" page-key-prefix="answer" gap-class="print:gap-x-8 print:gap-y-1">
+    <PrintLayout v-if="showAnswers" :items="questions" :title="$t('answerKey.title')" page-key-prefix="answer" gap-class="print:gap-x-8 print:gap-y-1" :force-page-break="true">
       <template #item="{ item }">
         <div
           class="print:text-base print:text-black"
