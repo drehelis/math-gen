@@ -1,22 +1,15 @@
 <template>
-  <span class="relative inline-block border-b-4 w-[3rem] sm:w-[3.5rem]" :style="{ borderColor: borderColor }">
+  <span class="relative inline-block border-b-4 w-[4rem] sm:w-[4.5rem]" :style="{ borderColor: borderColor }">
     <input
       v-model="userAnswer"
       @input="validateAnswer"
       type="text"
       inputmode="numeric"
-      maxlength="4"
+      maxlength="6"
       class="w-full bg-transparent text-center font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
       :class="inputClasses"
       style="color: var(--color-deep);"
     />
-    <span
-      v-if="showFeedback && !hideFeedback"
-      class="absolute -right-8 top-1/2 -translate-y-1/2 font-bold"
-      :style="{ color: feedbackColor, fontSize: '2rem' }"
-    >
-      {{ feedbackIcon }}
-    </span>
   </span>
 </template>
 
@@ -27,10 +20,6 @@ const props = defineProps({
   correctAnswer: {
     type: Number,
     required: true
-  },
-  hideFeedback: {
-    type: Boolean,
-    default: false
   }
 })
 
