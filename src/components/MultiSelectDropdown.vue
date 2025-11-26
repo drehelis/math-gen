@@ -27,17 +27,17 @@
           v-for="option in options"
           :key="option.value"
           @click="toggleOption(option)"
-          class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 hover:translate-x-1 flex items-center gap-3"
+          class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 ltr:hover:translate-x-1 rtl:hover:-translate-x-1 flex items-center gap-3"
           :style="optionStyle"
         >
           <div
             class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
             :style="{
               borderColor: textColor,
-              backgroundColor: isSelected(option.value) ? textColor : 'transparent'
+              backgroundColor: 'transparent'
             }"
           >
-            <span v-if="isSelected(option.value)" class="text-white font-bold text-lg sm:text-base">✓</span>
+            <div v-if="isSelected(option.value)" class="w-3 h-3 sm:w-2.5 sm:h-2.5 rounded-full" :style="{ backgroundColor: textColor }"></div>
           </div>
           <span>{{ option.label }}</span>
         </div>

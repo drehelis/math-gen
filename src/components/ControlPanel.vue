@@ -94,10 +94,22 @@
       <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           @click="handleGenerate"
-          class="relative py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg"
+          class="relative py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg overflow-hidden"
           style="background: var(--color-sky); border-color: var(--color-deep); color: white;"
         >
-          <span class="relative z-10">{{ $t('controls.generateQuestions') }}</span>
+          <span class="relative z-10 transition-all duration-300" :class="{ 'opacity-0': showScrollHint }">
+            {{ $t('controls.generateQuestions') }}
+          </span>
+          <span
+            v-if="showScrollHint"
+            class="absolute inset-0 flex flex-col items-center justify-center z-20 animate-bounce-slow"
+          >
+            <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <polyline points="19 12 12 19 5 12"></polyline>
+            </svg>
+            <span class="text-base font-bold mt-1">{{ $t('controls.scrollDown') }}</span>
+          </span>
         </button>
 
         <button
@@ -170,6 +182,7 @@ const localSettings = reactive({
 })
 const showCustomCount = ref(false)
 const customCountValue = ref(null)
+const showScrollHint = ref(false)
 
 watch(localSettings, (newValue) => {
   emit('update:settings', newValue)
@@ -207,6 +220,14 @@ watch(() => localSettings.varySecondNumber, () => {
 
 const handleGenerate = () => {
   emit('generate')
+
+  // Show scroll hint on mobile only
+  if (window.innerWidth < 768) {
+    showScrollHint.value = true
+    setTimeout(() => {
+      showScrollHint.value = false
+    }, 3000)
+  }
 }
 
 const handlePrint = () => {
