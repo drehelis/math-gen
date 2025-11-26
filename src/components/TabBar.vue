@@ -4,7 +4,7 @@
       v-for="tab in tabs"
       :key="tab.value"
       @click="$emit('update:modelValue', tab.value)"
-      class="px-8 py-3 font-bold text-lg rounded-t-2xl transition-all transform hover:scale-105"
+      class="px-4 sm:px-8 py-3 font-bold text-base sm:text-lg rounded-t-2xl transition-all transform hover:scale-105 whitespace-nowrap"
       :class="modelValue === tab.value ? 'translate-y-1' : ''"
       :style="getTabStyle(tab.value)"
     >
