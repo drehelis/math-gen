@@ -129,27 +129,23 @@ const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstIn
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
 
-// Auto-focus first unanswered input on mount (for page refresh with persisted state)
 onMounted(() => {
   if (props.questions.length > 0 && !props.showAnswers) {
     focusFirstInput(props.questions)
   }
 })
 
-// Auto-focus first input when new questions are generated
 watch(() => props.questions, (newQuestions, oldQuestions) => {
   if (newQuestions.length > 0 && !props.showAnswers) {
-    // Reset stats when new questions are generated (questions array changed)
     if (!oldQuestions || newQuestions.length !== oldQuestions.length || 
         newQuestions[0]?.id !== oldQuestions[0]?.id) {
-      clearAllFeedback() // Clear all feedback including localStorage
-      showCompletionOverlay.value = false // Reset overlay for new questions
+      clearAllFeedback()
+      showCompletionOverlay.value = false
     }
     focusFirstInput(newQuestions)
   }
 }, { deep: true })
 
-// Watch for completion
 watch(correctCount, (newCount) => {
   if (newCount === props.questions.length && props.questions.length > 0 && !props.showAnswers) {
     completionStats.value = getCompletionStats(props.questions.length)

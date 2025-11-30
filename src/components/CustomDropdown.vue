@@ -115,17 +115,14 @@ const isOpen = ref(false)
 const dropdownRef = ref(null)
 const expandedParents = reactive({})
 
-// Detect RTL direction
 const isRTL = computed(() => {
   return document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('lang') === 'he'
 })
 
 const selectedLabel = computed(() => {
-  // Check regular options first
   let option = props.options.find(opt => opt.value === props.modelValue)
   if (option) return option.label
   
-  // Check nested children
   for (const parent of props.options) {
     if (parent.children) {
       const child = parent.children.find(c => c.value === props.modelValue)

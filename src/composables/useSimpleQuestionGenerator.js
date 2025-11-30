@@ -58,12 +58,10 @@ export function useSimpleQuestionGenerator() {
     varySecondNumber: false
   })
 
-  // Watch settings and save to localStorage
   watch(settings, (newSettings) => {
     saveSettings(newSettings)
   }, { deep: true })
 
-  // Watch questions and save to localStorage
   watch(questions, (newQuestions) => {
     saveQuestions(newQuestions)
   }, { deep: true })

@@ -57,11 +57,9 @@ const { locale, t } = useI18n()
 const simpleTab = useSimpleQuestionGenerator()
 const missingTab = useMissingQuestionGenerator()
 
-// Load active tab from localStorage
 const loadActiveTab = () => {
   try {
     const saved = localStorage.getItem('math-gen-active-tab')
-    // Validate that the saved tab is valid
     if (saved === 'simple' || saved === 'complex') {
       return saved
     }
@@ -74,7 +72,6 @@ const loadActiveTab = () => {
 
 const activeTab = ref(loadActiveTab())
 
-// Save active tab to localStorage
 watch(activeTab, (newTab) => {
   try {
     localStorage.setItem('math-gen-active-tab', newTab)
