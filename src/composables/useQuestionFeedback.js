@@ -62,10 +62,27 @@ export function useQuestionFeedback(storageKey) {
     }
   }
 
-  const focusFirstInput = () => {
+  const focusFirstInput = (questions = []) => {
     // Use setTimeout to ensure DOM is ready
     setTimeout(() => {
-      inputRefs.value[0]?.focus()
+      // Find the first unanswered question
+      let firstUnansweredIndex = 0
+
+      if (questions.length > 0) {
+        // Look for the first question that hasn't been answered correctly
+        for (let i = 0; i < questions.length; i++) {
+          const questionId = questions[i].id
+          const feedback = feedbackState.value[questionId]
+
+          // If there's no feedback or the answer is incorrect, focus here
+          if (!feedback || !feedback.isCorrect) {
+            firstUnansweredIndex = i
+            break
+          }
+        }
+      }
+
+      inputRefs.value[firstUnansweredIndex]?.focus()
     }, 100)
   }
 
@@ -94,7 +111,7 @@ export function useQuestionFeedback(storageKey) {
           return Math.random() * (max - min) + min
         }
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -117,7 +134,7 @@ export function useQuestionFeedback(storageKey) {
         const duration = 2000
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -163,7 +180,7 @@ export function useQuestionFeedback(storageKey) {
         const duration = 2500
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -195,7 +212,7 @@ export function useQuestionFeedback(storageKey) {
         const duration = 3000
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 

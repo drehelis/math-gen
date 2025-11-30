@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { watch, onMounted } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
@@ -102,10 +102,17 @@ const props = defineProps({
 
 const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput } = useQuestionFeedback('math-gen-simple-feedback')
 
+// Auto-focus first unanswered input on mount (for page refresh with persisted state)
+onMounted(() => {
+  if (props.questions.length > 0 && !props.showAnswers) {
+    focusFirstInput(props.questions)
+  }
+})
+
 // Auto-focus first input when new questions are generated
 watch(() => props.questions, (newQuestions) => {
   if (newQuestions.length > 0 && !props.showAnswers) {
-    focusFirstInput()
+    focusFirstInput(newQuestions)
   }
 }, { deep: true })
 
