@@ -28,7 +28,12 @@
           <div class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
             <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               <template v-if="question.missingPosition === 'first'">
-                <AnswerInput v-if="!showAnswers" :correct-answer="question.answer" @feedback="(data) => handleFeedback(question.id, data)" />
+                <AnswerInput
+                  v-if="!showAnswers"
+                  v-model="question.userAnswer"
+                  :correct-answer="question.answer"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                />
                 <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
                   <span class="opacity-40">{{ question.answer }}</span>
                 </span>
@@ -36,7 +41,12 @@
               </template>
               <template v-else>
                 {{ question.num1 + ' ' + question.operation + ' ' }}
-                <AnswerInput v-if="!showAnswers" :correct-answer="question.answer" @feedback="(data) => handleFeedback(question.id, data)" />
+                <AnswerInput
+                  v-if="!showAnswers"
+                  v-model="question.userAnswer"
+                  :correct-answer="question.answer"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                />
                 <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
                   <span class="opacity-40">{{ question.answer }}</span>
                 </span>
@@ -103,9 +113,36 @@ defineProps({
   }
 })
 
-const feedbackState = ref({})
+const STORAGE_KEY = 'math-gen-missing-feedback'
+
+const loadFeedbackState = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('Failed to load feedback state:', error)
+  }
+  return {}
+}
+
+const saveFeedbackState = (state) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (error) {
+    console.error('Failed to save feedback state:', error)
+  }
+}
+
+const feedbackState = ref(loadFeedbackState())
 const confettiCount = ref(0)
 const lastCorrectCount = ref(0)
+
+// Watch feedback state and save to localStorage
+watch(feedbackState, (newState) => {
+  saveFeedbackState(newState)
+}, { deep: true })
 
 const correctCount = computed(() => {
   return Object.values(feedbackState.value).filter(
