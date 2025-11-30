@@ -28,6 +28,8 @@ export function useQuestionFeedback(storageKey) {
   const confettiCount = ref(0)
   const lastCorrectCount = ref(0)
   const inputRefs = ref([])
+  const startTime = ref(Date.now())
+  const attemptTracker = ref({}) // Track attempts per question
 
   // Watch feedback state and save to localStorage
   if (storageKey) {
@@ -43,7 +45,60 @@ export function useQuestionFeedback(storageKey) {
   })
 
   const handleFeedback = (questionId, data) => {
-    feedbackState.value[questionId] = data
+    // Only track attempts when feedback is shown (user entered an answer)
+    if (data.show) {
+      if (!attemptTracker.value[questionId]) {
+        attemptTracker.value[questionId] = 0
+      }
+
+      // Only increment if this is a new attempt (not already correct)
+      const previousState = feedbackState.value[questionId]
+      if (!previousState || !previousState.isCorrect) {
+        attemptTracker.value[questionId]++
+      }
+
+      feedbackState.value[questionId] = {
+        ...data,
+        attempts: attemptTracker.value[questionId],
+        firstTry: attemptTracker.value[questionId] === 1 && data.isCorrect
+      }
+    } else {
+      // Just update feedback state without tracking attempts
+      feedbackState.value[questionId] = data
+    }
+  }
+
+  const resetStats = () => {
+    startTime.value = Date.now()
+    attemptTracker.value = {}
+  }
+
+  const clearAllFeedback = () => {
+    feedbackState.value = {}
+    attemptTracker.value = {}
+    startTime.value = Date.now()
+    if (storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch (error) {
+        console.error('Failed to clear feedback state:', error)
+      }
+    }
+  }
+
+  const getCompletionStats = (totalQuestions) => {
+    const timeInSeconds = Math.floor((Date.now() - startTime.value) / 1000)
+    const firstTryCorrect = Object.values(feedbackState.value).filter(
+      state => state.firstTry
+    ).length
+    const accuracy = totalQuestions > 0 ? Math.round((firstTryCorrect / totalQuestions) * 100) : 100
+
+    return {
+      total: totalQuestions,
+      firstTry: firstTryCorrect,
+      timeInSeconds,
+      accuracy
+    }
   }
 
   const setInputRef = (el, index) => {
@@ -259,6 +314,10 @@ export function useQuestionFeedback(storageKey) {
     handleFeedback,
     setInputRef,
     focusNextInput,
-    focusFirstInput
+    focusFirstInput,
+    resetStats,
+    clearAllFeedback,
+    getCompletionStats,
+    correctCount
   }
 }

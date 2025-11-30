@@ -53,5 +53,12 @@
   "tabs": {
     "simple": "Simple",
     "complex": "Missing Number"
+  },
+  "completion": {
+    "title": "Amazing Work!",
+    "subtitle": "You completed all exercises!",
+    "total": "Total Questions",
+    "time": "Total Time",
+    "close": "Close"
   }
 }
