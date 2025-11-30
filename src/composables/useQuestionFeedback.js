@@ -65,24 +65,40 @@ export function useQuestionFeedback(storageKey) {
   const focusFirstInput = (questions = []) => {
     // Use setTimeout to ensure DOM is ready
     setTimeout(() => {
-      // Find the first unanswered question
-      let firstUnansweredIndex = 0
+      // Find the next unanswered question after the last answered one
+      let targetIndex = 0
 
       if (questions.length > 0) {
-        // Look for the first question that hasn't been answered correctly
+        // Find the last correctly answered question
+        let lastAnsweredIndex = -1
         for (let i = 0; i < questions.length; i++) {
           const questionId = questions[i].id
           const feedback = feedbackState.value[questionId]
 
-          // If there's no feedback or the answer is incorrect, focus here
-          if (!feedback || !feedback.isCorrect) {
-            firstUnansweredIndex = i
-            break
+          if (feedback && feedback.isCorrect) {
+            lastAnsweredIndex = i
+          }
+        }
+
+        // Focus on the next question after the last answered one
+        targetIndex = lastAnsweredIndex + 1
+
+        // If we're beyond the end, focus on the first unanswered from the start
+        if (targetIndex >= questions.length) {
+          targetIndex = 0
+          for (let i = 0; i < questions.length; i++) {
+            const questionId = questions[i].id
+            const feedback = feedbackState.value[questionId]
+
+            if (!feedback || !feedback.isCorrect) {
+              targetIndex = i
+              break
+            }
           }
         }
       }
 
-      inputRefs.value[firstUnansweredIndex]?.focus()
+      inputRefs.value[targetIndex]?.focus()
     }, 100)
   }
 
