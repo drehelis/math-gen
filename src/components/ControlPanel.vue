@@ -296,7 +296,7 @@ const optionsOptions = computed(() => {
     { value: 'showAnswers', label: t('controls.showAnswers') }
   ]
 
-  if (localSettings.difficulty === 'basic' || localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
+  if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
     options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
   }
 
