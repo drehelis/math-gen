@@ -2,7 +2,7 @@
   <div class="no-print relative mb-12">
     <div class="bg-white rounded-3xl p-8 shadow-2xl border-8" style="border-color: var(--color-deep);">
       <div class="relative text-center mb-8">
-        <div class="mb-4 md:mb-0 md:absolute md:top-0 flex justify-center md:block" :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }">
+        <div class="mb-4 lg:mb-0 lg:absolute lg:top-0 flex justify-center" :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }">
           <slot name="language-switcher"></slot>
         </div>
 
@@ -166,10 +166,8 @@ const localSettings = reactive({
   selectedOptions: []
 })
 
-// Watch for hideOperation changes and filter invalid operations
 watch(() => props.hideOperation, (isHidden) => {
   if (isHidden) {
-    // Filter out multiplication and division for missing number tab
     const validOps = localSettings.operations.filter(op =>
       op === 'addition' || op === 'subtraction'
     )
@@ -221,7 +219,6 @@ watch(() => localSettings.varySecondNumber, () => {
 const handleGenerate = () => {
   emit('generate')
 
-  // Show scroll hint on mobile only
   if (window.innerWidth < 768) {
     showScrollHint.value = true
     setTimeout(() => {

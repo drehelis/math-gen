@@ -4,6 +4,8 @@
       ref="inputElement"
       v-model="userAnswer"
       @input="validateAnswer"
+      @focus="emit('focus')"
+      @blur="emit('blur')"
       type="text"
       inputmode="numeric"
       maxlength="6"
@@ -28,14 +30,13 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer'])
+const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer', 'focus', 'blur'])
 
 const inputElement = ref(null)
 const userAnswer = ref(props.modelValue)
 const isCorrect = ref(false)
 const showFeedback = ref(false)
 
-// Watch for external changes to modelValue
 watch(() => props.modelValue, (newValue) => {
   if (newValue !== userAnswer.value) {
     userAnswer.value = newValue
@@ -44,19 +45,16 @@ watch(() => props.modelValue, (newValue) => {
 })
 
 const validateAnswer = () => {
-  // Only allow digits and minus sign at the start
   const cleaned = userAnswer.value.replace(/[^\d-]/g, '')
   if (cleaned !== userAnswer.value) {
     userAnswer.value = cleaned
   }
 
-  // Ensure minus sign only at start
   if (userAnswer.value.includes('-')) {
     const parts = userAnswer.value.split('-')
     userAnswer.value = '-' + parts.join('')
   }
 
-  // Emit the updated value
   emit('update:modelValue', userAnswer.value)
 
   const answer = parseInt(userAnswer.value, 10)
@@ -87,7 +85,7 @@ const inputClasses = computed(() => {
 })
 
 const feedbackColor = computed(() => {
-  return isCorrect.value ? '#15803d' : '#b91c1c' // green-700 / red-700 - darker for better contrast
+  return isCorrect.value ? '#15803d' : '#b91c1c'
 })
 
 const borderColor = computed(() => {
@@ -95,7 +93,6 @@ const borderColor = computed(() => {
   return isCorrect.value ? '#15803d' : '#b91c1c'
 })
 
-// Reset when correctAnswer changes (new question set)
 watch(() => props.correctAnswer, () => {
   userAnswer.value = ''
   isCorrect.value = false
@@ -103,7 +100,6 @@ watch(() => props.correctAnswer, () => {
   emit('feedback', { show: false, isCorrect: false })
 })
 
-// Expose focus method for parent components
 defineExpose({
   focus: () => {
     inputElement.value?.focus()

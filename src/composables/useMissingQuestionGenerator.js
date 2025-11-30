@@ -50,7 +50,6 @@ export function useMissingQuestionGenerator() {
   const questions = ref(savedQuestions)
   const savedSettings = loadSettings()
 
-  // Validate and sanitize saved settings for missing number tab
   let initialSettings = {
     count: 20,
     difficulty: 'easy',
@@ -60,7 +59,6 @@ export function useMissingQuestionGenerator() {
   }
 
   if (savedSettings) {
-    // Filter out invalid operations (multiplication and division not supported)
     const validOps = (savedSettings.operations || []).filter(op =>
       op === 'addition' || op === 'subtraction'
     )
@@ -74,12 +72,10 @@ export function useMissingQuestionGenerator() {
 
   const settings = ref(initialSettings)
 
-  // Watch settings and save to localStorage
   watch(settings, (newSettings) => {
     saveSettings(newSettings)
   }, { deep: true })
 
-  // Watch questions and save to localStorage
   watch(questions, (newQuestions) => {
     saveQuestions(newQuestions)
   }, { deep: true })

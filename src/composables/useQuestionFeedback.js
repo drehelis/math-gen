@@ -29,9 +29,8 @@ export function useQuestionFeedback(storageKey) {
   const lastCorrectCount = ref(0)
   const inputRefs = ref([])
   const startTime = ref(Date.now())
-  const attemptTracker = ref({}) // Track attempts per question
+  const attemptTracker = ref({})
 
-  // Watch feedback state and save to localStorage
   if (storageKey) {
     watch(feedbackState, (newState) => {
       saveFeedbackState(newState)
@@ -45,13 +44,11 @@ export function useQuestionFeedback(storageKey) {
   })
 
   const handleFeedback = (questionId, data) => {
-    // Only track attempts when feedback is shown (user entered an answer)
     if (data.show) {
       if (!attemptTracker.value[questionId]) {
         attemptTracker.value[questionId] = 0
       }
 
-      // Only increment if this is a new attempt (not already correct)
       const previousState = feedbackState.value[questionId]
       if (!previousState || !previousState.isCorrect) {
         attemptTracker.value[questionId]++
@@ -63,7 +60,6 @@ export function useQuestionFeedback(storageKey) {
         firstTry: attemptTracker.value[questionId] === 1 && data.isCorrect
       }
     } else {
-      // Just update feedback state without tracking attempts
       feedbackState.value[questionId] = data
     }
   }
@@ -110,7 +106,6 @@ export function useQuestionFeedback(storageKey) {
   const focusNextInput = (currentIndex, totalQuestions) => {
     const nextIndex = currentIndex + 1
     if (nextIndex < totalQuestions) {
-      // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
         inputRefs.value[nextIndex]?.focus()
       }, 100)
@@ -118,13 +113,10 @@ export function useQuestionFeedback(storageKey) {
   }
 
   const focusFirstInput = (questions = []) => {
-    // Use setTimeout to ensure DOM is ready
     setTimeout(() => {
-      // Find the next unanswered question after the last answered one
       let targetIndex = 0
 
       if (questions.length > 0) {
-        // Find the last correctly answered question
         let lastAnsweredIndex = -1
         for (let i = 0; i < questions.length; i++) {
           const questionId = questions[i].id
@@ -135,10 +127,8 @@ export function useQuestionFeedback(storageKey) {
           }
         }
 
-        // Focus on the next question after the last answered one
         targetIndex = lastAnsweredIndex + 1
 
-        // If we're beyond the end, focus on the first unanswered from the start
         if (targetIndex >= questions.length) {
           targetIndex = 0
           for (let i = 0; i < questions.length; i++) {
@@ -157,7 +147,6 @@ export function useQuestionFeedback(storageKey) {
     }, 100)
   }
 
-  // Watch for multiples of 4 correct answers and trigger different confetti effects
   watch(correctCount, (newCount) => {
     const newMilestone = Math.floor(newCount / 4)
     const oldMilestone = Math.floor(lastCorrectCount.value / 4)
