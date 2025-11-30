@@ -1,6 +1,7 @@
 <template>
   <span class="relative inline-block border-b-4 w-[4rem] sm:w-[4.5rem]" :style="{ borderColor: borderColor }">
     <input
+      ref="inputElement"
       v-model="userAnswer"
       @input="validateAnswer"
       type="text"
@@ -27,8 +28,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['feedback', 'update:modelValue'])
+const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer'])
 
+const inputElement = ref(null)
 const userAnswer = ref(props.modelValue)
 const isCorrect = ref(false)
 const showFeedback = ref(false)
@@ -69,6 +71,10 @@ const validateAnswer = () => {
   showFeedback.value = true
   isCorrect.value = answer === props.correctAnswer
   emit('feedback', { show: true, isCorrect: isCorrect.value })
+
+  if (isCorrect.value) {
+    emit('correctAnswer')
+  }
 }
 
 const feedbackIcon = computed(() => {
@@ -95,6 +101,13 @@ watch(() => props.correctAnswer, () => {
   isCorrect.value = false
   showFeedback.value = false
   emit('feedback', { show: false, isCorrect: false })
+})
+
+// Expose focus method for parent components
+defineExpose({
+  focus: () => {
+    inputElement.value?.focus()
+  }
 })
 </script>
 
