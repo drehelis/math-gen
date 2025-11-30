@@ -68,9 +68,22 @@ const validateAnswer = () => {
     return
   }
 
-  showFeedback.value = true
+  // Check if the answer is correct
   isCorrect.value = answer === props.correctAnswer
-  emit('feedback', { show: true, isCorrect: isCorrect.value })
+
+  // For multi-digit correct answers, only show feedback if:
+  // 1. The answer is correct, OR
+  // 2. The entered number is already too large (definitely wrong), OR
+  // 3. The entered number has the same number of digits as the correct answer
+  const correctAnswerDigits = Math.abs(props.correctAnswer).toString().length
+  const enteredDigits = Math.abs(answer).toString().length
+  
+  const shouldShowFeedback = isCorrect.value || 
+                            Math.abs(answer) > Math.abs(props.correctAnswer) ||
+                            enteredDigits >= correctAnswerDigits
+
+  showFeedback.value = shouldShowFeedback
+  emit('feedback', { show: shouldShowFeedback, isCorrect: isCorrect.value })
 
   if (isCorrect.value) {
     emit('correctAnswer')

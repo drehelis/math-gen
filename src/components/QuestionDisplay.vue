@@ -130,7 +130,7 @@ watch(() => props.questions, (newQuestions, oldQuestions) => {
     }
     focusFirstInput(newQuestions)
   }
-}, { deep: true })
+})
 
 // Watch for completion
 watch(correctCount, (newCount) => {
