@@ -1,8 +1,53 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+const STORAGE_KEY_SETTINGS = 'math-gen-simple-settings'
+const STORAGE_KEY_QUESTIONS = 'math-gen-simple-questions'
+
+const loadSettings = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('Failed to load settings:', error)
+  }
+  return null
+}
+
+const saveSettings = (settings) => {
+  try {
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.error('Failed to save settings:', error)
+  }
+}
+
+const loadQuestions = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_QUESTIONS)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('Failed to load questions:', error)
+  }
+  return []
+}
+
+const saveQuestions = (questions) => {
+  try {
+    localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questions))
+  } catch (error) {
+    console.error('Failed to save questions:', error)
+  }
+}
 
 export function useSimpleQuestionGenerator() {
-  const questions = ref([])
-  const settings = ref({
+  const savedQuestions = loadQuestions()
+  const questions = ref(savedQuestions)
+  const savedSettings = loadSettings()
+  const settings = ref(savedSettings || {
     count: 20,
     difficulty: 'easy',
     operation: 'addition',
@@ -10,6 +55,16 @@ export function useSimpleQuestionGenerator() {
     showAnswers: false,
     varySecondNumber: false
   })
+
+  // Watch settings and save to localStorage
+  watch(settings, (newSettings) => {
+    saveSettings(newSettings)
+  }, { deep: true })
+
+  // Watch questions and save to localStorage
+  watch(questions, (newQuestions) => {
+    saveQuestions(newQuestions)
+  }, { deep: true })
 
   const getRandomNumber = (isSecondNumber = false) => {
     let min = 0
@@ -92,7 +147,8 @@ export function useSimpleQuestionGenerator() {
       num1,
       num2,
       answer,
-      operation
+      operation,
+      userAnswer: ''
     }
   }
 

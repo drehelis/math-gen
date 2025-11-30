@@ -1,5 +1,11 @@
 <template>
   <div v-if="questions.length > 0">
+    <CompletionOverlay
+      :show="showCompletionOverlay"
+      :stats="completionStats"
+      @close="showCompletionOverlay = false"
+    />
+
     <div class="print:hidden">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" dir="ltr">
         <div
@@ -30,6 +36,7 @@
               <template v-if="question.missingPosition === 'first'">
                 <AnswerInput
                   v-if="!showAnswers"
+                  v-model="question.userAnswer"
                   :ref="el => setInputRef(el, index)"
                   :correct-answer="question.answer"
                   @feedback="(data) => handleFeedback(question.id, data)"
@@ -44,6 +51,7 @@
                 {{ question.num1 + ' ' + question.operation + ' ' }}
                 <AnswerInput
                   v-if="!showAnswers"
+                  v-model="question.userAnswer"
                   :ref="el => setInputRef(el, index)"
                   :correct-answer="question.answer"
                   @feedback="(data) => handleFeedback(question.id, data)"
@@ -99,9 +107,10 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { watch, onMounted, ref } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
+import CompletionOverlay from './CompletionOverlay.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
 const props = defineProps({
@@ -115,14 +124,40 @@ const props = defineProps({
   }
 })
 
-const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput } = useQuestionFeedback()
+const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-missing-feedback')
+
+const showCompletionOverlay = ref(false)
+const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
+
+// Auto-focus first unanswered input on mount (for page refresh with persisted state)
+onMounted(() => {
+  if (props.questions.length > 0 && !props.showAnswers) {
+    focusFirstInput(props.questions)
+  }
+})
 
 // Auto-focus first input when new questions are generated
-watch(() => props.questions, (newQuestions) => {
+watch(() => props.questions, (newQuestions, oldQuestions) => {
   if (newQuestions.length > 0 && !props.showAnswers) {
-    focusFirstInput()
+    // Reset stats when new questions are generated (questions array changed)
+    if (!oldQuestions || newQuestions.length !== oldQuestions.length || 
+        newQuestions[0]?.id !== oldQuestions[0]?.id) {
+      clearAllFeedback() // Clear all feedback including localStorage
+      showCompletionOverlay.value = false // Reset overlay for new questions
+    }
+    focusFirstInput(newQuestions)
   }
 }, { deep: true })
+
+// Watch for completion
+watch(correctCount, (newCount) => {
+  if (newCount === props.questions.length && props.questions.length > 0 && !props.showAnswers) {
+    completionStats.value = getCompletionStats(props.questions.length)
+    setTimeout(() => {
+      showCompletionOverlay.value = true
+    }, 500)
+  }
+})
 
 const cardColors = [
   'var(--color-sunshine)',

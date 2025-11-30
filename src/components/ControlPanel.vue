@@ -156,6 +156,16 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['update:settings', 'generate', 'print'])
+
+const localSettings = reactive({
+  ...props.settings,
+  operations: props.settings.operations || ['addition'],
+  varySecondNumber: props.settings.varySecondNumber || false,
+  showAnswers: props.settings.showAnswers || false,
+  selectedOptions: []
+})
+
 // Watch for hideOperation changes and filter invalid operations
 watch(() => props.hideOperation, (isHidden) => {
   if (isHidden) {
@@ -170,16 +180,6 @@ watch(() => props.hideOperation, (isHidden) => {
     }
   }
 }, { immediate: true })
-
-const emit = defineEmits(['update:settings', 'generate', 'print'])
-
-const localSettings = reactive({
-  ...props.settings,
-  operations: props.settings.operations || ['addition'],
-  varySecondNumber: props.settings.varySecondNumber || false,
-  showAnswers: props.settings.showAnswers || false,
-  selectedOptions: []
-})
 const showCustomCount = ref(false)
 const customCountValue = ref(null)
 const showScrollHint = ref(false)

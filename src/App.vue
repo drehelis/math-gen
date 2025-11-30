@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useSimpleQuestionGenerator } from './composables/useSimpleQuestionGenerator'
 import { useMissingQuestionGenerator } from './composables/useMissingQuestionGenerator'
 import ControlPanel from './components/ControlPanel.vue'
@@ -57,7 +57,31 @@ const { locale, t } = useI18n()
 const simpleTab = useSimpleQuestionGenerator()
 const missingTab = useMissingQuestionGenerator()
 
-const activeTab = ref('simple')
+// Load active tab from localStorage
+const loadActiveTab = () => {
+  try {
+    const saved = localStorage.getItem('math-gen-active-tab')
+    // Validate that the saved tab is valid
+    if (saved === 'simple' || saved === 'complex') {
+      return saved
+    }
+    return 'simple'
+  } catch (error) {
+    console.error('Failed to load active tab:', error)
+    return 'simple'
+  }
+}
+
+const activeTab = ref(loadActiveTab())
+
+// Save active tab to localStorage
+watch(activeTab, (newTab) => {
+  try {
+    localStorage.setItem('math-gen-active-tab', newTab)
+  } catch (error) {
+    console.error('Failed to save active tab:', error)
+  }
+})
 
 const currentTabData = computed(() => {
   return activeTab.value === 'simple' ? simpleTab : missingTab

@@ -21,15 +21,27 @@ const props = defineProps({
   correctAnswer: {
     type: Number,
     required: true
+  },
+  modelValue: {
+    type: String,
+    default: ''
   }
 })
 
-const emit = defineEmits(['feedback', 'correctAnswer'])
+const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer'])
 
 const inputElement = ref(null)
-const userAnswer = ref('')
+const userAnswer = ref(props.modelValue)
 const isCorrect = ref(false)
 const showFeedback = ref(false)
+
+// Watch for external changes to modelValue
+watch(() => props.modelValue, (newValue) => {
+  if (newValue !== userAnswer.value) {
+    userAnswer.value = newValue
+    validateAnswer()
+  }
+})
 
 const validateAnswer = () => {
   // Only allow digits and minus sign at the start
@@ -43,6 +55,9 @@ const validateAnswer = () => {
     const parts = userAnswer.value.split('-')
     userAnswer.value = '-' + parts.join('')
   }
+
+  // Emit the updated value
+  emit('update:modelValue', userAnswer.value)
 
   const answer = parseInt(userAnswer.value, 10)
 

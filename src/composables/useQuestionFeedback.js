@@ -1,11 +1,42 @@
 import { ref, computed, watch } from 'vue'
 import confetti from 'canvas-confetti'
 
-export function useQuestionFeedback() {
-  const feedbackState = ref({})
+export function useQuestionFeedback(storageKey) {
+  const loadFeedbackState = () => {
+    if (!storageKey) return {}
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error('Failed to load feedback state:', error)
+    }
+    return {}
+  }
+
+  const saveFeedbackState = (state) => {
+    if (!storageKey) return
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(state))
+    } catch (error) {
+      console.error('Failed to save feedback state:', error)
+    }
+  }
+
+  const feedbackState = ref(loadFeedbackState())
   const confettiCount = ref(0)
   const lastCorrectCount = ref(0)
   const inputRefs = ref([])
+  const startTime = ref(Date.now())
+  const attemptTracker = ref({}) // Track attempts per question
+
+  // Watch feedback state and save to localStorage
+  if (storageKey) {
+    watch(feedbackState, (newState) => {
+      saveFeedbackState(newState)
+    }, { deep: true })
+  }
 
   const correctCount = computed(() => {
     return Object.values(feedbackState.value).filter(
@@ -14,7 +45,60 @@ export function useQuestionFeedback() {
   })
 
   const handleFeedback = (questionId, data) => {
-    feedbackState.value[questionId] = data
+    // Only track attempts when feedback is shown (user entered an answer)
+    if (data.show) {
+      if (!attemptTracker.value[questionId]) {
+        attemptTracker.value[questionId] = 0
+      }
+
+      // Only increment if this is a new attempt (not already correct)
+      const previousState = feedbackState.value[questionId]
+      if (!previousState || !previousState.isCorrect) {
+        attemptTracker.value[questionId]++
+      }
+
+      feedbackState.value[questionId] = {
+        ...data,
+        attempts: attemptTracker.value[questionId],
+        firstTry: attemptTracker.value[questionId] === 1 && data.isCorrect
+      }
+    } else {
+      // Just update feedback state without tracking attempts
+      feedbackState.value[questionId] = data
+    }
+  }
+
+  const resetStats = () => {
+    startTime.value = Date.now()
+    attemptTracker.value = {}
+  }
+
+  const clearAllFeedback = () => {
+    feedbackState.value = {}
+    attemptTracker.value = {}
+    startTime.value = Date.now()
+    if (storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch (error) {
+        console.error('Failed to clear feedback state:', error)
+      }
+    }
+  }
+
+  const getCompletionStats = (totalQuestions) => {
+    const timeInSeconds = Math.floor((Date.now() - startTime.value) / 1000)
+    const firstTryCorrect = Object.values(feedbackState.value).filter(
+      state => state.firstTry
+    ).length
+    const accuracy = totalQuestions > 0 ? Math.round((firstTryCorrect / totalQuestions) * 100) : 100
+
+    return {
+      total: totalQuestions,
+      firstTry: firstTryCorrect,
+      timeInSeconds,
+      accuracy
+    }
   }
 
   const setInputRef = (el, index) => {
@@ -33,10 +117,43 @@ export function useQuestionFeedback() {
     }
   }
 
-  const focusFirstInput = () => {
+  const focusFirstInput = (questions = []) => {
     // Use setTimeout to ensure DOM is ready
     setTimeout(() => {
-      inputRefs.value[0]?.focus()
+      // Find the next unanswered question after the last answered one
+      let targetIndex = 0
+
+      if (questions.length > 0) {
+        // Find the last correctly answered question
+        let lastAnsweredIndex = -1
+        for (let i = 0; i < questions.length; i++) {
+          const questionId = questions[i].id
+          const feedback = feedbackState.value[questionId]
+
+          if (feedback && feedback.isCorrect) {
+            lastAnsweredIndex = i
+          }
+        }
+
+        // Focus on the next question after the last answered one
+        targetIndex = lastAnsweredIndex + 1
+
+        // If we're beyond the end, focus on the first unanswered from the start
+        if (targetIndex >= questions.length) {
+          targetIndex = 0
+          for (let i = 0; i < questions.length; i++) {
+            const questionId = questions[i].id
+            const feedback = feedbackState.value[questionId]
+
+            if (!feedback || !feedback.isCorrect) {
+              targetIndex = i
+              break
+            }
+          }
+        }
+      }
+
+      inputRefs.value[targetIndex]?.focus()
     }, 100)
   }
 
@@ -65,7 +182,7 @@ export function useQuestionFeedback() {
           return Math.random() * (max - min) + min
         }
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -88,7 +205,7 @@ export function useQuestionFeedback() {
         const duration = 2000
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -134,7 +251,7 @@ export function useQuestionFeedback() {
         const duration = 2500
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -166,7 +283,7 @@ export function useQuestionFeedback() {
         const duration = 3000
         const animationEnd = Date.now() + duration
 
-        const interval = setInterval(function() {
+        const interval = setInterval(function () {
           const timeLeft = animationEnd - Date.now()
           if (timeLeft <= 0) return clearInterval(interval)
 
@@ -197,6 +314,10 @@ export function useQuestionFeedback() {
     handleFeedback,
     setInputRef,
     focusNextInput,
-    focusFirstInput
+    focusFirstInput,
+    resetStats,
+    clearAllFeedback,
+    getCompletionStats,
+    correctCount
   }
 }
