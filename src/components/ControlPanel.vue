@@ -279,7 +279,14 @@ const operationOptions = computed(() => [
 ])
 
 const difficultyOptions = computed(() => [
-  { value: 'easy', label: t('difficulty.easy') },
+  { 
+    value: 'easy', 
+    label: t('difficulty.easy'),
+    children: [
+      { value: 'beginners', label: t('difficulty.beginners') },
+      { value: 'basic', label: t('difficulty.basic') }
+    ]
+  },
   { value: 'medium', label: t('difficulty.medium') },
   { value: 'hard', label: t('difficulty.hard') }
 ])

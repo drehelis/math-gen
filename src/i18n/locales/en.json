@@ -30,7 +30,10 @@
     "all": "All operations"
   },
   "difficulty": {
-    "easy": "Easy (0-10)",
+    "label": "Difficulty",
+    "easy": "Easy",
+    "beginners": "Beginners (0-10)",
+    "basic": "Basic (1-20)",
     "medium": "Medium (10-100)",
     "hard": "Hard (100-900)"
   },
