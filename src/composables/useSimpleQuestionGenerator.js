@@ -1,5 +1,7 @@
 import { ref, watch } from 'vue'
 
+let idCounter = 0
+
 const STORAGE_KEY_SETTINGS = 'math-gen-simple-settings'
 const STORAGE_KEY_QUESTIONS = 'math-gen-simple-questions'
 
@@ -73,6 +75,20 @@ export function useSimpleQuestionGenerator() {
     if (settings.value.difficulty === 'easy') {
       min = 0
       max = 10
+    } else if (settings.value.difficulty === 'beginners') {
+      min = 0
+      max = 10
+    } else if (settings.value.difficulty === 'basic') {
+      min = 1
+      max = 20
+
+      if (isSecondNumber && settings.value.varySecondNumber) {
+        const useSmaller = Math.random() < 0.5
+        if (useSmaller) {
+          min = 1
+          max = 10
+        }
+      }
     } else if (settings.value.difficulty === 'medium') {
       min = 10
       max = 100
@@ -143,7 +159,7 @@ export function useSimpleQuestionGenerator() {
     }
 
     return {
-      id: Date.now() + Math.random(),
+      id: `q-${Date.now()}-${++idCounter}`,
       num1,
       num2,
       answer,

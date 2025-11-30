@@ -1,4 +1,6 @@
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+
+let idCounter = 0
 
 const STORAGE_KEY_SETTINGS = 'math-gen-missing-settings'
 const STORAGE_KEY_QUESTIONS = 'math-gen-missing-questions'
@@ -89,6 +91,9 @@ export function useMissingQuestionGenerator() {
     if (settings.value.difficulty === 'easy') {
       min = 0
       max = 10
+    } else if (settings.value.difficulty === 'medium1') {
+      min = 1
+      max = 20
     } else if (settings.value.difficulty === 'medium') {
       min = 10
       max = 100
@@ -111,7 +116,7 @@ export function useMissingQuestionGenerator() {
       const missingPosition = Math.random() < 0.5 ? 'first' : 'second'
 
       return {
-        id: Date.now() + Math.random(),
+        id: `q-${Date.now()}-${++idCounter}`,
         num1,
         num2,
         result,
@@ -129,7 +134,7 @@ export function useMissingQuestionGenerator() {
         const num1 = result + num2
 
         return {
-          id: Date.now() + Math.random(),
+          id: `q-${Date.now()}-${++idCounter}`,
           num1,
           num2,
           result,
@@ -144,7 +149,7 @@ export function useMissingQuestionGenerator() {
         const num2 = num1 - result
 
         return {
-          id: Date.now() + Math.random(),
+          id: `q-${Date.now()}-${++idCounter}`,
           num1,
           num2,
           result,
