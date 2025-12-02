@@ -52,7 +52,7 @@
           </div>
 
           <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
-            <div class="w-[85%] sm:w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
+            <div class="w-full max-w-[12rem] sm:max-w-none sm:w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
               <div class="text-right">{{ question.num1 }}</div>
               <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
               <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>

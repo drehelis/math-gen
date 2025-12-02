@@ -305,8 +305,13 @@ const optionsOptions = computed(() => {
 const initializeOptions = () => {
   const selected = []
   if (localSettings.showAnswers) selected.push('showAnswers')
-  if (localSettings.varySecondNumber) selected.push('varySecondNumber')
-  if (localSettings.inputMode === 'column-by-column') selected.push('columnByColumn')
+
+  // Only add these options if difficulty is medium or hard
+  if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
+    if (localSettings.varySecondNumber) selected.push('varySecondNumber')
+    if (localSettings.inputMode === 'column-by-column') selected.push('columnByColumn')
+  }
+
   localSettings.selectedOptions = selected
 }
 
@@ -317,4 +322,10 @@ watch(() => localSettings.selectedOptions, (newOptions) => {
   localSettings.varySecondNumber = newOptions.includes('varySecondNumber')
   localSettings.inputMode = newOptions.includes('columnByColumn') ? 'column-by-column' : 'native'
 }, { deep: true })
+
+watch(() => localSettings.difficulty, () => {
+  // When difficulty changes, remove options that are no longer available
+  const availableValues = optionsOptions.value.map(opt => opt.value)
+  localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
+})
 </script>
