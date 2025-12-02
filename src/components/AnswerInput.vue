@@ -1,5 +1,5 @@
 <template>
-  <span class="relative inline-block border-b-4 w-[4rem] sm:w-[4.5rem]" :style="{ borderColor: borderColor }">
+  <span class="relative inline-block w-[4rem] sm:w-[4.5rem]" :class="{ 'border-b-4': showBorder }" :style="{ borderColor: showBorder ? borderColor : 'transparent' }">
     <input
       ref="inputElement"
       v-model="userAnswer"
@@ -27,6 +27,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  showBorder: {
+    type: Boolean,
+    default: true
   }
 })
 

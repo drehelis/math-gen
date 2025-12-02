@@ -30,12 +30,14 @@
         v-show="activeTab === 'simple'"
         :questions="simpleTab.questions.value"
         :show-answers="simpleTab.settings.value.showAnswers"
+        :difficulty="simpleTab.settings.value.difficulty"
       />
 
       <MissingQuestionDisplay
         v-show="activeTab === 'complex'"
         :questions="missingTab.questions.value"
         :show-answers="missingTab.settings.value.showAnswers"
+        :difficulty="missingTab.settings.value.difficulty"
       />
     </div>
   </div>

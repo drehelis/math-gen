@@ -147,6 +147,10 @@ export function useQuestionFeedback(storageKey) {
     }, 100)
   }
 
+  const focusInput = (index) => {
+    inputRefs.value[index]?.focus()
+  }
+
   watch(correctCount, (newCount) => {
     const newMilestone = Math.floor(newCount / 4)
     const oldMilestone = Math.floor(lastCorrectCount.value / 4)
@@ -304,6 +308,7 @@ export function useQuestionFeedback(storageKey) {
     setInputRef,
     focusNextInput,
     focusFirstInput,
+    focusInput,
     resetStats,
     clearAllFeedback,
     getCompletionStats,

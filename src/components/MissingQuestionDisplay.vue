@@ -11,8 +11,9 @@
         <div
           v-for="(question, index) in questions"
           :key="question.id"
-          class="question-card relative rounded-2xl p-3 sm:p-4 border-4"
+          class="question-card relative rounded-2xl p-3 sm:p-4 border-4 cursor-pointer"
           :style="getCardStyle(index)"
+          @click="focusInput(index)"
         >
           <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4"
                :style="getBadgeStyle(index)">
@@ -42,7 +43,7 @@
                   @feedback="(data) => handleFeedback(question.id, data)"
                   @correct-answer="() => focusNextInput(index, questions.length)"
                 />
-                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                   <span class="opacity-40">{{ question.answer }}</span>
                 </span>
                 {{ ' ' + question.operation + ' ' + question.num2 + ' = ' + question.result }}
@@ -57,7 +58,7 @@
                   @feedback="(data) => handleFeedback(question.id, data)"
                   @correct-answer="() => focusNextInput(index, questions.length)"
                 />
-                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                   <span class="opacity-40">{{ question.answer }}</span>
                 </span>
                 {{ ' = ' + question.result }}
@@ -107,7 +108,7 @@
 </template>
 
 <script setup>
-import { watch, onMounted, ref } from 'vue'
+import { watch, onMounted, ref, computed } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
@@ -121,10 +122,14 @@ const props = defineProps({
   showAnswers: {
     type: Boolean,
     default: false
+  },
+  difficulty: {
+    type: String,
+    default: 'easy'
   }
 })
 
-const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-missing-feedback')
+const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, focusInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-missing-feedback')
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
@@ -182,6 +187,7 @@ const getBadgeStyle = (index) => {
 
 const formatPrintQuestion = (questionNum, question) => {
   const numStr = String(questionNum).padStart(3, ' ')
+
   if (question.missingPosition === 'first') {
     const num2Str = String(question.num2).padStart(3, ' ')
     const resultStr = String(question.result).padStart(4, ' ')

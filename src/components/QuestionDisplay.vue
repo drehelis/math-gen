@@ -11,8 +11,9 @@
         <div
           v-for="(question, index) in questions"
           :key="question.id"
-          class="question-card relative rounded-2xl p-3 sm:p-4 border-4"
+          class="question-card relative rounded-2xl p-3 sm:p-4 border-4 cursor-pointer"
           :style="getCardStyle(index)"
+          @click="focusInput(index)"
         >
           <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 z-10"
                :style="getBadgeStyle(index)">
@@ -31,7 +32,7 @@
             <span class="text-xl">{{ feedbackState[question.id]?.isCorrect ? '✓' : '✗' }}</span>
           </div>
 
-          <div class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
+          <div v-if="!useVerticalFormat" class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
             <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               {{ question.num1 }} {{ question.operation }} {{ question.num2 }} =
               <AnswerInput
@@ -44,10 +45,33 @@
                 @focus="focusedIndex = index"
                 @blur="focusedIndex = -1"
               />
-              <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+              <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                 <span class="opacity-40">{{ question.answer }}</span>
               </span>
             </span>
+          </div>
+
+          <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Courier New', monospace;" dir="ltr">
+            <div class="text-2xl sm:text-3xl md:text-4xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
+              <div class="text-right">{{ question.num1 }}</div>
+              <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
+              <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>
+              <div class="text-right" style="margin-top: 0.3em;">
+                <AnswerInput
+                  v-if="!showAnswers"
+                  v-model="question.userAnswer"
+                  :ref="el => setInputRef(el, index)"
+                  :correct-answer="question.answer"
+                  :show-border="false"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                  @correct-answer="() => focusNextInput(index, questions.length)"
+                  @focus="focusedIndex = index"
+                  @blur="focusedIndex = -1"
+                  style="text-align: right; font-family: 'Courier New', monospace;"
+                />
+                <span v-else class="opacity-60">{{ question.answer }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -106,14 +130,26 @@ const props = defineProps({
   showAnswers: {
     type: Boolean,
     default: false
+  },
+  difficulty: {
+    type: String,
+    default: 'easy'
   }
 })
 
-const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-simple-feedback')
+const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, focusInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-simple-feedback')
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
 const focusedIndex = ref(-1)
+
+const useVerticalFormat = computed(() => {
+  return props.difficulty === 'medium' || props.difficulty === 'hard'
+})
+
+const operatorMarginLeft = computed(() => {
+  return props.difficulty === 'hard' ? '-1.5rem' : '-0.5rem'
+})
 
 const currentQuestionIndex = computed(() => {
   for (let i = 0; i < props.questions.length; i++) {
@@ -248,6 +284,14 @@ const getBadgeStyle = (index) => {
 
 const formatPrintQuestion = (questionNum, num1, num2, operation) => {
   const numStr = String(questionNum).padStart(3, ' ')
+
+  if (useVerticalFormat.value) {
+    const num1Str = String(num1).padStart(6, ' ')
+    const num2Str = String(num2).padStart(5, ' ')
+    const line = '______'.padStart(6, ' ')
+    return `${numStr})  ${num1Str}\n    ${operation}${num2Str}\n    ${line}`
+  }
+
   const num1Str = String(num1).padStart(3, ' ')
   const num2Str = String(num2).padStart(3, ' ')
   return `${numStr})  ${num1Str} ${operation} ${num2Str}  =  __________`
@@ -255,6 +299,14 @@ const formatPrintQuestion = (questionNum, num1, num2, operation) => {
 
 const formatPrintAnswer = (questionNum, num1, num2, operation, answer) => {
   const numStr = String(questionNum).padStart(3, ' ')
+
+  if (useVerticalFormat.value) {
+    const num1Str = String(num1).padStart(6, ' ')
+    const num2Str = String(num2).padStart(5, ' ')
+    const answerStr = String(answer).padStart(6, ' ')
+    return `${numStr})  ${num1Str}\n    ${operation}${num2Str}\n    ${answerStr}`
+  }
+
   const num1Str = String(num1).padStart(3, ' ')
   const num2Str = String(num2).padStart(3, ' ')
   const answerStr = String(answer).padStart(4, ' ')
