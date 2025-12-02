@@ -16,7 +16,7 @@
       :style="{
         width: index === fields.length - 1 ? `${Math.min(Math.max(1, fields[index].length) * 0.7, 6.6)}em` : '0.7em',
         color: 'var(--color-deep)',
-        fontFamily: '\'Courier New\', monospace'
+        fontFamily: '\'Space Mono\', monospace'
       }"
     />
   </div>
@@ -33,6 +33,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  difficulty: {
+    type: String,
+    default: 'medium'
   }
 })
 
@@ -41,9 +45,10 @@ const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer', 'foc
 const inputRefs = ref([])
 const answerLength = computed(() => Math.abs(props.correctAnswer).toString().length)
 const numFields = computed(() => {
-  if (answerLength.value === 1) return 1
-  if (answerLength.value === 2) return 2
-  return 3
+  // Base number of fields on difficulty, not answer length
+  if (props.difficulty === 'medium') return 2
+  if (props.difficulty === 'hard') return 3
+  return 2 // default to 2 fields
 })
 const fields = ref(Array(numFields.value).fill(''))
 const isCorrect = ref(false)

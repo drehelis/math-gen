@@ -33,7 +33,7 @@
           </div>
 
           <div v-if="!useVerticalFormat" class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
-            <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
+            <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               {{ question.num1 }} {{ question.operation }} {{ question.num2 }} =
               <AnswerInput
                 v-if="!showAnswers"
@@ -51,8 +51,8 @@
             </span>
           </div>
 
-          <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Courier New', monospace;" dir="ltr">
-            <div class="w-[85%] sm:w-full text-2xl sm:text-3xl md:text-4xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
+          <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
+            <div class="w-[85%] sm:w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
               <div class="text-right">{{ question.num1 }}</div>
               <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
               <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>
@@ -62,6 +62,7 @@
                   v-model="question.userAnswer"
                   :ref="el => setInputRef(el, index)"
                   :correct-answer="question.answer"
+                  :difficulty="difficulty"
                   @feedback="(data) => handleFeedback(question.id, data)"
                   @correct-answer="() => focusNextInput(index, questions.length)"
                   @focus="focusedIndex = index"
