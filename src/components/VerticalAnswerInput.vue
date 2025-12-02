@@ -40,7 +40,11 @@ const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer', 'foc
 
 const inputRefs = ref([])
 const answerLength = computed(() => Math.abs(props.correctAnswer).toString().length)
-const numFields = computed(() => answerLength.value === 1 ? 1 : 2)
+const numFields = computed(() => {
+  if (answerLength.value === 1) return 1
+  if (answerLength.value === 2) return 2
+  return 3
+})
 const fields = ref(Array(numFields.value).fill(''))
 const isCorrect = ref(false)
 const showFeedback = ref(false)
@@ -56,10 +60,16 @@ watch(() => props.modelValue, (newValue) => {
     fields.value = Array(numFields.value).fill('')
   } else if (numFields.value === 1) {
     fields.value[0] = newValue
-  } else {
+  } else if (numFields.value === 2) {
     const digits = newValue.split('')
     fields.value[0] = digits[digits.length - 1] || ''
     fields.value[1] = digits.slice(0, -1).join('')
+  } else {
+    // 3 fields: rightmost (ones), middle (tens), leftmost (hundreds+)
+    const digits = newValue.split('')
+    fields.value[0] = digits[digits.length - 1] || ''
+    fields.value[1] = digits[digits.length - 2] || ''
+    fields.value[2] = digits.slice(0, -2).join('')
   }
 })
 
@@ -107,9 +117,11 @@ const handleBeforeInput = (event, index) => {
   const isLastField = index === fields.value.length - 1
 
   if (isLastField) {
+    // Leftmost field can have multiple digits
     fields.value[index] = currentValue + data
     validateAnswer()
   } else {
+    // Non-last fields (ones and tens place) are single-digit only
     if (currentValue.length === 0) {
       fields.value[index] = data
       validateAnswer()
@@ -154,8 +166,11 @@ const validateAnswer = () => {
   let answer = ''
   if (numFields.value === 1) {
     answer = fields.value[0]
-  } else {
+  } else if (numFields.value === 2) {
     answer = fields.value[1] + fields.value[0]
+  } else {
+    // 3 fields: concatenate leftmost + middle + rightmost
+    answer = fields.value[2] + fields.value[1] + fields.value[0]
   }
 
   answer = answer.trim()
