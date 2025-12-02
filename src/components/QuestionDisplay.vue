@@ -52,16 +52,30 @@
           </div>
 
           <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Courier New', monospace;" dir="ltr">
-            <div class="text-2xl sm:text-3xl md:text-4xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
+            <div class="w-[85%] sm:w-full text-2xl sm:text-3xl md:text-4xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
               <div class="text-right">{{ question.num1 }}</div>
               <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
               <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>
               <div class="flex justify-end" style="margin-top: 0.3em;">
                 <VerticalAnswerInput
-                  v-if="!showAnswers"
+                  v-if="!showAnswers && inputMode === 'column-by-column'"
                   v-model="question.userAnswer"
                   :ref="el => setInputRef(el, index)"
                   :correct-answer="question.answer"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                  @correct-answer="() => focusNextInput(index, questions.length)"
+                  @focus="focusedIndex = index"
+                  @blur="focusedIndex = -1"
+                />
+                <AnswerInput
+                  v-else-if="!showAnswers && inputMode === 'native'"
+                  v-model="question.userAnswer"
+                  :ref="el => setInputRef(el, index)"
+                  :correct-answer="question.answer"
+                  :show-border="false"
+                  :max-length="12"
+                  custom-width="w-[8.4em]"
+                  text-align="right"
                   @feedback="(data) => handleFeedback(question.id, data)"
                   @correct-answer="() => focusNextInput(index, questions.length)"
                   @focus="focusedIndex = index"
@@ -133,6 +147,10 @@ const props = defineProps({
   difficulty: {
     type: String,
     default: 'easy'
+  },
+  inputMode: {
+    type: String,
+    default: 'native'
   }
 })
 
@@ -147,7 +165,7 @@ const useVerticalFormat = computed(() => {
 })
 
 const operatorMarginLeft = computed(() => {
-  return props.difficulty === 'hard' ? '-1.5rem' : '-0.5rem'
+  return props.difficulty === 'hard' ? '-0.8rem' : '-0.5rem'
 })
 
 const currentQuestionIndex = computed(() => {

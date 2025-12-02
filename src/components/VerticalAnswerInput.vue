@@ -11,9 +11,10 @@
       @blur="emit('blur')"
       type="text"
       inputmode="numeric"
-      :class="['bg-transparent text-right font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input', inputClasses]"
+      class="bg-transparent text-right font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
+      :class="inputClasses"
       :style="{
-        width: index === fields.length - 1 ? `${(answerLength - 1) * 0.7}em` : '0.7em',
+        width: index === fields.length - 1 ? `${Math.min(Math.max(1, fields[index].length) * 0.7, 6.6)}em` : '0.7em',
         color: 'var(--color-deep)',
         fontFamily: '\'Courier New\', monospace'
       }"
@@ -39,7 +40,6 @@ const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer', 'foc
 
 const inputRefs = ref([])
 const answerLength = computed(() => Math.abs(props.correctAnswer).toString().length)
-// Create fields: rightmost field for ones digit, leftmost field for remaining digits
 const numFields = computed(() => answerLength.value === 1 ? 1 : 2)
 const fields = ref(Array(numFields.value).fill(''))
 const isCorrect = ref(false)
@@ -57,7 +57,6 @@ watch(() => props.modelValue, (newValue) => {
   } else if (numFields.value === 1) {
     fields.value[0] = newValue
   } else {
-    // Split answer: last digit in field 0, rest in field 1
     const digits = newValue.split('')
     fields.value[0] = digits[digits.length - 1] || ''
     fields.value[1] = digits.slice(0, -1).join('')
@@ -70,7 +69,6 @@ watch(() => props.correctAnswer, () => {
   showFeedback.value = false
   emit('feedback', { show: false, isCorrect: false })
 
-  // Focus first field
   nextTick(() => {
     if (inputRefs.value[0]) {
       inputRefs.value[0].focus()
@@ -81,7 +79,6 @@ watch(() => props.correctAnswer, () => {
 const handleBeforeInput = (event, index) => {
   const data = event.data
 
-  // Allow deletion
   if (event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward') {
     event.preventDefault()
     const currentValue = fields.value[index]
@@ -92,8 +89,14 @@ const handleBeforeInput = (event, index) => {
     return
   }
 
-  // Only allow digits
   if (!data || !/^\d$/.test(data)) {
+    event.preventDefault()
+    return
+  }
+
+  // Calculate total digits
+  const totalDigits = fields.value.reduce((sum, field) => sum + field.length, 0)
+  if (totalDigits >= 12) {
     event.preventDefault()
     return
   }
@@ -104,19 +107,13 @@ const handleBeforeInput = (event, index) => {
   const isLastField = index === fields.value.length - 1
 
   if (isLastField) {
-    // Leftmost field: allow multiple digits (answerLength - 1)
-    const maxDigits = answerLength.value - 1
-    if (currentValue.length < maxDigits) {
-      fields.value[index] = currentValue + data
-      validateAnswer()
-    }
+    fields.value[index] = currentValue + data
+    validateAnswer()
   } else {
-    // Rightmost field (ones place): single digit only
     if (currentValue.length === 0) {
       fields.value[index] = data
       validateAnswer()
 
-      // Auto-advance to next field
       nextTick(() => {
         focusField(index + 1)
       })
@@ -128,8 +125,10 @@ const handleKeydown = (event, index) => {
   if (event.key === 'Backspace') {
     const currentValue = fields.value[index]
     if (currentValue === '' && index > 0) {
-      // Field is empty, move to previous field
       event.preventDefault()
+      // Clear the previous field and focus it
+      fields.value[index - 1] = ''
+      validateAnswer()
       focusField(index - 1)
     }
   } else if (event.key === 'ArrowLeft') {
@@ -152,7 +151,6 @@ const focusField = (index) => {
 }
 
 const validateAnswer = () => {
-  // Combine fields: field[1] (leftmost) + field[0] (rightmost)
   let answer = ''
   if (numFields.value === 1) {
     answer = fields.value[0]

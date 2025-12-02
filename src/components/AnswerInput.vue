@@ -1,5 +1,5 @@
 <template>
-  <span class="relative inline-block w-[4rem] sm:w-[4.5rem]" :class="{ 'border-b-4': showBorder }" :style="{ borderColor: showBorder ? borderColor : 'transparent' }">
+  <span class="relative inline-block" :class="[{ 'border-b-4': showBorder }, customWidth || 'w-[4rem] sm:w-[4.5rem]']" :style="{ borderColor: showBorder ? borderColor : 'transparent' }">
     <input
       ref="inputElement"
       :value="userAnswer"
@@ -8,7 +8,7 @@
       @blur="emit('blur')"
       type="text"
       inputmode="numeric"
-      maxlength="6"
+      :maxlength="maxLength"
       class="w-full bg-transparent font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
       :class="[inputClasses, `text-${textAlign}`]"
       style="color: var(--color-deep);"
@@ -39,6 +39,14 @@ const props = defineProps({
   reverseInput: {
     type: Boolean,
     default: false
+  },
+  maxLength: {
+    type: Number,
+    default: 6
+  },
+  customWidth: {
+    type: String,
+    default: ''
   }
 })
 
@@ -60,6 +68,7 @@ watch(() => props.modelValue, (newValue) => {
 
 const handleInput = (event) => {
   if (!props.reverseInput) {
+    userAnswer.value = event.target.value
     validateAnswer()
     return
   }

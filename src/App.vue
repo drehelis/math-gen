@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 md:p-8 print:bg-white print:p-0" style="background: var(--color-bg);">
+  <div class="min-h-screen p-6 md:p-8 print:bg-white print:p-0" style="background: var(--color-bg);">
     <div class="no-print fixed inset-0 overflow-hidden pointer-events-none opacity-20">
       <div class="absolute top-10 left-10 font-bold" style="color: var(--color-orange); animation: float 6s ease-in-out infinite; font-size: 15rem;">+</div>
       <div class="absolute top-40 right-20 font-bold" style="color: var(--color-coral); animation: float 8s ease-in-out infinite 1s; font-size: 12rem;">-</div>
@@ -31,6 +31,7 @@
         :questions="simpleTab.questions.value"
         :show-answers="simpleTab.settings.value.showAnswers"
         :difficulty="simpleTab.settings.value.difficulty"
+        :input-mode="simpleTab.settings.value.inputMode"
       />
 
       <MissingQuestionDisplay

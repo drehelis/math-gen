@@ -163,6 +163,7 @@ const localSettings = reactive({
   operations: props.settings.operations || ['addition'],
   varySecondNumber: props.settings.varySecondNumber || false,
   showAnswers: props.settings.showAnswers || false,
+  inputMode: props.settings.inputMode || 'native',
   selectedOptions: []
 })
 
@@ -295,6 +296,7 @@ const optionsOptions = computed(() => {
 
   if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
     options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
+    options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
   }
 
   return options
@@ -304,6 +306,7 @@ const initializeOptions = () => {
   const selected = []
   if (localSettings.showAnswers) selected.push('showAnswers')
   if (localSettings.varySecondNumber) selected.push('varySecondNumber')
+  if (localSettings.inputMode === 'column-by-column') selected.push('columnByColumn')
   localSettings.selectedOptions = selected
 }
 
@@ -312,5 +315,6 @@ initializeOptions()
 watch(() => localSettings.selectedOptions, (newOptions) => {
   localSettings.showAnswers = newOptions.includes('showAnswers')
   localSettings.varySecondNumber = newOptions.includes('varySecondNumber')
+  localSettings.inputMode = newOptions.includes('columnByColumn') ? 'column-by-column' : 'native'
 }, { deep: true })
 </script>

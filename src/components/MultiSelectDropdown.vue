@@ -86,7 +86,7 @@ const dropdownRef = ref(null)
 
 const selectedLabel = computed(() => {
   if (props.modelValue.length === 0) {
-    return t('missingOperation.all')
+    return t('controls.none')
   }
   if (props.modelValue.length === props.options.length) {
     return t('missingOperation.all')
