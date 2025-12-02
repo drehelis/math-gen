@@ -33,7 +33,7 @@
           </div>
 
           <div v-if="!useVerticalFormat" class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
-            <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
+            <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               {{ question.num1 }} {{ question.operation }} {{ question.num2 }} =
               <AnswerInput
                 v-if="!showAnswers"
