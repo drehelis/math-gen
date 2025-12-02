@@ -56,20 +56,18 @@
               <div class="text-right">{{ question.num1 }}</div>
               <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
               <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>
-              <div class="text-right" style="margin-top: 0.3em;">
-                <AnswerInput
+              <div class="flex justify-end" style="margin-top: 0.3em;">
+                <VerticalAnswerInput
                   v-if="!showAnswers"
                   v-model="question.userAnswer"
                   :ref="el => setInputRef(el, index)"
                   :correct-answer="question.answer"
-                  :show-border="false"
                   @feedback="(data) => handleFeedback(question.id, data)"
                   @correct-answer="() => focusNextInput(index, questions.length)"
                   @focus="focusedIndex = index"
                   @blur="focusedIndex = -1"
-                  style="text-align: right; font-family: 'Courier New', monospace;"
                 />
-                <span v-else class="opacity-60">{{ question.answer }}</span>
+                <span v-else class="text-right opacity-60">{{ question.answer }}</span>
               </div>
             </div>
           </div>
@@ -119,6 +117,7 @@
 import { watch, onMounted, ref, computed } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
+import VerticalAnswerInput from './VerticalAnswerInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 

@@ -2,15 +2,15 @@
   <span class="relative inline-block w-[4rem] sm:w-[4.5rem]" :class="{ 'border-b-4': showBorder }" :style="{ borderColor: showBorder ? borderColor : 'transparent' }">
     <input
       ref="inputElement"
-      v-model="userAnswer"
-      @input="validateAnswer"
+      :value="userAnswer"
+      @input="handleInput"
       @focus="emit('focus')"
       @blur="emit('blur')"
       type="text"
       inputmode="numeric"
       maxlength="6"
-      class="w-full bg-transparent text-center font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
-      :class="inputClasses"
+      class="w-full bg-transparent font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
+      :class="[inputClasses, `text-${textAlign}`]"
       style="color: var(--color-deep);"
     />
   </span>
@@ -31,6 +31,14 @@ const props = defineProps({
   showBorder: {
     type: Boolean,
     default: true
+  },
+  textAlign: {
+    type: String,
+    default: 'center'
+  },
+  reverseInput: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -40,13 +48,51 @@ const inputElement = ref(null)
 const userAnswer = ref(props.modelValue)
 const isCorrect = ref(false)
 const showFeedback = ref(false)
+const lastLength = ref(0)
 
 watch(() => props.modelValue, (newValue) => {
   if (newValue !== userAnswer.value) {
     userAnswer.value = newValue
+    lastLength.value = newValue.length
     validateAnswer()
   }
 })
+
+const handleInput = (event) => {
+  if (!props.reverseInput) {
+    validateAnswer()
+    return
+  }
+
+  const input = event.target
+  const newValue = input.value
+  const currentLength = newValue.length
+
+  if (currentLength > lastLength.value) {
+    // User typed character(s) - prepend each character individually
+    const numNewChars = currentLength - lastLength.value
+    const newChars = newValue.slice(-numNewChars)
+
+    // Prepend each new character to build right-to-left
+    for (let i = 0; i < newChars.length; i++) {
+      userAnswer.value = newChars[i] + userAnswer.value
+    }
+  } else if (currentLength < lastLength.value) {
+    // User deleted character(s) - remove from the beginning
+    const numDeleted = lastLength.value - currentLength
+    userAnswer.value = userAnswer.value.slice(numDeleted)
+  }
+
+  lastLength.value = userAnswer.value.length
+  input.value = userAnswer.value
+
+  // Move cursor to the end
+  setTimeout(() => {
+    input.setSelectionRange(input.value.length, input.value.length)
+  }, 0)
+
+  validateAnswer()
+}
 
 const validateAnswer = () => {
   const cleaned = userAnswer.value.replace(/[^\d-]/g, '')
