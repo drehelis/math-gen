@@ -77,23 +77,62 @@
       </div>
     </div>
 
-    <PrintLayout :items="questions" :title="$t('app.title')" page-key-prefix="missing-question">
-      <template #item="{ item }">
-        <div
-          class="print:text-base print:text-black print:p-2"
-          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-        >{{ formatPrintQuestion(item.displayIndex, item) }}</div>
+    <div class="hidden print:block">
+      <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`missing-page-${pageIndex}`">
+        <div class="print-page" :class="{ 'print:break-before-page': pageIndex > 0 }">
+          <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('app.title') }}</h2>
+          <div class="print-horizontal-grid" dir="ltr">
+            <div
+              v-for="question in page"
+              :key="question.id"
+              class="print-horizontal-item"
+            >
+              <span class="equation-number">{{ question.displayIndex }})</span>
+              <span class="equation">
+                <template v-if="question.missingPosition === 'first'">
+                  <span class="answer-blank">_______</span>
+                  <span class="operator">{{ question.operation }}</span>
+                  <span class="number">{{ question.num2 }}</span>
+                  <span class="equals">=</span>
+                  <span class="number">{{ question.result }}</span>
+                </template>
+                <template v-else>
+                  <span class="number">{{ question.num1 }}</span>
+                  <span class="operator">{{ question.operation }}</span>
+                  <span class="answer-blank">_______</span>
+                  <span class="equals">=</span>
+                  <span class="number">{{ question.result }}</span>
+                </template>
+              </span>
+            </div>
+          </div>
+        </div>
       </template>
-    </PrintLayout>
 
-    <PrintLayout v-if="showAnswers" :items="questions" :title="$t('answerKey.title')" page-key-prefix="missing-answer" gap-class="print:gap-x-8 print:gap-y-1" :force-page-break="true">
-      <template #item="{ item }">
-        <div
-          class="print:text-base print:text-black"
-          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-        >{{ formatPrintAnswer(item.displayIndex, item) }}</div>
+      <template v-if="showAnswers">
+        <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`missing-answer-page-${pageIndex}`">
+          <div class="print-page print:break-before-page">
+            <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('answerKey.title') }}</h2>
+            <div class="print-horizontal-grid" dir="ltr">
+              <div
+                v-for="question in page"
+                :key="question.id"
+                class="print-horizontal-item"
+              >
+                <span class="equation-number">{{ question.displayIndex }})</span>
+                <span class="equation">
+                  <span class="number">{{ question.num1 }}</span>
+                  <span class="operator">{{ question.operation }}</span>
+                  <span class="number">{{ question.num2 }}</span>
+                  <span class="equals">=</span>
+                  <span class="number">{{ question.result }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
       </template>
-    </PrintLayout>
+    </div>
   </div>
 
   <div v-else class="text-center py-20 no-print">
@@ -185,25 +224,72 @@ const getBadgeStyle = (index) => {
   }
 }
 
-const formatPrintQuestion = (questionNum, question) => {
-  const numStr = String(questionNum).padStart(3, ' ')
+const paginateQuestions = (questions, itemsPerPage) => {
+  const pages = []
+  const questionsWithIndex = questions.map((question, index) => ({
+    ...question,
+    displayIndex: index + 1
+  }))
 
-  if (question.missingPosition === 'first') {
-    const num2Str = String(question.num2).padStart(3, ' ')
-    const resultStr = String(question.result).padStart(4, ' ')
-    return `${numStr})  __________ ${question.operation} ${num2Str}  =  ${resultStr}`
-  } else {
-    const num1Str = String(question.num1).padStart(3, ' ')
-    const resultStr = String(question.result).padStart(4, ' ')
-    return `${numStr})  ${num1Str} ${question.operation} __________  =  ${resultStr}`
+  for (let i = 0; i < questionsWithIndex.length; i += itemsPerPage) {
+    pages.push(questionsWithIndex.slice(i, i + itemsPerPage))
   }
-}
 
-const formatPrintAnswer = (questionNum, question) => {
-  const numStr = String(questionNum).padStart(3, ' ')
-  const num1Str = String(question.num1).padStart(3, ' ')
-  const num2Str = String(question.num2).padStart(3, ' ')
-  const resultStr = String(question.result).padStart(4, ' ')
-  return `${numStr})  ${num1Str} ${question.operation} ${num2Str}  =  ${resultStr}`
+  return pages
 }
 </script>
+
+<style scoped>
+@media print {
+  .print-horizontal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
+    grid-template-rows: repeat(15, auto);
+    gap: 2em 4em;
+    width: 100%;
+  }
+
+  .print-horizontal-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .print-horizontal-item .equation-number {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    width: 2.5em;
+    text-align: right;
+    margin-right: 0.5em;
+  }
+
+  .equation {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+  }
+
+  .equation .number {
+    display: inline-block;
+    text-align: right;
+    min-width: 2ch;
+  }
+
+  .equation .operator {
+    display: inline-block;
+    margin: 0 0.3em;
+  }
+
+  .equation .equals {
+    display: inline-block;
+    margin: 0 0.3em;
+  }
+
+  .equation .answer-blank {
+    display: inline-block;
+    min-width: 4em;
+    margin-left: 0.3em;
+  }
+}
+</style>

@@ -102,7 +102,7 @@
     <div v-if="useVerticalFormat" class="hidden print:block">
       <div class="print-page">
         <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('app.title') }}</h2>
-        <div class="print-vertical-grid">
+        <div class="print-vertical-grid" dir="ltr">
           <div
             v-for="(question, index) in questions"
             :key="question.id"
@@ -121,7 +121,7 @@
 
       <div v-if="showAnswers" class="print-page print:break-before-page">
         <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('answerKey.title') }}</h2>
-        <div class="print-vertical-grid">
+        <div class="print-vertical-grid" dir="ltr">
           <div
             v-for="(question, index) in questions"
             :key="question.id"
@@ -146,7 +146,7 @@
         <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`page-${pageIndex}`">
           <div class="print-page" :class="{ 'print:break-before-page': pageIndex > 0 }">
             <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('app.title') }}</h2>
-            <div class="print-horizontal-grid">
+            <div class="print-horizontal-grid" dir="ltr">
               <div
                 v-for="question in page"
                 :key="question.id"
@@ -169,7 +169,7 @@
           <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`answer-page-${pageIndex}`">
             <div class="print-page print:break-before-page">
               <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('answerKey.title') }}</h2>
-              <div class="print-horizontal-grid">
+              <div class="print-horizontal-grid" dir="ltr">
                 <div
                   v-for="question in page"
                   :key="question.id"
