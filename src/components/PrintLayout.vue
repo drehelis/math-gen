@@ -11,8 +11,8 @@
         </h2>
       </div>
       <div
-        class="print:grid print:grid-cols-2 print:auto-flow-column"
-        :class="gapClass"
+        class="print:grid print:auto-flow-column"
+        :class="[gapClass, columnsClass]"
         :style="getPageGridStyle(page.length)"
         dir="ltr"
       >
@@ -46,6 +46,10 @@ const props = defineProps({
     type: String,
     default: 'print:gap-4'
   },
+  columnsClass: {
+    type: String,
+    default: 'print:grid-cols-2'
+  },
   forcePageBreak: {
     type: Boolean,
     default: false
@@ -69,7 +73,10 @@ const paginateItems = (items) => {
 const paginatedItems = computed(() => paginateItems(props.items))
 
 const getPageGridStyle = (itemCount) => {
-  const rowCount = Math.ceil(itemCount / 2)
+  // Extract the number of columns from columnsClass (e.g., "print:grid-cols-4" -> 4)
+  const colsMatch = props.columnsClass.match(/grid-cols-(\d+)/)
+  const numCols = colsMatch ? parseInt(colsMatch[1]) : 2
+  const rowCount = Math.ceil(itemCount / numCols)
   return {
     'grid-template-rows': `repeat(${rowCount}, auto)`
   }
