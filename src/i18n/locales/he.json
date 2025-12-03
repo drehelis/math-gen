@@ -11,10 +11,11 @@
     "operation": "פעולה",
     "difficulty": "רמת קושי",
     "options": "אפשרויות",
+    "none": "ללא",
     "showAnswers": "הצג תשובות",
-    "varySecondNumber": "ערבוב ספרות",
+    "varySecondNumber": "אורך משתנה",
+    "columnByColumn": "פתרון אנכי",
     "generateQuestions": "צור תרגילים",
-    "scrollDown": "גלול מטה",
     "printMe": "הדפס אותי",
     "enterNumber": "הזן מספר (1-500)"
   },

@@ -94,22 +94,10 @@
       <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           @click="handleGenerate"
-          class="relative py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg overflow-hidden"
+          class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg"
           style="background: var(--color-sky); border-color: var(--color-deep); color: white;"
         >
-          <span class="relative z-10 transition-all duration-300" :class="{ 'opacity-0': showScrollHint }">
-            {{ $t('controls.generateQuestions') }}
-          </span>
-          <span
-            v-if="showScrollHint"
-            class="absolute inset-0 flex flex-col items-center justify-center z-20 animate-bounce-slow"
-          >
-            <svg class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <polyline points="19 12 12 19 5 12"></polyline>
-            </svg>
-            <span class="text-base font-bold mt-1">{{ $t('controls.scrollDown') }}</span>
-          </span>
+          {{ $t('controls.generateQuestions') }}
         </button>
 
         <button
@@ -163,6 +151,7 @@ const localSettings = reactive({
   operations: props.settings.operations || ['addition'],
   varySecondNumber: props.settings.varySecondNumber || false,
   showAnswers: props.settings.showAnswers || false,
+  inputMode: props.settings.inputMode || 'native',
   selectedOptions: []
 })
 
@@ -180,7 +169,6 @@ watch(() => props.hideOperation, (isHidden) => {
 }, { immediate: true })
 const showCustomCount = ref(false)
 const customCountValue = ref(null)
-const showScrollHint = ref(false)
 
 watch(localSettings, (newValue) => {
   emit('update:settings', newValue)
@@ -218,13 +206,6 @@ watch(() => localSettings.varySecondNumber, () => {
 
 const handleGenerate = () => {
   emit('generate')
-
-  if (window.innerWidth < 768) {
-    showScrollHint.value = true
-    setTimeout(() => {
-      showScrollHint.value = false
-    }, 3000)
-  }
 }
 
 const handlePrint = () => {
@@ -295,6 +276,7 @@ const optionsOptions = computed(() => {
 
   if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
     options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
+    options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
   }
 
   return options
@@ -303,7 +285,13 @@ const optionsOptions = computed(() => {
 const initializeOptions = () => {
   const selected = []
   if (localSettings.showAnswers) selected.push('showAnswers')
-  if (localSettings.varySecondNumber) selected.push('varySecondNumber')
+
+  // Only add these options if difficulty is medium or hard
+  if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
+    if (localSettings.varySecondNumber) selected.push('varySecondNumber')
+    if (localSettings.inputMode === 'column-by-column') selected.push('columnByColumn')
+  }
+
   localSettings.selectedOptions = selected
 }
 
@@ -312,5 +300,12 @@ initializeOptions()
 watch(() => localSettings.selectedOptions, (newOptions) => {
   localSettings.showAnswers = newOptions.includes('showAnswers')
   localSettings.varySecondNumber = newOptions.includes('varySecondNumber')
+  localSettings.inputMode = newOptions.includes('columnByColumn') ? 'column-by-column' : 'native'
 }, { deep: true })
+
+watch(() => localSettings.difficulty, () => {
+  // When difficulty changes, remove options that are no longer available
+  const availableValues = optionsOptions.value.map(opt => opt.value)
+  localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
+})
 </script>

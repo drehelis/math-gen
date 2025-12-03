@@ -11,8 +11,9 @@
         <div
           v-for="(question, index) in questions"
           :key="question.id"
-          class="question-card relative rounded-2xl p-3 sm:p-4 border-4"
+          class="question-card relative rounded-2xl p-3 sm:p-4 border-4 cursor-pointer"
           :style="getCardStyle(index)"
+          @click="focusInput(index)"
         >
           <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 z-10"
                :style="getBadgeStyle(index)">
@@ -31,7 +32,7 @@
             <span class="text-xl">{{ feedbackState[question.id]?.isCorrect ? '✓' : '✗' }}</span>
           </div>
 
-          <div class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
+          <div v-if="!useVerticalFormat" class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
             <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
               {{ question.num1 }} {{ question.operation }} {{ question.num2 }} =
               <AnswerInput
@@ -44,10 +45,46 @@
                 @focus="focusedIndex = index"
                 @blur="focusedIndex = -1"
               />
-              <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem]" :style="{ borderColor: 'var(--color-deep)' }">
+              <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                 <span class="opacity-40">{{ question.answer }}</span>
               </span>
             </span>
+          </div>
+
+          <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
+            <div class="w-full max-w-[12rem] sm:max-w-none sm:w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
+              <div class="text-right">{{ question.num1 }}</div>
+              <div class="text-left" :style="{ marginLeft: operatorMarginLeft, marginTop: '-0.3em', marginBottom: '-0.3em' }">{{ question.operation }}</div>
+              <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em; min-width: 3ch;">{{ question.num2 }}</div>
+              <div class="flex justify-end" style="margin-top: 0.3em;">
+                <VerticalAnswerInput
+                  v-if="!showAnswers && inputMode === 'column-by-column'"
+                  v-model="question.userAnswer"
+                  :ref="el => setInputRef(el, index)"
+                  :correct-answer="question.answer"
+                  :difficulty="difficulty"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                  @correct-answer="() => focusNextInput(index, questions.length)"
+                  @focus="focusedIndex = index"
+                  @blur="focusedIndex = -1"
+                />
+                <AnswerInput
+                  v-else-if="!showAnswers && inputMode === 'native'"
+                  v-model="question.userAnswer"
+                  :ref="el => setInputRef(el, index)"
+                  :correct-answer="question.answer"
+                  :show-border="false"
+                  :max-length="12"
+                  custom-width="w-[8.4em]"
+                  text-align="right"
+                  @feedback="(data) => handleFeedback(question.id, data)"
+                  @correct-answer="() => focusNextInput(index, questions.length)"
+                  @focus="focusedIndex = index"
+                  @blur="focusedIndex = -1"
+                />
+                <span v-else class="text-right opacity-60">{{ question.answer }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -61,23 +98,98 @@
       </div>
     </div>
 
-    <PrintLayout :items="questions" :title="$t('app.title')" page-key-prefix="question">
-      <template #item="{ item }">
-        <div
-          class="print:text-base print:text-black print:p-2"
-          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-        >{{ formatPrintQuestion(item.displayIndex, item.num1, item.num2, item.operation) }}</div>
-      </template>
-    </PrintLayout>
+    <!-- Print Layout for Vertical Format -->
+    <div v-if="useVerticalFormat" class="hidden print:block">
+      <div class="print-page">
+        <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('app.title') }}</h2>
+        <div class="print-vertical-grid" dir="ltr">
+          <div
+            v-for="(question, index) in questions"
+            :key="question.id"
+            class="print-vertical-item"
+          >
+            <span class="equation-number">{{ index + 1 }})</span>
+            <span class="equation stacked">
+              <span class="number">{{ question.num1 }}</span>
+              <span class="operator">{{ question.operation }}</span>
+              <span class="number">{{ question.num2 }}</span>
+              <span class="equals">=</span>
+            </span>
+          </div>
+        </div>
+      </div>
 
-    <PrintLayout v-if="showAnswers" :items="questions" :title="$t('answerKey.title')" page-key-prefix="answer" gap-class="print:gap-x-8 print:gap-y-1" :force-page-break="true">
-      <template #item="{ item }">
-        <div
-          class="print:text-base print:text-black"
-          style="font-family: 'Space Mono', monospace; direction: ltr; white-space: pre;"
-        >{{ formatPrintAnswer(item.displayIndex, item.num1, item.num2, item.operation, item.answer) }}</div>
-      </template>
-    </PrintLayout>
+      <div v-if="showAnswers" class="print-page print:break-before-page">
+        <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('answerKey.title') }}</h2>
+        <div class="print-vertical-grid" dir="ltr">
+          <div
+            v-for="(question, index) in questions"
+            :key="question.id"
+            class="print-vertical-item"
+          >
+            <span class="equation-number">{{ index + 1 }})</span>
+            <span class="equation stacked">
+              <span class="number">{{ question.num1 }}</span>
+              <span class="operator">{{ question.operation }}</span>
+              <span class="number">{{ question.num2 }}</span>
+              <span class="equals">=</span>
+              <span class="number">{{ question.answer }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print Layout for Horizontal Format (Easy) -->
+    <template v-else>
+      <div class="hidden print:block">
+        <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`page-${pageIndex}`">
+          <div class="print-page" :class="{ 'print:break-before-page': pageIndex > 0 }">
+            <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('app.title') }}</h2>
+            <div class="print-horizontal-grid" dir="ltr">
+              <div
+                v-for="question in page"
+                :key="question.id"
+                class="print-horizontal-item"
+              >
+                <span class="equation-number">{{ question.displayIndex }})</span>
+                <span class="equation">
+                  <span class="number">{{ question.num1 }}</span>
+                  <span class="operator">{{ question.operation }}</span>
+                  <span class="number">{{ question.num2 }}</span>
+                  <span class="equals">=</span>
+                  <span class="answer-blank">_______</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="showAnswers">
+          <template v-for="(page, pageIndex) in paginateQuestions(questions, 30)" :key="`answer-page-${pageIndex}`">
+            <div class="print-page print:break-before-page">
+              <h2 class="text-xl font-bold mb-4" style="color: black;">{{ $t('answerKey.title') }}</h2>
+              <div class="print-horizontal-grid" dir="ltr">
+                <div
+                  v-for="question in page"
+                  :key="question.id"
+                  class="print-horizontal-item"
+                >
+                  <span class="equation-number">{{ question.displayIndex }})</span>
+                  <span class="equation">
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="answer-shown">{{ question.answer }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+    </template>
   </div>
 
   <div v-else class="text-center py-20 no-print">
@@ -95,6 +207,7 @@
 import { watch, onMounted, ref, computed } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
+import VerticalAnswerInput from './VerticalAnswerInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
@@ -106,14 +219,30 @@ const props = defineProps({
   showAnswers: {
     type: Boolean,
     default: false
+  },
+  difficulty: {
+    type: String,
+    default: 'easy'
+  },
+  inputMode: {
+    type: String,
+    default: 'native'
   }
 })
 
-const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-simple-feedback')
+const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, focusInput, resetStats, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-simple-feedback')
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
 const focusedIndex = ref(-1)
+
+const useVerticalFormat = computed(() => {
+  return props.difficulty === 'medium' || props.difficulty === 'hard'
+})
+
+const operatorMarginLeft = computed(() => {
+  return props.difficulty === 'hard' ? '-0.8rem' : '-0.5rem'
+})
 
 const currentQuestionIndex = computed(() => {
   for (let i = 0; i < props.questions.length; i++) {
@@ -246,8 +375,30 @@ const getBadgeStyle = (index) => {
   }
 }
 
+const paginateQuestions = (questions, itemsPerPage) => {
+  const pages = []
+  const questionsWithIndex = questions.map((question, index) => ({
+    ...question,
+    displayIndex: index + 1
+  }))
+
+  for (let i = 0; i < questionsWithIndex.length; i += itemsPerPage) {
+    pages.push(questionsWithIndex.slice(i, i + itemsPerPage))
+  }
+
+  return pages
+}
+
 const formatPrintQuestion = (questionNum, num1, num2, operation) => {
   const numStr = String(questionNum).padStart(3, ' ')
+
+  if (useVerticalFormat.value) {
+    const num1Str = String(num1).padStart(6, ' ')
+    const num2Str = String(num2).padStart(5, ' ')
+    const line = '______'.padStart(6, ' ')
+    return `${numStr})  ${num1Str}\n    ${operation}${num2Str}\n    ${line}`
+  }
+
   const num1Str = String(num1).padStart(3, ' ')
   const num2Str = String(num2).padStart(3, ' ')
   return `${numStr})  ${num1Str} ${operation} ${num2Str}  =  __________`
@@ -255,9 +406,141 @@ const formatPrintQuestion = (questionNum, num1, num2, operation) => {
 
 const formatPrintAnswer = (questionNum, num1, num2, operation, answer) => {
   const numStr = String(questionNum).padStart(3, ' ')
+
+  if (useVerticalFormat.value) {
+    const num1Str = String(num1).padStart(6, ' ')
+    const num2Str = String(num2).padStart(5, ' ')
+    const answerStr = String(answer).padStart(6, ' ')
+    return `${numStr})  ${num1Str}\n    ${operation}${num2Str}\n    ${answerStr}`
+  }
+
   const num1Str = String(num1).padStart(3, ' ')
   const num2Str = String(num2).padStart(3, ' ')
   const answerStr = String(answer).padStart(4, ' ')
   return `${numStr})  ${num1Str} ${operation} ${num2Str}  =  ${answerStr}`
 }
 </script>
+
+<style scoped>
+@media print {
+  .print-vertical-grid {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .print-vertical-grid::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  .print-vertical-item {
+    float: left;
+    width: 25%;
+    margin-bottom: 3.5em;
+    box-sizing: border-box;
+  }
+
+  /* Clear floats after every 4th item */
+  .print-vertical-item:nth-child(4n+1) {
+    clear: left;
+  }
+
+  /* Stacked equation styling from StackOverflow */
+  .equation-number {
+    display: inline-block;
+    margin-right: 3em;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+  }
+
+  .equation.stacked {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    position: relative;
+    padding-left: 1em;
+  }
+
+  .equation.stacked .number {
+    display: block;
+    margin-left: 1em;
+    text-align: right;
+    min-width: 3ch;
+  }
+
+  .equation.stacked .operator {
+    position: absolute;
+    left: 0;
+    width: 1em;
+    text-align: left;
+  }
+
+  .equation.stacked .equals {
+    display: block;
+    height: 0;
+    border-bottom: solid 2px black;
+    overflow: hidden;
+    margin-right: 0;
+  }
+
+  /* Horizontal (non-stacked) equation styling for easy difficulty */
+  .print-horizontal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
+    grid-template-rows: repeat(15, auto);
+    gap: 2em 4em;
+    width: 100%;
+  }
+
+  .print-horizontal-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .print-horizontal-item .equation-number {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    width: 2.5em;
+    text-align: right;
+    margin-right: 0.5em;
+  }
+
+  .equation {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+  }
+
+  .equation .number {
+    display: inline-block;
+    text-align: right;
+    min-width: 2ch;
+  }
+
+  .equation .operator {
+    display: inline-block;
+    margin: 0 0.3em;
+  }
+
+  .equation .equals {
+    display: inline-block;
+    margin: 0 0.3em;
+  }
+
+  .equation .answer-blank {
+    display: inline-block;
+    min-width: 4em;
+    margin-left: 0.3em;
+  }
+
+  .equation .answer-shown {
+    display: inline-block;
+    text-align: right;
+    min-width: 2ch;
+    margin-left: 0.3em;
+  }
+}
+</style>

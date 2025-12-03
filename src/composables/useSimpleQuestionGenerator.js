@@ -55,7 +55,8 @@ export function useSimpleQuestionGenerator() {
     operation: 'addition',
     operations: ['addition'],
     showAnswers: false,
-    varySecondNumber: false
+    varySecondNumber: false,
+    inputMode: 'native'
   })
 
   watch(settings, (newSettings) => {
