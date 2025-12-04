@@ -33,35 +33,100 @@
           </div>
 
           <div class="flex items-center justify-center pt-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
-            <span class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
-              <template v-if="question.missingPosition === 'first'">
-                <AnswerInput
-                  v-if="!showAnswers"
-                  v-model="question.userAnswer"
-                  :ref="el => setInputRef(el, index)"
-                  :correct-answer="question.answer"
-                  @feedback="(data) => handleFeedback(question.id, data)"
-                  @correct-answer="() => focusNextInput(index, questions.length)"
-                />
-                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
-                  <span class="opacity-40">{{ question.answer }}</span>
-                </span>
-                {{ ' ' + question.operation + ' ' + question.num2 + ' = ' + question.result }}
+            <span class="text-base sm:text-lg md:text-lg lg:text-xl font-bold whitespace-nowrap" style="color: var(--color-deep);">
+              <!-- Standard format: ___ + 5 = 10 or 2 + ___ = 7 -->
+              <template v-if="!question.format || question.format === 'standard'">
+                <template v-if="question.missingPosition === 'first'">
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                  {{ ' ' + question.operation + ' ' + question.num2 + ' = ' + question.result }}
+                </template>
+                <template v-else>
+                  {{ question.num1 + ' ' + question.operation + ' ' }}
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                  {{ ' = ' + question.result }}
+                </template>
               </template>
-              <template v-else>
-                {{ question.num1 + ' ' + question.operation + ' ' }}
-                <AnswerInput
-                  v-if="!showAnswers"
-                  v-model="question.userAnswer"
-                  :ref="el => setInputRef(el, index)"
-                  :correct-answer="question.answer"
-                  @feedback="(data) => handleFeedback(question.id, data)"
-                  @correct-answer="() => focusNextInput(index, questions.length)"
-                />
-                <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
-                  <span class="opacity-40">{{ question.answer }}</span>
-                </span>
-                {{ ' = ' + question.result }}
+
+              <!-- Both-sides format: various positions -->
+              <template v-else-if="question.format === 'both-sides'">
+                <template v-if="question.missingPosition === 'right-second'">
+                  {{ question.num1 + ' ' + question.operation + ' ' + question.num2 + ' = ' + question.num3 + ' ' + (question.operation2 || question.operation) + ' ' }}
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                </template>
+                <template v-else-if="question.missingPosition === 'right-first'">
+                  {{ question.num1 + ' ' + question.operation + ' ' + question.num2 + ' = ' }}
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                  {{ ' ' + (question.operation2 || question.operation) + ' ' + question.num4 }}
+                </template>
+                <template v-else-if="question.missingPosition === 'left-second'">
+                  {{ question.num1 + ' ' + question.operation + ' ' }}
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                  {{ ' = ' + question.num3 + ' ' + (question.operation2 || question.operation) + ' ' + question.num4 }}
+                </template>
+                <template v-else-if="question.missingPosition === 'left-first'">
+                  <AnswerInput
+                    v-if="!showAnswers"
+                    v-model="question.userAnswer"
+                    :ref="el => setInputRef(el, index)"
+                    :correct-answer="question.answer"
+                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @correct-answer="() => focusNextInput(index, questions.length)"
+                  />
+                  <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
+                    <span class="opacity-40">{{ question.answer }}</span>
+                  </span>
+                  {{ ' ' + question.operation + ' ' + question.num2 + ' = ' + question.num3 + ' ' + (question.operation2 || question.operation) + ' ' + question.num4 }}
+                </template>
               </template>
             </span>
           </div>
@@ -89,19 +154,62 @@
             >
               <span class="equation-number">{{ question.displayIndex }})</span>
               <span class="equation">
-                <template v-if="question.missingPosition === 'first'">
-                  <span class="answer-blank">_______</span>
-                  <span class="operator">{{ question.operation }}</span>
-                  <span class="number">{{ question.num2 }}</span>
-                  <span class="equals">=</span>
-                  <span class="number">{{ question.result }}</span>
+                <!-- Standard format -->
+                <template v-if="!question.format || question.format === 'standard'">
+                  <template v-if="question.missingPosition === 'first'">
+                    <span class="answer-blank">_______</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.result }}</span>
+                  </template>
+                  <template v-else>
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="answer-blank">_______</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.result }}</span>
+                  </template>
                 </template>
-                <template v-else>
-                  <span class="number">{{ question.num1 }}</span>
-                  <span class="operator">{{ question.operation }}</span>
-                  <span class="answer-blank">_______</span>
-                  <span class="equals">=</span>
-                  <span class="number">{{ question.result }}</span>
+
+                <!-- Both-sides format -->
+                <template v-else-if="question.format === 'both-sides'">
+                  <template v-if="question.missingPosition === 'right-second'">
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.num3 }}</span>
+                    <span class="operator">{{ question.operation2 || question.operation }}</span>
+                    <span class="answer-blank">_______</span>
+                  </template>
+                  <template v-else-if="question.missingPosition === 'right-first'">
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="answer-blank">_______</span>
+                    <span class="operator">{{ question.operation2 || question.operation }}</span>
+                    <span class="number">{{ question.num4 }}</span>
+                  </template>
+                  <template v-else-if="question.missingPosition === 'left-second'">
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="answer-blank">_______</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.num3 }}</span>
+                    <span class="operator">{{ question.operation2 || question.operation }}</span>
+                    <span class="number">{{ question.num4 }}</span>
+                  </template>
+                  <template v-else-if="question.missingPosition === 'left-first'">
+                    <span class="answer-blank">_______</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.num3 }}</span>
+                    <span class="operator">{{ question.operation2 || question.operation }}</span>
+                    <span class="number">{{ question.num4 }}</span>
+                  </template>
                 </template>
               </span>
             </div>
@@ -121,11 +229,54 @@
               >
                 <span class="equation-number">{{ question.displayIndex }})</span>
                 <span class="equation">
-                  <span class="number">{{ question.num1 }}</span>
-                  <span class="operator">{{ question.operation }}</span>
-                  <span class="number">{{ question.num2 }}</span>
-                  <span class="equals">=</span>
-                  <span class="number">{{ question.result }}</span>
+                  <!-- Standard format answer key -->
+                  <template v-if="!question.format || question.format === 'standard'">
+                    <span class="number">{{ question.num1 }}</span>
+                    <span class="operator">{{ question.operation }}</span>
+                    <span class="number">{{ question.num2 }}</span>
+                    <span class="equals">=</span>
+                    <span class="number">{{ question.result }}</span>
+                  </template>
+
+                  <!-- Both-sides format answer key -->
+                  <template v-else-if="question.format === 'both-sides'">
+                    <template v-if="question.missingPosition === 'right-second'">
+                      <span class="number">{{ question.num1 }}</span>
+                      <span class="operator">{{ question.operation }}</span>
+                      <span class="number">{{ question.num2 }}</span>
+                      <span class="equals">=</span>
+                      <span class="number">{{ question.num3 }}</span>
+                      <span class="operator">{{ question.operation2 || question.operation }}</span>
+                      <span class="number">{{ question.answer }}</span>
+                    </template>
+                    <template v-else-if="question.missingPosition === 'right-first'">
+                      <span class="number">{{ question.num1 }}</span>
+                      <span class="operator">{{ question.operation }}</span>
+                      <span class="number">{{ question.num2 }}</span>
+                      <span class="equals">=</span>
+                      <span class="number">{{ question.answer }}</span>
+                      <span class="operator">{{ question.operation2 || question.operation }}</span>
+                      <span class="number">{{ question.num4 }}</span>
+                    </template>
+                    <template v-else-if="question.missingPosition === 'left-second'">
+                      <span class="number">{{ question.num1 }}</span>
+                      <span class="operator">{{ question.operation }}</span>
+                      <span class="number">{{ question.answer }}</span>
+                      <span class="equals">=</span>
+                      <span class="number">{{ question.num3 }}</span>
+                      <span class="operator">{{ question.operation2 || question.operation }}</span>
+                      <span class="number">{{ question.num4 }}</span>
+                    </template>
+                    <template v-else-if="question.missingPosition === 'left-first'">
+                      <span class="number">{{ question.answer }}</span>
+                      <span class="operator">{{ question.operation }}</span>
+                      <span class="number">{{ question.num2 }}</span>
+                      <span class="equals">=</span>
+                      <span class="number">{{ question.num3 }}</span>
+                      <span class="operator">{{ question.operation2 || question.operation }}</span>
+                      <span class="number">{{ question.num4 }}</span>
+                    </template>
+                  </template>
                 </span>
               </div>
             </div>
@@ -181,14 +332,14 @@ onMounted(() => {
 
 watch(() => props.questions, (newQuestions, oldQuestions) => {
   if (newQuestions.length > 0 && !props.showAnswers) {
-    if (!oldQuestions || newQuestions.length !== oldQuestions.length || 
+    if (!oldQuestions || newQuestions.length !== oldQuestions.length ||
         newQuestions[0]?.id !== oldQuestions[0]?.id) {
       clearAllFeedback()
       showCompletionOverlay.value = false
     }
     focusFirstInput(newQuestions)
   }
-}, { deep: true })
+})
 
 watch(correctCount, (newCount) => {
   if (newCount === props.questions.length && props.questions.length > 0 && !props.showAnswers) {
