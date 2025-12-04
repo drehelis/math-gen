@@ -32,7 +32,6 @@
     "all": "All operations"
   },
   "questionFormat": {
-    "standard": "Standard (_ + 5 = 10)",
     "bothSides": "Both Sides"
   },
   "difficulty": {
