@@ -152,6 +152,7 @@ const localSettings = reactive({
   varySecondNumber: props.settings.varySecondNumber || false,
   showAnswers: props.settings.showAnswers || false,
   inputMode: props.settings.inputMode || 'native',
+  questionFormat: props.settings.questionFormat || 'standard',
   selectedOptions: []
 })
 
@@ -199,6 +200,12 @@ watch(() => localSettings.difficulty, () => {
 })
 
 watch(() => localSettings.varySecondNumber, () => {
+  if (props.hasQuestions) {
+    emit('generate')
+  }
+})
+
+watch(() => localSettings.questionFormat, () => {
   if (props.hasQuestions) {
     emit('generate')
   }
@@ -257,8 +264,8 @@ const operationOptions = computed(() => [
 ])
 
 const difficultyOptions = computed(() => [
-  { 
-    value: 'easy', 
+  {
+    value: 'easy',
     label: t('difficulty.easy'),
     children: [
       { value: 'beginners', label: t('difficulty.beginners') },
@@ -269,14 +276,35 @@ const difficultyOptions = computed(() => [
   { value: 'hard', label: t('difficulty.hard') }
 ])
 
+const formatOptions = computed(() => [
+  { value: 'standard', label: t('questionFormat.standard') },
+  { value: 'both-sides', label: t('questionFormat.bothSides') },
+  { value: 'missing-both', label: t('questionFormat.missingBoth') }
+])
+
 const optionsOptions = computed(() => {
   const options = [
     { value: 'showAnswers', label: t('controls.showAnswers') }
   ]
 
-  if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
-    options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
-    options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+  // For Simple tab (not hideOperation)
+  if (!props.hideOperation) {
+    if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
+      options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
+      options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+    }
+  }
+
+  // For Missing Number tab (hideOperation)
+  if (props.hideOperation) {
+    // Show Uneven Digits for medium and hard difficulty
+    if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
+      options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
+    }
+    // Only show Both Sides for medium and hard difficulty
+    if (localSettings.difficulty !== 'beginners' && localSettings.difficulty !== 'basic') {
+      options.push({ value: 'bothSides', label: t('questionFormat.bothSides') })
+    }
   }
 
   return options
@@ -286,10 +314,20 @@ const initializeOptions = () => {
   const selected = []
   if (localSettings.showAnswers) selected.push('showAnswers')
 
-  // Only add these options if difficulty is medium or hard
+  // Add options for medium or hard difficulty
   if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
     if (localSettings.varySecondNumber) selected.push('varySecondNumber')
-    if (localSettings.inputMode === 'column-by-column') selected.push('columnByColumn')
+    // Only add columnByColumn for Simple tab
+    if (!props.hideOperation && localSettings.inputMode === 'column-by-column') {
+      selected.push('columnByColumn')
+    }
+  }
+
+  // Add format options for Missing Number tab
+  if (props.hideOperation) {
+    if (localSettings.questionFormat === 'both-sides-mixed') {
+      selected.push('bothSides')
+    }
   }
 
   localSettings.selectedOptions = selected
@@ -301,10 +339,24 @@ watch(() => localSettings.selectedOptions, (newOptions) => {
   localSettings.showAnswers = newOptions.includes('showAnswers')
   localSettings.varySecondNumber = newOptions.includes('varySecondNumber')
   localSettings.inputMode = newOptions.includes('columnByColumn') ? 'column-by-column' : 'native'
+
+  // Handle format options for Missing Number tab
+  if (newOptions.includes('bothSides')) {
+    localSettings.questionFormat = 'both-sides-mixed'
+  } else if (props.hideOperation) {
+    // Only reset to standard if on Missing Number tab
+    localSettings.questionFormat = 'standard'
+  }
 }, { deep: true })
 
 watch(() => localSettings.difficulty, () => {
   // When difficulty changes, remove options that are no longer available
+  const availableValues = optionsOptions.value.map(opt => opt.value)
+  localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
+})
+
+watch(() => props.hideOperation, () => {
+  // When switching tabs, remove options that are no longer available
   const availableValues = optionsOptions.value.map(opt => opt.value)
   localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
 })
