@@ -109,49 +109,92 @@ export function useComparisonQuestionGenerator() {
   }
 
   const generateExpression = () => {
-    const num1 = getRandomNumber(10)
-    const num2 = getRandomNumber(10)
-    
-    // Determine operation based on settings
-    let operation
     const selectedOps = settings.value.operations || ['addition']
     
-    if (selectedOps.includes('addition') && selectedOps.includes('subtraction')) {
-      // Both selected, choose randomly
-      operation = Math.random() < 0.5 ? '+' : '-'
-    } else if (selectedOps.includes('addition')) {
-      operation = '+'
-    } else if (selectedOps.includes('subtraction')) {
-      operation = '-'
+    // Choose operation based on settings
+    let operation
+    if (selectedOps.length === 1) {
+      operation = selectedOps[0]
     } else {
-      // Fallback to addition if no valid operation
-      operation = '+'
+      operation = selectedOps[Math.floor(Math.random() * selectedOps.length)]
     }
     
-    if (operation === '+') {
+    let num1, num2, value, display
+    
+    if (operation === 'multiplication') {
+      num1 = getRandomNumber(10)
+      num2 = getRandomNumber(10)
+      value = num1 * num2
+      display = `${num1} × ${num2}`
+      
       return {
-        display: `${num1} + ${num2}`,
-        value: num1 + num2,
+        display,
+        value,
+        operation: 'multiplication',
+        num1,
+        num2,
+        operatorSymbol: '×'
+      }
+    } else if (operation === 'division') {
+      // For division, ensure it divides evenly
+      let divisorMax = 10
+      num2 = Math.floor(Math.random() * divisorMax) + 1
+      num1 = getRandomNumber(10)
+      
+      if (num1 % num2 !== 0) {
+        num1 = num2 * Math.floor(num1 / num2)
+        if (num1 === 0) num1 = num2
+      }
+      
+      value = num1 / num2
+      display = `${num1} ÷ ${num2}`
+      
+      return {
+        display,
+        value,
+        operation: 'division',
+        num1,
+        num2,
+        operatorSymbol: '÷'
+      }
+    } else if (operation === 'addition') {
+      num1 = getRandomNumber(10)
+      num2 = getRandomNumber(10)
+      value = num1 + num2
+      display = `${num1} + ${num2}`
+      
+      return {
+        display,
+        value,
         operation: 'addition',
         num1,
         num2,
         operatorSymbol: '+'
       }
-    } else {
+    } else if (operation === 'subtraction') {
+      num1 = getRandomNumber(10)
+      num2 = getRandomNumber(10)
+      
       // For subtraction, ensure result is not negative
       if (num1 >= num2) {
+        value = num1 - num2
+        display = `${num1} - ${num2}`
+        
         return {
-          display: `${num1} - ${num2}`,
-          value: num1 - num2,
+          display,
+          value,
           operation: 'subtraction',
           num1,
           num2,
           operatorSymbol: '-'
         }
       } else {
+        value = num2 - num1
+        display = `${num2} - ${num1}`
+        
         return {
-          display: `${num2} - ${num1}`,
-          value: num2 - num1,
+          display,
+          value,
           operation: 'subtraction',
           num1: num2,
           num2: num1,

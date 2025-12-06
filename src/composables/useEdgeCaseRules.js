@@ -1,18 +1,34 @@
 export const edgeCaseRules = [
   {
     operation: 'division',
-    check: (q) => q.operation === '÷' && q.num1 === 0,
+    check: (q) => (q.operation === '÷' || q.operatorSymbol === '÷') && q.num1 === 0,
     key: 'zeroDivision'
   },
   {
     operation: 'division',
-    check: (q) => q.operation === '÷' && q.num2 === 1,
+    check: (q) => (q.operation === '÷' || q.operatorSymbol === '÷') && q.num2 === 1,
     key: 'divideByOne'
   },
   {
     operation: 'division',
-    check: (q) => q.operation === '÷' && q.num1 === q.num2,
+    check: (q) => (q.operation === '÷' || q.operatorSymbol === '÷') && q.num1 === q.num2,
     key: 'oneDivision'
+  },
+  {
+    operation: 'multiplication',
+    check: (q) => (q.operation === '×' || q.operatorSymbol === '×') && q.num1 === 0 && q.num2 === 0,
+    key: 'zeroZeroMultiplication',
+    skip: true
+  },
+  {
+    operation: 'multiplication',
+    check: (q) => (q.operation === '×' || q.operatorSymbol === '×') && (q.num2 === 0 || q.num1 === 0),
+    key: 'zeroMultiplication'
+  },
+  {
+    operation: 'multiplication',
+    check: (q) => (q.operation === '×' || q.operatorSymbol === '×') && (q.num2 === 1 || q.num1 === 1),
+    key: 'oneMultiplication'
   },
   {
     operation: 'addition',

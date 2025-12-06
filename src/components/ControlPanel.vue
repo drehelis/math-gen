@@ -294,7 +294,9 @@ const comparisonOperationOptions = computed(() => {
   if (localSettings.difficulty === 'basic') {
     return [
       { value: 'addition', label: t('operation.addition') },
-      { value: 'subtraction', label: t('operation.subtraction') }
+      { value: 'subtraction', label: t('operation.subtraction') },
+      { value: 'multiplication', label: t('operation.multiplication') },
+      { value: 'division', label: t('operation.division') }
     ]
   } else {
     return [

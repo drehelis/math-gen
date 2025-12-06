@@ -57,11 +57,17 @@
                 </button>
               </template>
               <template v-else>
-                <span class="inline-block p-0 m-0">{{ question.num1 }}</span>
+                <span class="inline-block p-0 m-0 relative">
+                  <span v-if="question.hasExpression" class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-sm opacity-40">{{ question.leftValue }}</span>
+                  {{ question.num1 }}
+                </span>
                 <span class="inline-block relative mx-2 min-w-[3rem] text-center border-b-4 p-0" :style="{ borderBottomColor: 'var(--color-deep)' }">
                   <span class="opacity-40">{{ feedbackState[question.id]?.value || question.correctOperator }}</span>
                 </span>
-                <span class="inline-block p-0 m-0">{{ question.num2 }}</span>
+                <span class="inline-block p-0 m-0 relative">
+                  <span v-if="question.hasExpression" class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-sm opacity-40">{{ question.rightValue }}</span>
+                  {{ question.num2 }}
+                </span>
               </template>
             </div>
           </div>
