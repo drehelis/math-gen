@@ -56,7 +56,8 @@
   },
   "tabs": {
     "simple": "חשבון בסיסי",
-    "complex": "נעלמים"
+    "complex": "נעלמים",
+    "comparison": "השוואה"
   },
   "completion": {
     "title": "כל הכבוד!",

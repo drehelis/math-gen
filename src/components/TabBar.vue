@@ -31,7 +31,8 @@ defineEmits(['update:modelValue'])
 
 const tabColors = {
   simple: 'var(--color-orange)',
-  complex: 'var(--color-purple)'
+  complex: 'var(--color-purple)',
+  comparison: 'var(--color-mint)'
 }
 
 const getTabStyle = (tabValue) => {

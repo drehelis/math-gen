@@ -53,7 +53,9 @@
           </label>
           <MultiSelectDropdown
             v-model="localSettings.operations"
-            :options="hideOperation ? [
+            :options="comparisonMode ? [
+              { value: 'none', label: $t('controls.none') }
+            ] : hideOperation ? [
               { value: 'addition', label: $t('missingOperation.addition') },
               { value: 'subtraction', label: $t('missingOperation.subtraction') }
             ] : operationOptions"
@@ -141,6 +143,10 @@ const props = defineProps({
   hideOperation: {
     type: Boolean,
     default: false
+  },
+  comparisonMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -167,6 +173,19 @@ watch(() => props.hideOperation, (isHidden) => {
     }
   }
 }, { immediate: true })
+
+watch(() => props.comparisonMode, (isComparison) => {
+  if (isComparison && !localSettings.operations.includes('none')) {
+    localSettings.operations = ['none']
+  }
+}, { immediate: true })
+
+watch(() => localSettings.difficulty, (newDifficulty) => {
+  if (props.comparisonMode && newDifficulty === 'beginners') {
+    localSettings.operations = ['none']
+  }
+})
+
 const showCustomCount = ref(false)
 const customCountValue = ref(null)
 
