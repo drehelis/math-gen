@@ -53,9 +53,7 @@
           </label>
           <MultiSelectDropdown
             v-model="localSettings.operations"
-            :options="comparisonMode ? [
-              { value: 'none', label: $t('controls.none') }
-            ] : hideOperation ? [
+            :options="comparisonMode ? comparisonOperationOptions : hideOperation ? [
               { value: 'addition', label: $t('missingOperation.addition') },
               { value: 'subtraction', label: $t('missingOperation.subtraction') }
             ] : operationOptions"
@@ -175,14 +173,31 @@ watch(() => props.hideOperation, (isHidden) => {
 }, { immediate: true })
 
 watch(() => props.comparisonMode, (isComparison) => {
-  if (isComparison && !localSettings.operations.includes('none')) {
-    localSettings.operations = ['none']
+  if (isComparison) {
+    if (localSettings.difficulty === 'basic') {
+      // For basic difficulty, default to addition if not already set
+      if (!localSettings.operations.includes('addition') && !localSettings.operations.includes('subtraction')) {
+        localSettings.operations = ['addition']
+      }
+    } else if (!localSettings.operations.includes('none')) {
+      localSettings.operations = ['none']
+    }
+  } else if (!isComparison && localSettings.operations.includes('none')) {
+    // When leaving comparison mode, reset to default operations
+    localSettings.operations = ['addition']
   }
 }, { immediate: true })
 
 watch(() => localSettings.difficulty, (newDifficulty) => {
-  if (props.comparisonMode && newDifficulty === 'beginners') {
-    localSettings.operations = ['none']
+  if (props.comparisonMode) {
+    if (newDifficulty === 'beginners' || newDifficulty === 'easy') {
+      localSettings.operations = ['none']
+    } else if (newDifficulty === 'basic') {
+      // Switch to addition for basic difficulty
+      if (localSettings.operations.includes('none')) {
+        localSettings.operations = ['addition']
+      }
+    }
   }
 })
 
@@ -275,6 +290,19 @@ const operationOptions = computed(() => [
   { value: 'division', label: t('operation.division') }
 ])
 
+const comparisonOperationOptions = computed(() => {
+  if (localSettings.difficulty === 'basic') {
+    return [
+      { value: 'addition', label: t('operation.addition') },
+      { value: 'subtraction', label: t('operation.subtraction') }
+    ]
+  } else {
+    return [
+      { value: 'none', label: t('controls.none') }
+    ]
+  }
+})
+
 const difficultyOptions = computed(() => [
   { 
     value: 'easy', 
@@ -295,7 +323,10 @@ const optionsOptions = computed(() => {
 
   if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
     options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
-    options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+    // Only show columnByColumn for simple tab (not for missing number exercises)
+    if (!props.hideOperation && !props.comparisonMode) {
+      options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+    }
   }
 
   return options

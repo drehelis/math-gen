@@ -35,21 +35,21 @@
             <div class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap flex items-baseline" style="color: var(--color-deep);">
               <template v-if="!showAnswers">
                 <button
-                  @click="handleAnswer(question.id, 'num1', question.num1, question.num2, question.correctOperator)"
+                  @click="handleAnswer(question.id, 'num1', question)"
                   class="hover:opacity-70 transition-opacity cursor-pointer inline-block p-0 m-0 bg-transparent border-0"
                   style="color: var(--color-deep); font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
                 >
                   {{ question.num1 }}
                 </button>
                 <button
-                  @click="handleAnswer(question.id, 'equal', question.num1, question.num2, question.correctOperator)"
+                  @click="handleAnswer(question.id, 'equal', question)"
                   class="inline-block border-b-4 min-w-[3rem] text-center mx-2 hover:opacity-70 transition-opacity cursor-pointer p-0 bg-transparent border-x-0 border-t-0"
                   :style="{ borderBottomColor: 'var(--color-deep)', color: 'var(--color-deep)', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 'inherit' }"
                 >
                   <span :class="feedbackState[question.id]?.show ? '' : 'opacity-0'">{{ feedbackState[question.id]?.value || '_' }}</span>
                 </button>
                 <button
-                  @click="handleAnswer(question.id, 'num2', question.num1, question.num2, question.correctOperator)"
+                  @click="handleAnswer(question.id, 'num2', question)"
                   class="hover:opacity-70 transition-opacity cursor-pointer inline-block p-0 m-0 bg-transparent border-0"
                   style="color: var(--color-deep); font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
                 >
@@ -59,7 +59,7 @@
               <template v-else>
                 <span class="inline-block p-0 m-0">{{ question.num1 }}</span>
                 <span class="inline-block relative mx-2 min-w-[3rem] text-center border-b-4 p-0" :style="{ borderBottomColor: 'var(--color-deep)' }">
-                  <span>{{ feedbackState[question.id]?.value || question.correctOperator }}</span>
+                  <span class="opacity-40">{{ feedbackState[question.id]?.value || question.correctOperator }}</span>
                 </span>
                 <span class="inline-block p-0 m-0">{{ question.num2 }}</span>
               </template>
@@ -158,7 +158,11 @@ const { feedbackState, handleFeedback, clearAllFeedback, getCompletionStats, cor
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
 
-const handleAnswer = (questionId, clickedNumber, num1, num2, correctOperator) => {
+const handleAnswer = (questionId, clickedNumber, question) => {
+  // Get the actual values to compare (either simple numbers or calculated expression values)
+  const leftValue = question.hasExpression ? question.leftValue : question.num1
+  const rightValue = question.hasExpression ? question.rightValue : question.num2
+  
   // Determine the displayed operator based on which number/area was clicked
   let displayedOperator
   let isCorrect = false
@@ -166,15 +170,15 @@ const handleAnswer = (questionId, clickedNumber, num1, num2, correctOperator) =>
   if (clickedNumber === 'equal') {
     // User clicked the middle (equal sign)
     displayedOperator = '='
-    isCorrect = num1 === num2
+    isCorrect = leftValue === rightValue
   } else if (clickedNumber === 'num1') {
     // User clicked first number, so show num1 > num2
     displayedOperator = '>'
-    isCorrect = num1 > num2
+    isCorrect = leftValue > rightValue
   } else {
     // User clicked second number, so show num1 < num2
     displayedOperator = '<'
-    isCorrect = num2 > num1
+    isCorrect = rightValue > leftValue
   }
 
   handleFeedback(questionId, {
