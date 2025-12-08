@@ -174,8 +174,13 @@ watch(() => props.hideOperation, (isHidden) => {
 
 watch(() => props.comparisonMode, (isComparison) => {
   if (isComparison) {
-    if (localSettings.difficulty === 'basic') {
-      // For basic difficulty, default to addition if not already set
+    // If switching to comparison mode with hard difficulty, reset to medium
+    if (localSettings.difficulty === 'hard') {
+      localSettings.difficulty = 'medium'
+    }
+    
+    if (localSettings.difficulty === 'basic' || localSettings.difficulty === 'medium') {
+      // For basic/medium difficulty, default to addition if not already set
       if (!localSettings.operations.includes('addition') && !localSettings.operations.includes('subtraction')) {
         localSettings.operations = ['addition']
       }
@@ -192,8 +197,8 @@ watch(() => localSettings.difficulty, (newDifficulty) => {
   if (props.comparisonMode) {
     if (newDifficulty === 'beginners' || newDifficulty === 'easy') {
       localSettings.operations = ['none']
-    } else if (newDifficulty === 'basic') {
-      // Switch to addition for basic difficulty
+    } else if (newDifficulty === 'basic' || newDifficulty === 'medium') {
+      // Switch to addition for basic/medium difficulty
       if (localSettings.operations.includes('none')) {
         localSettings.operations = ['addition']
       }
@@ -291,7 +296,7 @@ const operationOptions = computed(() => [
 ])
 
 const comparisonOperationOptions = computed(() => {
-  if (localSettings.difficulty === 'basic') {
+  if (localSettings.difficulty === 'basic' || localSettings.difficulty === 'medium') {
     return [
       { value: 'addition', label: t('operation.addition') },
       { value: 'subtraction', label: t('operation.subtraction') },
@@ -305,18 +310,26 @@ const comparisonOperationOptions = computed(() => {
   }
 })
 
-const difficultyOptions = computed(() => [
-  { 
-    value: 'easy', 
-    label: t('difficulty.easy'),
-    children: [
-      { value: 'beginners', label: t('difficulty.beginners') },
-      { value: 'basic', label: t('difficulty.basic') }
-    ]
-  },
-  { value: 'medium', label: t('difficulty.medium') },
-  { value: 'hard', label: t('difficulty.hard') }
-])
+const difficultyOptions = computed(() => {
+  const options = [
+    { 
+      value: 'easy', 
+      label: t('difficulty.easy'),
+      children: [
+        { value: 'beginners', label: t('difficulty.beginners') },
+        { value: 'basic', label: t('difficulty.basic') }
+      ]
+    },
+    { value: 'medium', label: t('difficulty.medium') }
+  ]
+  
+  // Only exclude hard for comparison mode
+  if (!props.comparisonMode) {
+    options.push({ value: 'hard', label: t('difficulty.hard') })
+  }
+  
+  return options
+})
 
 const optionsOptions = computed(() => {
   const options = [

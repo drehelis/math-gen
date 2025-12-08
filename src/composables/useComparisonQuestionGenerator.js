@@ -93,9 +93,6 @@ export function useComparisonQuestionGenerator() {
       } else if (settings.value.difficulty === 'medium') {
         min = 1
         maxVal = 20
-      } else if (settings.value.difficulty === 'hard') {
-        min = 1
-        maxVal = 100
       }
     }
 
@@ -121,9 +118,13 @@ export function useComparisonQuestionGenerator() {
     
     let num1, num2, value, display
     
+    // Set number range based on difficulty
+    const numMax = (settings.value.difficulty === 'medium') ? 100 : 20
+    
     if (operation === 'multiplication') {
-      num1 = getRandomNumber(10)
-      num2 = getRandomNumber(10)
+      const factorMax = (settings.value.difficulty === 'medium') ? 10 : 10
+      num1 = getRandomNumber(factorMax)
+      num2 = getRandomNumber(factorMax)
       value = num1 * num2
       display = `${num1} × ${num2}`
       
@@ -137,14 +138,12 @@ export function useComparisonQuestionGenerator() {
       }
     } else if (operation === 'division') {
       // For division, ensure it divides evenly
-      let divisorMax = 10
-      num2 = Math.floor(Math.random() * divisorMax) + 1
-      num1 = getRandomNumber(10)
+      const divisorMax = (settings.value.difficulty === 'medium') ? 10 : 10
+      const quotientMax = (settings.value.difficulty === 'medium') ? 10 : 10
       
-      if (num1 % num2 !== 0) {
-        num1 = num2 * Math.floor(num1 / num2)
-        if (num1 === 0) num1 = num2
-      }
+      num2 = Math.floor(Math.random() * divisorMax) + 1  // divisor (1-10)
+      const quotient = Math.floor(Math.random() * quotientMax) + 1  // quotient (1-10)
+      num1 = num2 * quotient  // dividend
       
       value = num1 / num2
       display = `${num1} ÷ ${num2}`
@@ -158,8 +157,8 @@ export function useComparisonQuestionGenerator() {
         operatorSymbol: '÷'
       }
     } else if (operation === 'addition') {
-      num1 = getRandomNumber(10)
-      num2 = getRandomNumber(10)
+      num1 = getRandomNumber(numMax)
+      num2 = getRandomNumber(numMax)
       value = num1 + num2
       display = `${num1} + ${num2}`
       
@@ -172,8 +171,8 @@ export function useComparisonQuestionGenerator() {
         operatorSymbol: '+'
       }
     } else if (operation === 'subtraction') {
-      num1 = getRandomNumber(10)
-      num2 = getRandomNumber(10)
+      num1 = getRandomNumber(numMax)
+      num2 = getRandomNumber(numMax)
       
       // For subtraction, ensure result is not negative
       if (num1 >= num2) {
@@ -205,31 +204,42 @@ export function useComparisonQuestionGenerator() {
   }
 
   const generateQuestion = () => {
-    if (settings.value.difficulty === 'basic') {
-      // For basic difficulty, create expressions with arithmetic
-      const useExpressionOnLeft = Math.random() < 0.7 // 70% chance for expression on left
-      const useExpressionOnBoth = Math.random() < 0.3 // 30% chance for expressions on both sides
-      
+    if (settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium') {
+      // For basic and medium difficulty, create expressions with arithmetic
       let leftSide, rightSide, leftValue, rightValue
       
-      if (useExpressionOnBoth) {
-        // Both sides have expressions: "7 + 6 ___ 4 + 2"
+      const maxNum = (settings.value.difficulty === 'medium') ? 100 : 20
+      
+      if (settings.value.difficulty === 'medium') {
+        // For medium: always both sides have expressions
         leftSide = generateExpression()
         rightSide = generateExpression()
         leftValue = leftSide.value
         rightValue = rightSide.value
-      } else if (useExpressionOnLeft) {
-        // Left side has expression: "1 + 5 ___ 6"
-        leftSide = generateExpression()
-        rightValue = getRandomNumber(20)
-        leftValue = leftSide.value
-        rightSide = { display: rightValue.toString(), value: rightValue, operatorSymbol: null }
       } else {
-        // Right side has expression: "6 ___ 1 + 5"
-        leftValue = getRandomNumber(20)
-        rightSide = generateExpression()
-        rightValue = rightSide.value
-        leftSide = { display: leftValue.toString(), value: leftValue, operatorSymbol: null }
+        // For basic: mixed expressions
+        const useExpressionOnLeft = Math.random() < 0.7 // 70% chance for expression on left
+        const useExpressionOnBoth = Math.random() < 0.3 // 30% chance for expressions on both sides
+        
+        if (useExpressionOnBoth) {
+          // Both sides have expressions: "7 + 6 ___ 4 + 2"
+          leftSide = generateExpression()
+          rightSide = generateExpression()
+          leftValue = leftSide.value
+          rightValue = rightSide.value
+        } else if (useExpressionOnLeft) {
+          // Left side has expression: "1 + 5 ___ 6"
+          leftSide = generateExpression()
+          rightValue = getRandomNumber(maxNum)
+          leftValue = leftSide.value
+          rightSide = { display: rightValue.toString(), value: rightValue, operatorSymbol: null }
+        } else {
+          // Right side has expression: "6 ___ 1 + 5"
+          leftValue = getRandomNumber(maxNum)
+          rightSide = generateExpression()
+          rightValue = rightSide.value
+          leftSide = { display: leftValue.toString(), value: leftValue, operatorSymbol: null }
+        }
       }
       
       const correctOperator = getComparisonOperator(leftValue, rightValue)
@@ -277,9 +287,42 @@ export function useComparisonQuestionGenerator() {
       attempts++
       const question = generateQuestion()
       
-      // Check edge cases for basic difficulty with expressions
-      if (settings.value.difficulty === 'basic' && question.hasExpression) {
+      // Check edge cases for basic and medium difficulty with expressions
+      if ((settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium') && question.hasExpression) {
         let shouldSkip = false
+        
+        // For medium difficulty, check if values are too far apart (makes comparison too obvious)
+        if (settings.value.difficulty === 'medium') {
+          const diff = Math.abs(question.leftValue - question.rightValue)
+          const avgValue = (question.leftValue + question.rightValue) / 2
+          
+          // Only apply range checks if not using division (division has smaller results)
+          const hasDivision = (question.leftSide && question.leftSide.operation === 'division') || 
+                             (question.rightSide && question.rightSide.operation === 'division')
+          
+          if (!hasDivision) {
+            // Skip if difference is more than 40% of average, or if values are outside 30-80 range
+            if (diff > avgValue * 0.4 || question.leftValue < 30 || question.rightValue < 30 || 
+                question.leftValue > 80 || question.rightValue > 80) {
+              shouldSkip = true
+            }
+            
+            // Skip if either side has very small numbers (< 10) that make it trivial
+            if (question.leftSide.num1 < 10 && question.leftSide.num2 < 10) {
+              shouldSkip = true
+            }
+            if (question.rightSide.num1 < 10 && question.rightSide.num2 < 10) {
+              shouldSkip = true
+            }
+          } else {
+            // For division, just check if difference is too obvious (more than 50% of average)
+            if (diff > avgValue * 0.5) {
+              shouldSkip = true
+            }
+          }
+        }
+        
+        if (shouldSkip) continue
         
         // Check left side if it has an expression
         if (question.leftSide && question.leftSide.operatorSymbol) {
