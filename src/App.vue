@@ -15,6 +15,7 @@
         :has-questions="currentTabData.questions.value.length > 0"
         :show-controls="true"
         :hide-operation="activeTab === 'complex'"
+        :comparison-mode="activeTab === 'comparison'"
         @update:settings="currentTabData.updateSettings"
         @generate="currentTabData.generateQuestions"
       >
@@ -40,6 +41,13 @@
         :show-answers="missingTab.settings.value.showAnswers"
         :difficulty="missingTab.settings.value.difficulty"
       />
+
+      <ComparisonQuestionDisplay
+        v-show="activeTab === 'comparison'"
+        :questions="comparisonTab.questions.value"
+        :show-answers="comparisonTab.settings.value.showAnswers"
+        :difficulty="comparisonTab.settings.value.difficulty"
+      />
     </div>
   </div>
 </template>
@@ -48,9 +56,11 @@
 import { ref, computed, watch } from 'vue'
 import { useSimpleQuestionGenerator } from './composables/useSimpleQuestionGenerator'
 import { useMissingQuestionGenerator } from './composables/useMissingQuestionGenerator'
+import { useComparisonQuestionGenerator } from './composables/useComparisonQuestionGenerator'
 import ControlPanel from './components/ControlPanel.vue'
 import QuestionDisplay from './components/QuestionDisplay.vue'
 import MissingQuestionDisplay from './components/MissingQuestionDisplay.vue'
+import ComparisonQuestionDisplay from './components/ComparisonQuestionDisplay.vue'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import TabBar from './components/TabBar.vue'
 import { useI18n } from 'vue-i18n'
@@ -59,11 +69,12 @@ const { locale, t } = useI18n()
 
 const simpleTab = useSimpleQuestionGenerator()
 const missingTab = useMissingQuestionGenerator()
+const comparisonTab = useComparisonQuestionGenerator()
 
 const loadActiveTab = () => {
   try {
     const saved = localStorage.getItem('math-gen-active-tab')
-    if (saved === 'simple' || saved === 'complex') {
+    if (saved === 'simple' || saved === 'complex' || saved === 'comparison') {
       return saved
     }
     return 'simple'
@@ -84,12 +95,15 @@ watch(activeTab, (newTab) => {
 })
 
 const currentTabData = computed(() => {
-  return activeTab.value === 'simple' ? simpleTab : missingTab
+  if (activeTab.value === 'simple') return simpleTab
+  if (activeTab.value === 'complex') return missingTab
+  return comparisonTab
 })
 
 const tabs = computed(() => [
   { value: 'simple', label: t('tabs.simple') },
-  { value: 'complex', label: t('tabs.complex') }
+  { value: 'complex', label: t('tabs.complex') },
+  { value: 'comparison', label: t('tabs.comparison') }
 ])
 
 const changeLocale = (lang) => {

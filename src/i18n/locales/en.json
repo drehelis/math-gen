@@ -53,14 +53,16 @@
   },
   "emptyState": {
     "title": "Ready to Practice?",
-    "message": "Click \"Generate Questions\" to start!"
+    "message": "Click \"Generate Questions\" to start!",
+    "github": "View on GitHub"
   },
   "answerKey": {
     "title": "Answers"
   },
   "tabs": {
     "simple": "Simple",
-    "complex": "Missing Number"
+    "complex": "Missing Number",
+    "comparison": "Comparison"
   },
   "completion": {
     "title": "Amazing Work!",

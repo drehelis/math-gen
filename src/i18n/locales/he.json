@@ -53,14 +53,16 @@
   },
   "emptyState": {
     "title": "מוכנים לתרגל?",
-    "message": "לחץ על \"צור תרגילים\" כדי להתחיל!"
+    "message": "לחצו על \"צור תרגילים\" כדי להתחיל!",
+    "github": "צפה ב-GitHub"
   },
   "answerKey": {
     "title": "תשובות"
   },
   "tabs": {
     "simple": "חשבון בסיסי",
-    "complex": "נעלמים"
+    "complex": "נעלמים",
+    "comparison": "גדול קטן שווה"
   },
   "completion": {
     "title": "כל הכבוד!",

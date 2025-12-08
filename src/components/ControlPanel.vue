@@ -53,7 +53,7 @@
           </label>
           <MultiSelectDropdown
             v-model="localSettings.operations"
-            :options="hideOperation ? [
+            :options="comparisonMode ? comparisonOperationOptions : hideOperation ? [
               { value: 'addition', label: $t('missingOperation.addition') },
               { value: 'subtraction', label: $t('missingOperation.subtraction') }
             ] : operationOptions"
@@ -141,6 +141,10 @@ const props = defineProps({
   hideOperation: {
     type: Boolean,
     default: false
+  },
+  comparisonMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -168,6 +172,41 @@ watch(() => props.hideOperation, (isHidden) => {
     }
   }
 }, { immediate: true })
+
+watch(() => props.comparisonMode, (isComparison) => {
+  if (isComparison) {
+    // If switching to comparison mode with hard difficulty, reset to medium
+    if (localSettings.difficulty === 'hard') {
+      localSettings.difficulty = 'medium'
+    }
+    
+    if (localSettings.difficulty === 'basic' || localSettings.difficulty === 'medium') {
+      // For basic/medium difficulty, default to addition if not already set
+      if (!localSettings.operations.includes('addition') && !localSettings.operations.includes('subtraction')) {
+        localSettings.operations = ['addition']
+      }
+    } else if (!localSettings.operations.includes('none')) {
+      localSettings.operations = ['none']
+    }
+  } else if (!isComparison && localSettings.operations.includes('none')) {
+    // When leaving comparison mode, reset to default operations
+    localSettings.operations = ['addition']
+  }
+}, { immediate: true })
+
+watch(() => localSettings.difficulty, (newDifficulty) => {
+  if (props.comparisonMode) {
+    if (newDifficulty === 'beginners' || newDifficulty === 'easy') {
+      localSettings.operations = ['none']
+    } else if (newDifficulty === 'basic' || newDifficulty === 'medium') {
+      // Switch to addition for basic/medium difficulty
+      if (localSettings.operations.includes('none')) {
+        localSettings.operations = ['addition']
+      }
+    }
+  }
+})
+
 const showCustomCount = ref(false)
 const customCountValue = ref(null)
 
@@ -263,18 +302,41 @@ const operationOptions = computed(() => [
   { value: 'division', label: t('operation.division') }
 ])
 
-const difficultyOptions = computed(() => [
-  {
-    value: 'easy',
-    label: t('difficulty.easy'),
-    children: [
-      { value: 'beginners', label: t('difficulty.beginners') },
-      { value: 'basic', label: t('difficulty.basic') }
+const comparisonOperationOptions = computed(() => {
+  if (localSettings.difficulty === 'basic' || localSettings.difficulty === 'medium') {
+    return [
+      { value: 'addition', label: t('operation.addition') },
+      { value: 'subtraction', label: t('operation.subtraction') },
+      { value: 'multiplication', label: t('operation.multiplication') },
+      { value: 'division', label: t('operation.division') }
     ]
-  },
-  { value: 'medium', label: t('difficulty.medium') },
-  { value: 'hard', label: t('difficulty.hard') }
-])
+  } else {
+    return [
+      { value: 'none', label: t('controls.none') }
+    ]
+  }
+})
+
+const difficultyOptions = computed(() => {
+  const options = [
+    { 
+      value: 'easy', 
+      label: t('difficulty.easy'),
+      children: [
+        { value: 'beginners', label: t('difficulty.beginners') },
+        { value: 'basic', label: t('difficulty.basic') }
+      ]
+    },
+    { value: 'medium', label: t('difficulty.medium') }
+  ]
+  
+  // Only exclude hard for comparison mode
+  if (!props.comparisonMode) {
+    options.push({ value: 'hard', label: t('difficulty.hard') })
+  }
+  
+  return options
+})
 
 const formatOptions = computed(() => [
   { value: 'standard', label: t('questionFormat.standard') },
@@ -288,7 +350,7 @@ const optionsOptions = computed(() => {
   ]
 
   // For Simple tab (not hideOperation)
-  if (!props.hideOperation) {
+  if (!props.hideOperation && !props.comparisonMode) {
     if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
       options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
       options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })

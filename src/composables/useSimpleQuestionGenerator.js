@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue'
+import { edgeCaseRules, checkEdgeCases } from './useEdgeCaseRules'
 
 let idCounter = 0
 
@@ -167,61 +168,6 @@ export function useSimpleQuestionGenerator() {
     }
   }
 
-  const edgeCaseRules = [
-    {
-      operation: 'division',
-      check: (q) => q.operation === '÷' && q.num1 === 0,
-      key: 'zeroDivision'
-    },
-    {
-      operation: 'division',
-      check: (q) => q.operation === '÷' && q.num2 === 1,
-      key: 'divideByOne'
-    },
-    {
-      operation: 'division',
-      check: (q) => q.operation === '÷' && q.num1 === q.num2,
-      key: 'oneDivision'
-    },
-    {
-      operation: 'addition',
-      check: (q) => q.operation === '+' && q.num1 === 0 && q.num2 === 0,
-      key: 'zeroZeroAddition',
-      skip: true
-    },
-    {
-      operation: 'addition',
-      check: (q) => q.operation === '+' && (q.num2 === 0 || q.num1 === 0),
-      key: 'zeroAddition'
-    },
-    {
-      operation: 'addition',
-      check: (q) => q.operation === '+' && (q.num2 === 1 || q.num1 === 1),
-      key: 'oneAddition'
-    },
-    {
-      operation: 'subtraction',
-      check: (q) => q.operation === '-' && q.num1 === 0 && q.num2 === 0,
-      key: 'zeroZeroSubtraction',
-      skip: true
-    },
-    {
-      operation: 'subtraction',
-      check: (q) => q.operation === '-' && q.num2 === 0,
-      key: 'zeroSubtraction'
-    },
-    {
-      operation: 'subtraction',
-      check: (q) => q.operation === '-' && q.num2 === 1,
-      key: 'oneSubtraction'
-    },
-    {
-      operation: 'subtraction',
-      check: (q) => q.operation === '-' && q.num1 === q.num2 && q.num1 !== 0,
-      key: 'equalSubtraction'
-    }
-  ]
-
   const generateQuestions = () => {
     const newQuestions = []
     const seen = new Set()
@@ -236,22 +182,8 @@ export function useSimpleQuestionGenerator() {
       const question = generateQuestion()
       const key = `${question.num1}${question.operation}${question.num2}`
 
-      let shouldSkip = false
-      for (const rule of edgeCaseRules) {
-        if (availableOperations.includes(rule.operation) && rule.check(question)) {
-          if (rule.skip) {
-            shouldSkip = true
-            break
-          }
-          if (edgeCaseTracker[rule.key]) {
-            shouldSkip = true
-            break
-          }
-          edgeCaseTracker[rule.key] = true
-        }
-      }
-
-      if (shouldSkip) continue
+      const result = checkEdgeCases(question, availableOperations, edgeCaseTracker)
+      if (result.shouldSkip) continue
 
       if (!seen.has(key)) {
         seen.add(key)
