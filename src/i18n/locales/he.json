@@ -11,6 +11,7 @@
     "operation": "פעולה",
     "difficulty": "רמת קושי",
     "options": "אפשרויות",
+    "format": "פורמט",
     "none": "ללא",
     "showAnswers": "הצג תשובות",
     "varySecondNumber": "אורך משתנה",
@@ -29,6 +30,9 @@
     "addition": "נעלמים בחיבור (+)",
     "subtraction": "נעלמים בחיסור (-)",
     "all": "כל הפעולות"
+  },
+  "questionFormat": {
+    "bothSides": "שני צדדים"
   },
   "difficulty": {
     "label": "רמת קושי",

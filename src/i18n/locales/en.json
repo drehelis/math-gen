@@ -11,6 +11,7 @@
     "operation": "Operation",
     "difficulty": "Difficulty",
     "options": "Options",
+    "format": "Format",
     "none": "None",
     "showAnswers": "Show Answers",
     "varySecondNumber": "Uneven Digits",
@@ -29,6 +30,9 @@
     "addition": "Missing Addends (+)",
     "subtraction": "Missing Minuend (-)",
     "all": "All operations"
+  },
+  "questionFormat": {
+    "bothSides": "Both Sides"
   },
   "difficulty": {
     "label": "Difficulty",
