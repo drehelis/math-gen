@@ -12,10 +12,11 @@
     <div class="max-w-7xl mx-auto relative z-10">
       <ControlPanel
         :settings="currentTabData.settings.value"
-        :has-questions="currentTabData.questions.value.length > 0"
+        :has-questions="activeTab === 'table' ? true : currentTabData.questions.value.length > 0"
         :show-controls="true"
         :hide-operation="activeTab === 'complex'"
         :comparison-mode="activeTab === 'comparison'"
+        :table-mode="activeTab === 'table'"
         @update:settings="currentTabData.updateSettings"
         @generate="currentTabData.generateQuestions"
       >
@@ -48,19 +49,28 @@
         :show-answers="comparisonTab.settings.value.showAnswers"
         :difficulty="comparisonTab.settings.value.difficulty"
       />
+
+      <MultiplicationTableDisplay
+        v-show="activeTab === 'table'"
+        :questions="multiplicationTableTab.questions.value"
+        :show-answers="multiplicationTableTab.settings.value.showAnswers"
+        :table-size="multiplicationTableTab.settings.value.tableSize || 10"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, provide } from 'vue'
 import { useSimpleQuestionGenerator } from './composables/useSimpleQuestionGenerator'
 import { useMissingQuestionGenerator } from './composables/useMissingQuestionGenerator'
 import { useComparisonQuestionGenerator } from './composables/useComparisonQuestionGenerator'
+import { useMultiplicationTableGenerator } from './composables/useMultiplicationTableGenerator'
 import ControlPanel from './components/ControlPanel.vue'
 import QuestionDisplay from './components/QuestionDisplay.vue'
 import MissingQuestionDisplay from './components/MissingQuestionDisplay.vue'
 import ComparisonQuestionDisplay from './components/ComparisonQuestionDisplay.vue'
+import MultiplicationTableDisplay from './components/MultiplicationTableDisplay.vue'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import TabBar from './components/TabBar.vue'
 import { useI18n } from 'vue-i18n'
@@ -70,11 +80,15 @@ const { locale, t } = useI18n()
 const simpleTab = useSimpleQuestionGenerator()
 const missingTab = useMissingQuestionGenerator()
 const comparisonTab = useComparisonQuestionGenerator()
+const multiplicationTableTab = useMultiplicationTableGenerator()
+
+// Provide the multiplicationTableTab to child components
+provide('multiplicationTableTab', multiplicationTableTab)
 
 const loadActiveTab = () => {
   try {
     const saved = localStorage.getItem('math-gen-active-tab')
-    if (saved === 'simple' || saved === 'complex' || saved === 'comparison') {
+    if (saved === 'simple' || saved === 'complex' || saved === 'comparison' || saved === 'table') {
       return saved
     }
     return 'simple'
@@ -97,13 +111,15 @@ watch(activeTab, (newTab) => {
 const currentTabData = computed(() => {
   if (activeTab.value === 'simple') return simpleTab
   if (activeTab.value === 'complex') return missingTab
-  return comparisonTab
+  if (activeTab.value === 'comparison') return comparisonTab
+  return multiplicationTableTab
 })
 
 const tabs = computed(() => [
   { value: 'simple', label: t('tabs.simple') },
   { value: 'complex', label: t('tabs.complex') },
-  { value: 'comparison', label: t('tabs.comparison') }
+  { value: 'comparison', label: t('tabs.comparison') },
+  { value: 'table', label: t('tabs.table') }
 ])
 
 const changeLocale = (lang) => {

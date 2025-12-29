@@ -48,7 +48,8 @@ const emit = defineEmits(['update:modelValue'])
 const tabColors = {
   simple: 'var(--color-orange)',
   complex: 'var(--color-purple)',
-  comparison: 'var(--color-mint)'
+  comparison: 'var(--color-mint)',
+  table: 'var(--color-coral)'
 }
 
 const getMobileTabStyle = (tabValue) => {

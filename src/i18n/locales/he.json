@@ -17,6 +17,7 @@
     "varySecondNumber": "אורך משתנה",
     "columnByColumn": "פתרון אנכי",
     "generateQuestions": "צור תרגילים",
+    "prefillTable": "אכלוס הטבלה",
     "printMe": "הדפס אותי",
     "enterNumber": "הזן מספר (1-500)"
   },
@@ -33,6 +34,12 @@
   },
   "questionFormat": {
     "bothSides": "שני צדדים"
+  },
+  "missingPosition": {
+    "label": "מיקום נעלם",
+    "random": "אקראי",
+    "first": "מספר ראשון",
+    "second": "מספר שני"
   },
   "difficulty": {
     "label": "רמת קושי",
@@ -62,7 +69,8 @@
   "tabs": {
     "simple": "חשבון בסיסי",
     "complex": "נעלמים",
-    "comparison": "גדול קטן שווה"
+    "comparison": "גדול קטן שווה",
+    "table": "לוח הכפל"
   },
   "completion": {
     "title": "כל הכבוד!",
@@ -70,5 +78,20 @@
     "total": "סה\"כ תרגילים",
     "time": "זמן כולל",
     "close": "סגור"
+  },
+  "table": {
+    "prefillPercentage": "תאים מלאים מראש",
+    "prefill": {
+      "0": "0% מלא",
+      "25": "25% מלא",
+      "45": "45% מלא",
+      "75": "75% מלא"
+    },
+    "tableSize": "גודל לוח",
+    "size": {
+      "10": "10×10",
+      "12": "12×12",
+      "15": "15×15"
+    }
   }
 }

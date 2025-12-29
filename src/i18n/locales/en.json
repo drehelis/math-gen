@@ -17,6 +17,7 @@
     "varySecondNumber": "Uneven Digits",
     "columnByColumn": "Vertical Entry",
     "generateQuestions": "Generate Questions",
+    "prefillTable": "Prefill Table",
     "printMe": "Print me",
     "enterNumber": "Enter number (1-500)"
   },
@@ -33,6 +34,12 @@
   },
   "questionFormat": {
     "bothSides": "Both Sides"
+  },
+  "missingPosition": {
+    "label": "Missing Position",
+    "random": "Random",
+    "first": "First Number",
+    "second": "Second Number"
   },
   "difficulty": {
     "label": "Difficulty",
@@ -62,7 +69,8 @@
   "tabs": {
     "simple": "Simple",
     "complex": "Missing Number",
-    "comparison": "Comparison"
+    "comparison": "Comparison",
+    "table": "Multiplication Table"
   },
   "completion": {
     "title": "Amazing Work!",
@@ -70,5 +78,20 @@
     "total": "Total Questions",
     "time": "Total Time",
     "close": "Close"
+  },
+  "table": {
+    "prefillPercentage": "Pre-filled Cells",
+    "prefill": {
+      "0": "0% Filled",
+      "25": "25% Filled",
+      "45": "45% Filled",
+      "75": "75% Filled"
+    },
+    "tableSize": "Table Size",
+    "size": {
+      "10": "10×10",
+      "12": "12×12",
+      "15": "15×15"
+    }
   }
 }
