@@ -20,7 +20,7 @@
       <slot name="tabs"></slot>
 
       <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div>
+        <div v-if="!tableMode">
           <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
             {{ $t('controls.howMany') }}
           </label>
@@ -47,7 +47,33 @@
           />
         </div>
 
-        <div>
+        <div v-if="tableMode">
+          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
+            {{ $t('table.tableSize') }}
+          </label>
+          <CustomDropdown
+            v-model="localSettings.tableSize"
+            :options="tableSizeOptions"
+            border-color="var(--color-sunshine)"
+            background-color="var(--color-sunshine)"
+            text-color="var(--color-deep)"
+          />
+        </div>
+
+        <div v-if="tableMode">
+          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
+            {{ $t('table.prefillPercentage') }}
+          </label>
+          <CustomDropdown
+            v-model="localSettings.prefillPercentage"
+            :options="prefillOptions"
+            border-color="var(--color-sky)"
+            background-color="var(--color-sky)"
+            text-color="white"
+          />
+        </div>
+
+        <div v-if="!tableMode">
           <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
             {{ $t('controls.operation') }}
           </label>
@@ -63,7 +89,7 @@
           />
         </div>
 
-        <div>
+        <div v-if="!tableMode">
           <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
             {{ $t('controls.difficulty') }}
           </label>
@@ -94,10 +120,11 @@
       <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           @click="handleGenerate"
-          class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg"
-          style="background: var(--color-sky); border-color: var(--color-deep); color: white;"
+          :disabled="tableMode && localSettings.prefillPercentage === 0"
+          class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
+          :style="(tableMode && localSettings.prefillPercentage === 0) ? 'background: #ccc; border-color: #999; color: #666;' : 'background: var(--color-sky); border-color: var(--color-deep); color: white;'"
         >
-          {{ $t('controls.generateQuestions') }}
+          {{ tableMode ? $t('controls.prefillTable') : $t('controls.generateQuestions') }}
         </button>
 
         <button
@@ -145,6 +172,10 @@ const props = defineProps({
   comparisonMode: {
     type: Boolean,
     default: false
+  },
+  tableMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -157,6 +188,9 @@ const localSettings = reactive({
   showAnswers: props.settings.showAnswers || false,
   inputMode: props.settings.inputMode || 'native',
   questionFormat: props.settings.questionFormat || 'standard',
+  missingPosition: props.settings.missingPosition || 'random',
+  prefillPercentage: props.settings.prefillPercentage || 0,
+  tableSize: props.settings.tableSize || 10,
   selectedOptions: []
 })
 
@@ -250,6 +284,30 @@ watch(() => localSettings.questionFormat, () => {
   }
 })
 
+watch(() => localSettings.missingPosition, () => {
+  if (props.hasQuestions) {
+    emit('generate')
+  }
+})
+
+watch(() => localSettings.prefillPercentage, () => {
+  if (props.tableMode) {
+    // For table mode, always regenerate immediately when prefill changes
+    emit('generate')
+  } else if (props.hasQuestions) {
+    emit('generate')
+  }
+})
+
+watch(() => localSettings.tableSize, () => {
+  if (props.tableMode) {
+    // For table mode, always regenerate immediately when size changes
+    emit('generate')
+  } else if (props.hasQuestions) {
+    emit('generate')
+  }
+})
+
 const handleGenerate = () => {
   emit('generate')
 }
@@ -316,6 +374,25 @@ const comparisonOperationOptions = computed(() => {
     ]
   }
 })
+
+const missingPositionOptions = computed(() => [
+  { value: 'random', label: t('missingPosition.random') },
+  { value: 'first', label: t('missingPosition.first') },
+  { value: 'second', label: t('missingPosition.second') }
+])
+
+const tableSizeOptions = computed(() => [
+  { value: 10, label: t('table.size.10') },
+  { value: 12, label: t('table.size.12') },
+  { value: 15, label: t('table.size.15') }
+])
+
+const prefillOptions = computed(() => [
+  { value: 0, label: t('table.prefill.0') },
+  { value: 25, label: t('table.prefill.25') },
+  { value: 45, label: t('table.prefill.45') },
+  { value: 75, label: t('table.prefill.75') }
+])
 
 const difficultyOptions = computed(() => {
   const options = [
