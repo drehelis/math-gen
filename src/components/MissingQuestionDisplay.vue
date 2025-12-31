@@ -44,6 +44,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -59,6 +61,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -78,6 +82,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -92,6 +98,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -107,6 +115,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -121,6 +131,8 @@
                     :correct-answer="question.answer"
                     @feedback="(data) => handleFeedback(question.id, data)"
                     @correct-answer="() => focusNextInput(index, questions.length)"
+                    @focus="focusedIndex = index"
+                    @blur="focusedIndex = -1"
                   />
                   <span v-else class="inline-block align-bottom border-b-4 min-w-[4rem] sm:min-w-[4.5rem] text-center" :style="{ borderColor: 'var(--color-deep)' }">
                     <span class="opacity-40">{{ question.answer }}</span>
@@ -323,6 +335,7 @@ const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstIn
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
+const focusedIndex = ref(-1)
 
 onMounted(() => {
   if (props.questions.length > 0 && !props.showAnswers) {
@@ -359,6 +372,41 @@ const cardColors = [
 
 const getCardStyle = (index) => {
   const color = cardColors[index % cardColors.length]
+  const questionId = props.questions[index]?.id
+  const feedback = feedbackState.value[questionId]
+  const isAnsweredCorrectly = feedback && feedback.isCorrect
+  const isFocused = index === focusedIndex.value
+  const isUnanswered = !feedback || !feedback.isCorrect
+  
+  if (isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: '#d1fae5',
+      borderColor: 'var(--color-deep)',
+      opacity: '0.7',
+      transition: 'all 0.3s ease'
+    }
+  }
+  
+  if (isFocused && !isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: color,
+      borderColor: 'var(--color-deep)',
+      opacity: '1',
+      transform: 'scale(1.02)',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+    }
+  }
+  
+  if (isUnanswered && !isFocused && !props.showAnswers) {
+    return {
+      background: color,
+      borderColor: 'var(--color-deep)',
+      opacity: '0.4',
+      transition: 'all 0.3s ease'
+    }
+  }
+  
   return {
     background: color,
     borderColor: 'var(--color-deep)',
@@ -368,10 +416,44 @@ const getCardStyle = (index) => {
 const getBadgeStyle = (index) => {
   const bgColors = ['var(--color-orange)', 'var(--color-purple)', 'var(--color-sky)', 'var(--color-mint)']
   const bg = bgColors[index % bgColors.length]
+  const questionId = props.questions[index]?.id
+  const feedback = feedbackState.value[questionId]
+  const isAnsweredCorrectly = feedback && feedback.isCorrect
+  const isFocused = index === focusedIndex.value
+  
+  if (isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: '#10b981',
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1'
+    }
+  }
+  
+  if (isFocused && !props.showAnswers) {
+    return {
+      background: bg,
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1'
+    }
+  }
+  
+  if (!isAnsweredCorrectly && !isFocused && !props.showAnswers) {
+    return {
+      background: bg,
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1',
+      filter: 'brightness(0.7)'
+    }
+  }
+  
   return {
     background: bg,
     borderColor: 'var(--color-deep)',
     color: 'white',
+    opacity: '1'
   }
 }
 

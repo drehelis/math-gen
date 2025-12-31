@@ -11,8 +11,9 @@
         <div
           v-for="(question, index) in questions"
           :key="question.id"
-          class="question-card relative rounded-2xl p-3 sm:p-4 border-4"
+          class="question-card relative rounded-2xl p-3 sm:p-4 border-4 cursor-pointer"
           :style="getCardStyle(index)"
+          @click="focusedIndex = index"
         >
           <div class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4"
                :style="getBadgeStyle(index)">
@@ -163,6 +164,7 @@ const { feedbackState, handleFeedback, clearAllFeedback, getCompletionStats, cor
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
+const focusedIndex = ref(-1)
 
 const handleAnswer = (questionId, clickedNumber, question) => {
   // Get the actual values to compare (either simple numbers or calculated expression values)
@@ -200,6 +202,7 @@ watch(() => props.questions, (newQuestions, oldQuestions) => {
         newQuestions[0]?.id !== oldQuestions[0]?.id) {
       clearAllFeedback()
       showCompletionOverlay.value = false
+      focusedIndex.value = -1
     }
   }
 }, { deep: true })
@@ -222,6 +225,41 @@ const cardColors = [
 
 const getCardStyle = (index) => {
   const color = cardColors[index % cardColors.length]
+  const questionId = props.questions[index]?.id
+  const feedback = feedbackState.value[questionId]
+  const isAnsweredCorrectly = feedback && feedback.isCorrect
+  const isFocused = index === focusedIndex.value
+  const isUnanswered = !feedback || !feedback.isCorrect
+  
+  if (isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: '#d1fae5',
+      borderColor: 'var(--color-deep)',
+      opacity: '0.7',
+      transition: 'all 0.3s ease'
+    }
+  }
+  
+  if (isFocused && !isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: color,
+      borderColor: 'var(--color-deep)',
+      opacity: '1',
+      transform: 'scale(1.02)',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+    }
+  }
+  
+  if (isUnanswered && !isFocused && !props.showAnswers) {
+    return {
+      background: color,
+      borderColor: 'var(--color-deep)',
+      opacity: '0.4',
+      transition: 'all 0.3s ease'
+    }
+  }
+  
   return {
     background: color,
     borderColor: 'var(--color-deep)',
@@ -231,10 +269,44 @@ const getCardStyle = (index) => {
 const getBadgeStyle = (index) => {
   const bgColors = ['var(--color-orange)', 'var(--color-purple)', 'var(--color-sky)', 'var(--color-mint)']
   const bg = bgColors[index % bgColors.length]
+  const questionId = props.questions[index]?.id
+  const feedback = feedbackState.value[questionId]
+  const isAnsweredCorrectly = feedback && feedback.isCorrect
+  const isFocused = index === focusedIndex.value
+  
+  if (isAnsweredCorrectly && !props.showAnswers) {
+    return {
+      background: '#10b981',
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1'
+    }
+  }
+  
+  if (isFocused && !props.showAnswers) {
+    return {
+      background: bg,
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1'
+    }
+  }
+  
+  if (!isAnsweredCorrectly && !isFocused && !props.showAnswers) {
+    return {
+      background: bg,
+      borderColor: 'var(--color-deep)',
+      color: 'white',
+      opacity: '1',
+      filter: 'brightness(0.7)'
+    }
+  }
+  
   return {
     background: bg,
     borderColor: 'var(--color-deep)',
     color: 'white',
+    opacity: '1'
   }
 }
 
