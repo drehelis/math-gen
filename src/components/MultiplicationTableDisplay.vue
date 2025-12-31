@@ -46,6 +46,7 @@
                   }"
                 >
                   <input
+                    v-show="!showAnswers"
                     :ref="el => setCellRef(el, row, col)"
                     v-model="cellValues[getCellKey(row, col)]"
                     @input="(e) => handleInput(row, col, e.target.value)"
@@ -57,9 +58,8 @@
                     pattern="[0-9]*"
                     maxlength="3"
                     class="cell-input"
-                    :class="{ 'hidden': showAnswers }"
                   />
-                  <span class="cell-answer" :class="{ 'hidden': !showAnswers }">{{ getAnswer(row, col) }}</span>
+                  <span v-show="showAnswers" class="cell-answer">{{ getAnswer(row, col) }}</span>
                 </div>
               </template>
             </div>
@@ -422,11 +422,6 @@ watch(cellValues, (newValues) => {
 .cell-answer {
   opacity: 0.4;
   pointer-events: none;
-}
-
-.cell-input.hidden,
-.cell-answer.hidden {
-  visibility: hidden;
 }
 
 @media (min-width: 768px) {

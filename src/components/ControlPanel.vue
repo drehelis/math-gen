@@ -426,6 +426,11 @@ const optionsOptions = computed(() => {
     { value: 'showAnswers', label: t('controls.showAnswers') }
   ]
 
+  // For table mode, only show answers option is relevant
+  if (props.tableMode) {
+    return options
+  }
+
   // For Simple tab (not hideOperation)
   if (!props.hideOperation && !props.comparisonMode) {
     if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
@@ -496,6 +501,12 @@ watch(() => localSettings.difficulty, () => {
 
 watch(() => props.hideOperation, () => {
   // When switching tabs, remove options that are no longer available
+  const availableValues = optionsOptions.value.map(opt => opt.value)
+  localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
+})
+
+watch(() => props.tableMode, () => {
+  // When switching to/from table mode, remove options that are no longer available
   const availableValues = optionsOptions.value.map(opt => opt.value)
   localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
 })
