@@ -7,63 +7,71 @@
     />
 
     <div class="print:hidden">
-      <!-- Interactive 12x12 Grid -->
+      <!-- Interactive Scrollable Table -->
       <div class="no-print relative mb-12" dir="ltr">
         <div class="table-wrapper">
-            <!-- Grid -->
-            <div class="table-grid" :style="gridStyle">
-              <!-- Top-left corner cell (×) -->
-              <div class="corner-cell">
-                <span class="text-2xl md:text-3xl font-bold" style="color: white;">×</span>
-              </div>
-
-              <!-- Column headers (1-tableSize) -->
-              <div
-                v-for="col in tableSize"
-                :key="`header-${col}`"
-                class="col-header"
-              >
-                <span class="text-lg md:text-xl font-bold" style="color: var(--color-deep);">{{ col }}</span>
-              </div>
-
-              <!-- Data rows -->
-              <template v-for="row in tableSize" :key="`row-${row}`">
-                <!-- Row header -->
-                <div class="row-header">
-                  <span class="text-lg md:text-xl font-bold" style="color: var(--color-deep);">{{ row }}</span>
-                </div>
-
-                <!-- Data cells -->
-                <div
-                  v-for="col in tableSize"
-                  :key="`cell-${row}-${col}`"
-                  class="data-cell"
-                  :class="{
-                    'cell-diagonal': row === col,
-                    'cell-correct': !showAnswers && isCorrect(row, col),
-                    'cell-incorrect': !showAnswers && isIncorrect(row, col),
-                    'cell-focused': !showAnswers && focusedCell === getCellKey(row, col) && !isCorrect(row, col) && !isIncorrect(row, col)
-                  }"
+          <div class="scroll-container">
+            <table class="interactive-table">
+              <thead>
+                <tr>
+                  <!-- Corner cell (×) -->
+                  <th class="corner-cell">
+                    <span class="header-text">×</span>
+                  </th>
+                  <!-- Column headers (1-tableSize) -->
+                  <th
+                    v-for="col in tableSize"
+                    :key="`header-${col}`"
+                    class="col-header"
+                    :class="{ 'col-highlighted': highlightedCol === col }"
+                  >
+                    <span class="header-text">{{ col }}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="row in tableSize"
+                  :key="`row-${row}`"
+                  :class="{ 'row-highlighted': highlightedRow === row }"
                 >
-                  <input
-                    v-show="!showAnswers"
-                    :ref="el => setCellRef(el, row, col)"
-                    v-model="cellValues[getCellKey(row, col)]"
-                    @input="(e) => handleInput(row, col, e.target.value)"
-                    @keydown="(e) => handleKeydown(e, row, col)"
-                    @focus="focusedCell = getCellKey(row, col)"
-                    @blur="focusedCell = null"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    maxlength="3"
-                    class="cell-input"
-                  />
-                  <span v-show="showAnswers" class="cell-answer">{{ getAnswer(row, col) }}</span>
-                </div>
-              </template>
-            </div>
+                  <!-- Row header -->
+                  <th class="row-header" :class="{ 'row-header-highlighted': highlightedRow === row }">
+                    <span class="header-text">{{ row }}</span>
+                  </th>
+                  <!-- Data cells -->
+                  <td
+                    v-for="col in tableSize"
+                    :key="`cell-${row}-${col}`"
+                    class="data-cell"
+                    :class="{
+                      'cell-diagonal': row === col,
+                      'cell-correct': !showAnswers && isCorrect(row, col),
+                      'cell-incorrect': !showAnswers && isIncorrect(row, col),
+                      'cell-focused': !showAnswers && focusedCell === getCellKey(row, col) && !isCorrect(row, col) && !isIncorrect(row, col)
+                    }"
+                  >
+                    <input
+                      v-show="!showAnswers"
+                      :ref="el => setCellRef(el, row, col)"
+                      v-model="cellValues[getCellKey(row, col)]"
+                      @input="(e) => handleInput(row, col, e.target.value)"
+                      @keydown="(e) => handleKeydown(e, row, col)"
+                      @focus="handleCellFocus(row, col)"
+                      @blur="handleCellBlur()"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      maxlength="3"
+                      class="cell-input"
+                    />
+                    <span v-show="showAnswers" class="cell-answer">{{ getAnswer(row, col) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
         <!-- Clear button at bottom -->
         <div v-if="!showAnswers && (correctCount > 0 || incorrectCount > 0)" class="mt-6 text-center">
@@ -133,6 +141,8 @@ const multiplicationTableTab = inject('multiplicationTableTab', null)
 
 const cellRefs = ref({})
 const focusedCell = ref(null)
+const highlightedRow = ref(null)
+const highlightedCol = ref(null)
 const cellValues = ref({})
 const showCompletionOverlay = ref(false)
 const completionStats = ref({
@@ -140,6 +150,18 @@ const completionStats = ref({
   timeInSeconds: 0
 })
 const startTime = ref(null)
+
+const handleCellFocus = (row, col) => {
+  focusedCell.value = getCellKey(row, col)
+  highlightedRow.value = row
+  highlightedCol.value = col
+}
+
+const handleCellBlur = () => {
+  focusedCell.value = null
+  highlightedRow.value = null
+  highlightedCol.value = null
+}
 
 const getCellKey = (row, col) => `${row}-${col}`
 const getAnswer = (row, col) => row * col
@@ -309,56 +331,180 @@ watch(cellValues, (newValues) => {
 </script>
 
 <style scoped>
+/* Container */
 .table-wrapper {
   background: white;
-  border-radius: 1.5rem;
-  padding: 2rem;
+  border-radius: 1rem;
+  padding: 0.75rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 8px solid var(--color-deep);
+  border: 4px solid var(--color-deep);
 }
 
-.table-grid {
+@media (min-width: 640px) {
+  .table-wrapper {
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    border-width: 6px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .table-wrapper {
+    padding: 2rem;
+    border-width: 8px;
+  }
+}
+
+/* Scroll container */
+.scroll-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 80vh;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Hide scrollbar for cleaner look but keep functionality */
+.scroll-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-sky);
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-purple);
+}
+
+/* Table structure */
+.interactive-table {
+  border-collapse: separate;
+  border-spacing: 0;
   font-family: var(--font-mono);
+  width: max-content;
+  min-width: 100%;
 }
 
+/* All cells base styling */
 .corner-cell,
 .col-header,
 .row-header,
 .data-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  border: 2px solid var(--color-deep);
-  min-height: 2.5rem;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0.125rem;
+  border: 1px solid var(--color-deep);
+  text-align: center;
+  vertical-align: middle;
   font-family: var(--font-mono);
+  box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .corner-cell,
   .col-header,
   .row-header,
   .data-cell {
-    min-height: 3.5rem;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .corner-cell,
+  .col-header,
+  .row-header,
+  .data-cell {
+    min-width: 56px;
+    min-height: 56px;
     padding: 0.75rem;
   }
 }
 
+/* Header text styling */
+.header-text {
+  font-weight: 700;
+  color: var(--color-deep);
+  font-size: 0.6875rem;
+}
+
+@media (min-width: 640px) {
+  .header-text {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header-text {
+    font-size: 1.25rem;
+  }
+}
+
+/* Corner cell - sticky in both directions */
 .corner-cell {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
   background: var(--color-coral);
 }
 
+.corner-cell .header-text {
+  color: white;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 1024px) {
+  .corner-cell .header-text {
+    font-size: 1.75rem;
+  }
+}
+
+/* Column headers - sticky at top */
 .col-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--color-sky);
 }
 
+.col-header.col-highlighted {
+  background: var(--color-sunshine);
+  box-shadow: inset 0 -3px 0 var(--color-orange);
+}
+
+/* Row headers - sticky at left */
 .row-header {
+  position: sticky;
+  left: 0;
+  z-index: 20;
   background: #ffd7ba;
 }
 
+.row-header-highlighted {
+  background: var(--color-sunshine) !important;
+  box-shadow: inset -3px 0 0 var(--color-orange);
+}
+
+/* Row highlighting */
+.row-highlighted td {
+  background: rgba(255, 217, 61, 0.15);
+}
+
+/* Data cells */
 .data-cell {
   background: white;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease;
   cursor: text !important;
   position: relative;
 }
@@ -385,9 +531,10 @@ watch(cellValues, (newValues) => {
   background: var(--color-sunshine);
   transform: scale(1.05);
   z-index: 10;
-  box-shadow: 0 0 0 4px var(--color-deep);
+  box-shadow: 0 0 0 3px var(--color-deep);
 }
 
+/* Input and answer styling */
 .cell-input,
 .cell-answer {
   position: absolute;
@@ -396,7 +543,7 @@ watch(cellValues, (newValues) => {
   width: 100%;
   height: 100%;
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: var(--color-deep);
   font-family: var(--font-mono);
@@ -407,6 +554,20 @@ watch(cellValues, (newValues) => {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .cell-input,
+  .cell-answer {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cell-input,
+  .cell-answer {
+    font-size: 1.25rem;
+  }
 }
 
 .cell-input {
@@ -424,46 +585,7 @@ watch(cellValues, (newValues) => {
   pointer-events: none;
 }
 
-@media (min-width: 768px) {
-  .cell-input,
-  .cell-answer {
-    font-size: 1.25rem;
-  }
-}
-
-.progress-card-compact {
-  background: var(--color-sunshine);
-  border: 4px solid var(--color-deep);
-  border-radius: 1.5rem;
-  padding: 0.75rem 1.5rem;
-  display: inline-block;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-}
-
-.stat-badge-compact {
-  min-width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  border: 3px solid var(--color-deep);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
-  color: white;
-  padding: 0 0.5rem;
-}
-
-.correct-badge {
-  background: #10b981;
-}
-
-.incorrect-badge {
-  background: #ef4444;
-}
-
+/* Clear button */
 .clear-button {
   background: var(--color-coral);
   color: white;
@@ -487,6 +609,7 @@ watch(cellValues, (newValues) => {
   opacity: 0.8;
 }
 
+/* Animations */
 @keyframes pop {
   0% {
     transform: scale(1);

@@ -7,8 +7,7 @@ Source code for https://math-gen.com
 ## Build and Run Locally
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+- [Bun](https://bun.sh/)
 
 ### Installation
 
@@ -20,14 +19,14 @@ cd math-gen
 
 2. Install dependencies:
 ```bash
-npm install
+bun install
 ```
 
 ### Development
 
 Run the development server:
 ```bash
-npm run dev
+bun run dev
 ```
 
 The app will be available at `http://localhost:5173`
