@@ -1,21 +1,54 @@
 <template>
   <div class="no-print relative mb-12">
-    <div class="bg-white rounded-3xl p-8 shadow-2xl border-8" style="border-color: var(--color-deep);">
-      <div class="relative text-center mb-8">
-        <div class="mb-4 lg:mb-0 lg:absolute lg:top-0 flex justify-center" :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }">
-          <slot name="language-switcher"></slot>
-        </div>
+    <div 
+      class="rounded-3xl shadow-2xl relative transition-all duration-300 md:bg-white md:p-8 md:border-8"
+      :class="{
+        'bg-transparent p-0 shadow-none border-0': isCollapsed,
+        'bg-white p-8 border-8': !isCollapsed
+      }"
+      :style="'border-color: var(--color-deep);'"
+    >
 
-        <h1 class="text-5xl md:text-6xl font-bold mb-2" style="color: var(--color-deep); letter-spacing: -0.02em;">
-          {{ $t('app.title') }}
-        </h1>
-        <div class="flex items-center justify-center gap-3 text-4xl font-bold">
-          <span class="animate-pulse" style="color: var(--color-orange);">+</span>
-          <span class="animate-pulse" style="color: var(--color-coral); animation-delay: 0.2s;">-</span>
-          <span class="animate-pulse" style="color: var(--color-sky); animation-delay: 0.4s;">×</span>
-          <span class="animate-pulse" style="color: var(--color-mint); animation-delay: 0.6s;">÷</span>
+      <!-- Mobile: Collapse badge on bottom border -->
+      <button
+        @click="isCollapsed = !isCollapsed"
+        class="md:hidden absolute left-1/2 -translate-x-1/2 -bottom-5 z-20 px-4 py-1 rounded-full border-4 transition-all shadow-lg"
+        style="background: var(--color-deep); border-color: var(--color-deep); color: white;"
+      >
+        <svg
+          class="w-5 h-5 transition-transform duration-300"
+          :class="{ 'rotate-180': !isCollapsed }"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <!-- Collapsible content wrapper for mobile -->
+      <div
+        class="transition-all duration-300 ease-in-out overflow-hidden md:!max-h-none md:!opacity-100"
+        :class="{
+          'max-h-0 opacity-0': isCollapsed,
+          'max-h-[2000px] opacity-100': !isCollapsed
+        }"
+      >
+        <div class="relative text-center mb-8">
+          <div class="mb-4 lg:mb-0 lg:absolute lg:top-0 flex justify-center" :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }">
+            <slot name="language-switcher"></slot>
+          </div>
+
+          <h1 class="text-5xl md:text-6xl font-bold mb-2" style="color: var(--color-deep); letter-spacing: -0.02em;">
+            {{ $t('app.title') }}
+          </h1>
+          <div class="flex items-center justify-center gap-3 text-4xl font-bold">
+            <span class="animate-pulse" style="color: var(--color-orange);">+</span>
+            <span class="animate-pulse" style="color: var(--color-coral); animation-delay: 0.2s;">-</span>
+            <span class="animate-pulse" style="color: var(--color-sky); animation-delay: 0.4s;">×</span>
+            <span class="animate-pulse" style="color: var(--color-mint); animation-delay: 0.6s;">÷</span>
+          </div>
         </div>
-      </div>
 
       <slot name="tabs"></slot>
 
@@ -136,6 +169,7 @@
           {{ $t('controls.printMe') }}
         </button>
       </div>
+      </div> <!-- End Collapsible content wrapper -->
     </div>
 
     <div class="absolute -top-4 -right-4 w-24 h-24 rounded-full -z-10" style="background: var(--color-sunshine);"></div>
@@ -193,6 +227,9 @@ const localSettings = reactive({
   tableSize: props.settings.tableSize || 10,
   selectedOptions: []
 })
+
+// Mobile collapse state
+const isCollapsed = ref(true)
 
 watch(() => props.hideOperation, (isHidden) => {
   if (isHidden) {
