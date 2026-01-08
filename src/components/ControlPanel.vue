@@ -228,8 +228,15 @@ const localSettings = reactive({
   selectedOptions: []
 })
 
-// Mobile collapse state
-const isCollapsed = ref(true)
+// Mobile collapse state - start expanded if no questions
+const isCollapsed = ref(props.hasQuestions)
+
+// Auto-expand menu when there are no questions
+watch(() => props.hasQuestions, (hasQuestions) => {
+  if (!hasQuestions) {
+    isCollapsed.value = false
+  }
+})
 
 watch(() => props.hideOperation, (isHidden) => {
   if (isHidden) {
