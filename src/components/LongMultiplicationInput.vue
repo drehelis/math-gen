@@ -318,8 +318,11 @@ const initializeFields = () => {
   const finalLength = String(props.correctAnswer).length
   const carryLength = multiplicandDigits.value.length
 
-  // When showAnswers is true, pre-fill all the answer boxes
-  if (props.showAnswers) {
+  // Check if the question is already solved correctly
+  const isSolved = props.modelValue === String(props.correctAnswer)
+
+  // When showAnswers is true OR the question is already solved correctly, pre-fill all the answer boxes
+  if (props.showAnswers || isSolved) {
     // Fill partial product 1
     const pp1Str = String(expectedPartialProduct1.value)
     partialProduct1Fields.value = pp1Str.split('').reverse()
@@ -399,6 +402,7 @@ const setFinalAnswerRef = (el, index) => {
 const focusPartialProduct1 = (fieldIndex) => {
   // Switch to step 1 when clicking on partial product 1
   currentStep.value = 1
+  updateCarryDigits()
   // Refs are indexed by visual position (0=leftmost, n-1=rightmost)
   // Field index 0 = ones digit = rightmost visual box = refIndex n-1
   const refIndex = partialProduct1Fields.value.length - 1 - fieldIndex
@@ -410,6 +414,7 @@ const focusPartialProduct1 = (fieldIndex) => {
 const focusPartialProduct2 = (fieldIndex) => {
   // Switch to step 2 when clicking on partial product 2
   currentStep.value = 2
+  updateCarryDigits()
   const refIndex = partialProduct2Fields.value.length - 1 - fieldIndex
   if (partialProduct2Refs.value[refIndex]) {
     partialProduct2Refs.value[refIndex].focus()
@@ -419,6 +424,7 @@ const focusPartialProduct2 = (fieldIndex) => {
 const focusPartialProduct3 = (fieldIndex) => {
   // Switch to step 3 when clicking on partial product 3
   currentStep.value = 3
+  updateCarryDigits()
   const refIndex = partialProduct3Fields.value.length - 1 - fieldIndex
   if (partialProduct3Refs.value[refIndex]) {
     partialProduct3Refs.value[refIndex].focus()
@@ -428,6 +434,7 @@ const focusPartialProduct3 = (fieldIndex) => {
 const focusFinalAnswer = (fieldIndex) => {
   // Final answer step: 3 for 2-digit multiplier, 4 for 3-digit multiplier
   currentStep.value = multiplierDigits.value.length > 2 ? 4 : 3
+  updateCarryDigits()
   const refIndex = finalAnswerFields.value.length - 1 - fieldIndex
   if (finalAnswerRefs.value[refIndex]) {
     finalAnswerRefs.value[refIndex].focus()
@@ -451,6 +458,7 @@ const handlePartialProduct1Input = (event, index) => {
 const handlePartialProduct2Input = (event, index) => {
   handleGenericInput(event, index, partialProduct2Fields, partialProduct2Refs, () => {
     validatePartialProduct2()
+    updateCarryDigits()
   })
 }
 
@@ -458,6 +466,7 @@ const handlePartialProduct2Input = (event, index) => {
 const handlePartialProduct3Input = (event, index) => {
   handleGenericInput(event, index, partialProduct3Fields, partialProduct3Refs, () => {
     validatePartialProduct3()
+    updateCarryDigits()
   })
 }
 
@@ -566,7 +575,23 @@ const handleKeydown = (event, step, index) => {
 
 // Update carry digits based on current multiplication step
 const updateCarryDigits = () => {
-  const multiplierDigit = props.num2 % 10
+  let multiplierDigit = 0
+  let currentFields = []
+  
+  if (currentStep.value === 1) {
+    multiplierDigit = props.num2 % 10
+    currentFields = partialProduct1Fields.value
+  } else if (currentStep.value === 2) {
+    multiplierDigit = Math.floor(props.num2 / 10) % 10
+    currentFields = partialProduct2Fields.value
+  } else if (currentStep.value === 3) {
+    multiplierDigit = Math.floor(props.num2 / 100) % 10
+    currentFields = partialProduct3Fields.value
+  } else {
+    // No carry digits for final answer step
+    carryDigits.value = Array(carryDigits.value.length).fill('')
+    return
+  }
   const newCarries = Array(carryDigits.value.length).fill('')
   
   let carry = 0
@@ -577,7 +602,13 @@ const updateCarryDigits = () => {
     const product = digit * multiplierDigit + carry
     carry = Math.floor(product / 10)
     
-    if (carry > 0 && i > 0) {
+    // Only show carry if the corresponding input field (to the right) is filled
+    // i corresponds to the position generating the carry
+    // Formula for field index: multiplicandStr.length - 1 - i
+    const fieldIndex = multiplicandStr.length - 1 - i
+    const isFieldFilled = currentFields[fieldIndex] !== '' && currentFields[fieldIndex] !== undefined
+    
+    if (carry > 0 && i > 0 && isFieldFilled) {
       newCarries[i - 1] = String(carry)
     }
   }
@@ -606,8 +637,7 @@ const validatePartialProduct1 = () => {
       if (multiplierDigits.value.length > 1) {
         // Multi-digit multiplier: move to partial product 2
         currentStep.value = 2
-        // Clear carry digits for step 2
-        carryDigits.value = Array(carryDigits.value.length).fill('')
+        updateCarryDigits()
         nextTick(() => {
           // Focus rightmost box of partial product 2
           const rightmost = partialProduct2Fields.value.length - 1
@@ -645,7 +675,7 @@ const validatePartialProduct2 = () => {
       if (multiplierDigits.value.length > 2) {
         // 3-digit multiplier: move to partial product 3
         currentStep.value = 3
-        carryDigits.value = Array(carryDigits.value.length).fill('')
+        updateCarryDigits()
         nextTick(() => {
           const rightmost = partialProduct3Fields.value.length - 1
           if (partialProduct3Refs.value[rightmost]) partialProduct3Refs.value[rightmost].focus()
@@ -653,6 +683,7 @@ const validatePartialProduct2 = () => {
       } else {
         // 2-digit multiplier: move to final answer
         currentStep.value = 3
+        updateCarryDigits()
         nextTick(() => {
           const rightmost = finalAnswerFields.value.length - 1
           if (finalAnswerRefs.value[rightmost]) finalAnswerRefs.value[rightmost].focus()
@@ -679,6 +710,7 @@ const validatePartialProduct3 = () => {
   if (partialProduct3Correct.value) {
     nextTick(() => {
       currentStep.value = 4
+      updateCarryDigits()
       nextTick(() => {
         const rightmost = finalAnswerFields.value.length - 1
         if (finalAnswerRefs.value[rightmost]) finalAnswerRefs.value[rightmost].focus()
