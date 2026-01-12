@@ -28,10 +28,10 @@
 
       <!-- Collapsible content wrapper for mobile -->
       <div
-        class="transition-all duration-300 ease-in-out overflow-hidden md:!max-h-none md:!opacity-100"
+        class="transition-all duration-300 ease-in-out md:!max-h-none md:!opacity-100 md:!overflow-visible"
         :class="{
-          'max-h-0 opacity-0': isCollapsed,
-          'max-h-[2000px] opacity-100': !isCollapsed
+          'max-h-0 opacity-0 overflow-hidden': isCollapsed,
+          'max-h-[2000px] opacity-100 overflow-visible': !isCollapsed
         }"
       >
         <div class="relative text-center mb-8">
