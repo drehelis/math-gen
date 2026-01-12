@@ -51,6 +51,29 @@
             </span>
           </div>
 
+          <!-- Long Multiplication Layout for multiplication operations -->
+          <div v-else-if="isMultiplication(question)" class="flex flex-col items-center justify-center pt-2 pb-2" dir="ltr">
+            <LongMultiplicationInput
+              v-if="!showAnswers"
+              :num1="question.num1"
+              :num2="question.num2"
+              :correct-answer="question.answer"
+              v-model="question.userAnswer"
+              :ref="el => setInputRef(el, index)"
+              @feedback="(data) => handleFeedback(question.id, data)"
+              @correct-answer="() => focusNextInput(index, questions.length)"
+              @focus="focusedIndex = index"
+              @blur="focusedIndex = -1"
+            />
+            <div v-else class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="font-family: 'Space Mono', monospace; color: var(--color-deep);">
+              <div class="text-right">{{ question.num1 }}</div>
+              <div class="text-left" style="margin-left: -0.5rem;">×</div>
+              <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em;">{{ question.num2 }}</div>
+              <div class="text-right opacity-60" style="margin-top: 0.3em;">{{ question.answer }}</div>
+            </div>
+          </div>
+
+          <!-- Standard Vertical Layout for other operations (addition, subtraction) -->
           <div v-else class="flex flex-col items-center justify-center pt-4 pb-2" style="font-family: 'Space Mono', monospace;" dir="ltr">
             <div class="w-full max-w-[12rem] sm:max-w-none sm:w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="color: var(--color-deep); line-height: 0.75;">
               <div class="text-right">{{ question.num1 }}</div>
@@ -208,6 +231,7 @@ import { watch, onMounted, ref, computed } from 'vue'
 import PrintLayout from './PrintLayout.vue'
 import AnswerInput from './AnswerInput.vue'
 import VerticalAnswerInput from './VerticalAnswerInput.vue'
+import LongMultiplicationInput from './LongMultiplicationInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
@@ -239,6 +263,11 @@ const focusedIndex = ref(-1)
 const useVerticalFormat = computed(() => {
   return props.difficulty === 'medium' || props.difficulty === 'hard'
 })
+
+// Check if a question is a multiplication operation
+const isMultiplication = (question) => {
+  return question.operation === '×'
+}
 
 const operatorMarginLeft = computed(() => {
   return props.difficulty === 'hard' ? '-0.8rem' : '-0.5rem'
