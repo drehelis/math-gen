@@ -91,9 +91,9 @@
           type="text"
           inputmode="numeric"
           maxlength="1"
-          :disabled="currentStep > 1"
+          :disabled="showAnswers"
           class="digit-input"
-          :style="{ cursor: currentStep === 1 ? 'text' : 'default' }"
+          :style="{ cursor: showAnswers ? 'default' : 'text' }"
         />
       </div>
     </div>
@@ -128,12 +128,52 @@
           type="text"
           inputmode="numeric"
           maxlength="1"
-          :disabled="currentStep !== 2"
+          :disabled="showAnswers"
           class="digit-input"
-          :style="{ cursor: currentStep === 2 ? 'text' : 'default' }"
+          :style="{ cursor: showAnswers ? 'default' : 'text' }"
         />
       </div>
       <!-- Shift placeholder (ones place) -->
+      <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
+    </div>
+
+    <!-- Partial product 3 (multiplicand × hundreds digit of multiplier, shifted 2 places) -->
+    <div v-if="multiplierDigits.length > 2" class="partial-product-row" :style="{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.2em' }">
+      <div 
+        v-for="(_, index) in partialProduct3Fields"
+        :key="`pp3-box-${index}`"
+        class="input-box"
+        :class="{ 
+          'active': currentStep === 3,
+          'completed': currentStep > 3,
+          'correct': currentStep > 3 && partialProduct3Correct,
+          'incorrect': showFeedback[3] && !partialProduct3Correct,
+          'answers-shown': showAnswers
+        }"
+        :style="{ 
+          width: digitBoxSize, 
+          height: digitBoxSize,
+        }"
+        @click="focusPartialProduct3(partialProduct3Fields.length - 1 - index)"
+      >
+        <input
+          :ref="el => setPartialProduct3Ref(el, index)"
+          :value="partialProduct3Fields[partialProduct3Fields.length - 1 - index]"
+          @beforeinput="(e) => handlePartialProduct3Input(e, partialProduct3Fields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, 3, partialProduct3Fields.length - 1 - index)"
+          @click.stop="focusPartialProduct3(partialProduct3Fields.length - 1 - index)"
+          @focus="handleFocus"
+          @blur="emit('blur')"
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          :disabled="showAnswers"
+          class="digit-input"
+          :style="{ cursor: showAnswers ? 'default' : 'text' }"
+        />
+      </div>
+      <!-- Shift placeholders (ones and tens places) -->
+      <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
       <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
     </div>
 
@@ -153,9 +193,9 @@
         :key="`final-box-${index}`"
         class="input-box"
         :class="{ 
-          'active': currentStep === 3,
-          'correct': showFeedback[3] && finalAnswerCorrect,
-          'incorrect': showFeedback[3] && !finalAnswerCorrect,
+          'active': currentStep === (multiplierDigits.length > 2 ? 4 : 3),
+          'correct': showFeedback[multiplierDigits.length > 2 ? 4 : 3] && finalAnswerCorrect,
+          'incorrect': showFeedback[multiplierDigits.length > 2 ? 4 : 3] && !finalAnswerCorrect,
           'answers-shown': showAnswers
         }"
         :style="{ 
@@ -168,16 +208,16 @@
           :ref="el => setFinalAnswerRef(el, index)"
           :value="finalAnswerFields[finalAnswerFields.length - 1 - index]"
           @beforeinput="(e) => handleFinalAnswerInput(e, finalAnswerFields.length - 1 - index)"
-          @keydown="(e) => handleKeydown(e, 3, finalAnswerFields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, multiplierDigits.length > 2 ? 4 : 3, finalAnswerFields.length - 1 - index)"
           @click.stop="focusFinalAnswer(finalAnswerFields.length - 1 - index)"
           @focus="handleFocus"
           @blur="emit('blur')"
           type="text"
           inputmode="numeric"
           maxlength="1"
-          :disabled="currentStep !== 3"
+          :disabled="showAnswers"
           class="digit-input"
-          :style="{ cursor: currentStep === 3 ? 'text' : 'default' }"
+          :style="{ cursor: showAnswers ? 'default' : 'text' }"
         />
       </div>
     </div>
@@ -218,9 +258,10 @@ const digitBoxSize = '1.8em'
 // Refs for input elements
 const partialProduct1Refs = ref([])
 const partialProduct2Refs = ref([])
+const partialProduct3Refs = ref([])
 const finalAnswerRefs = ref([])
 
-// Current step: 1 = partial product 1, 2 = partial product 2, 3 = final answer
+// Current step: 1 = PP1, 2 = PP2, 3 = PP3 (if 3-digit), 4 = final answer
 const currentStep = ref(1)
 
 // Carry digits to display above multiplicand
@@ -229,13 +270,15 @@ const carryDigits = ref([])
 // Field values
 const partialProduct1Fields = ref([])
 const partialProduct2Fields = ref([])
+const partialProduct3Fields = ref([])
 const finalAnswerFields = ref([])
 
 // Feedback states
 const partialProduct1Correct = ref(false)
 const partialProduct2Correct = ref(false)
+const partialProduct3Correct = ref(false)
 const finalAnswerCorrect = ref(false)
-const showFeedback = ref({ 1: false, 2: false, 3: false })
+const showFeedback = ref({ 1: false, 2: false, 3: false, 4: false })
 
 // Computed values
 const multiplicandDigits = computed(() => String(props.num1).split(''))
@@ -261,10 +304,17 @@ const expectedPartialProduct2 = computed(() => {
   return props.num1 * tensDigit
 })
 
+const expectedPartialProduct3 = computed(() => {
+  if (multiplierDigits.value.length < 3) return 0
+  const hundredsDigit = Math.floor(props.num2 / 100) % 10
+  return props.num1 * hundredsDigit
+})
+
 // Initialize fields based on expected lengths
 const initializeFields = () => {
   const pp1Length = String(expectedPartialProduct1.value).length
   const pp2Length = multiplierDigits.value.length > 1 ? String(expectedPartialProduct2.value).length : 0
+  const pp3Length = multiplierDigits.value.length > 2 ? String(expectedPartialProduct3.value).length : 0
   const finalLength = String(props.correctAnswer).length
   const carryLength = multiplicandDigits.value.length
 
@@ -282,6 +332,14 @@ const initializeFields = () => {
       partialProduct2Fields.value = []
     }
     
+    // Fill partial product 3 (if 3-digit multiplier)
+    if (pp3Length > 0) {
+      const pp3Str = String(expectedPartialProduct3.value)
+      partialProduct3Fields.value = pp3Str.split('').reverse()
+    } else {
+      partialProduct3Fields.value = []
+    }
+    
     // Fill final answer (if multi-digit multiplier)
     if (multiplierDigits.value.length > 1) {
       const finalStr = String(props.correctAnswer)
@@ -291,20 +349,24 @@ const initializeFields = () => {
     }
     
     // Set all steps as complete
-    currentStep.value = multiplierDigits.value.length > 1 ? 4 : 2 // Past all steps
+    const totalSteps = multiplierDigits.value.length > 2 ? 5 : (multiplierDigits.value.length > 1 ? 4 : 2)
+    currentStep.value = totalSteps // Past all steps
     partialProduct1Correct.value = true
     partialProduct2Correct.value = true
+    partialProduct3Correct.value = true
     finalAnswerCorrect.value = true
-    showFeedback.value = { 1: false, 2: false, 3: false } // Don't show feedback indicators
+    showFeedback.value = { 1: false, 2: false, 3: false, 4: false } // Don't show feedback indicators
   } else {
     partialProduct1Fields.value = Array(pp1Length).fill('')
     partialProduct2Fields.value = pp2Length > 0 ? Array(pp2Length).fill('') : []
+    partialProduct3Fields.value = pp3Length > 0 ? Array(pp3Length).fill('') : []
     finalAnswerFields.value = Array(finalLength).fill('')
     currentStep.value = 1
     partialProduct1Correct.value = false
     partialProduct2Correct.value = false
+    partialProduct3Correct.value = false
     finalAnswerCorrect.value = false
-    showFeedback.value = { 1: false, 2: false, 3: false }
+    showFeedback.value = { 1: false, 2: false, 3: false, 4: false }
   }
   
   carryDigits.value = Array(carryLength).fill('')
@@ -312,6 +374,7 @@ const initializeFields = () => {
   // Reset refs
   partialProduct1Refs.value = []
   partialProduct2Refs.value = []
+  partialProduct3Refs.value = []
   finalAnswerRefs.value = []
 }
 
@@ -324,12 +387,18 @@ const setPartialProduct2Ref = (el, index) => {
   if (el) partialProduct2Refs.value[index] = el
 }
 
+const setPartialProduct3Ref = (el, index) => {
+  if (el) partialProduct3Refs.value[index] = el
+}
+
 const setFinalAnswerRef = (el, index) => {
   if (el) finalAnswerRefs.value[index] = el
 }
 
 // Focus helpers
 const focusPartialProduct1 = (fieldIndex) => {
+  // Switch to step 1 when clicking on partial product 1
+  currentStep.value = 1
   // Refs are indexed by visual position (0=leftmost, n-1=rightmost)
   // Field index 0 = ones digit = rightmost visual box = refIndex n-1
   const refIndex = partialProduct1Fields.value.length - 1 - fieldIndex
@@ -339,13 +408,26 @@ const focusPartialProduct1 = (fieldIndex) => {
 }
 
 const focusPartialProduct2 = (fieldIndex) => {
+  // Switch to step 2 when clicking on partial product 2
+  currentStep.value = 2
   const refIndex = partialProduct2Fields.value.length - 1 - fieldIndex
   if (partialProduct2Refs.value[refIndex]) {
     partialProduct2Refs.value[refIndex].focus()
   }
 }
 
+const focusPartialProduct3 = (fieldIndex) => {
+  // Switch to step 3 when clicking on partial product 3
+  currentStep.value = 3
+  const refIndex = partialProduct3Fields.value.length - 1 - fieldIndex
+  if (partialProduct3Refs.value[refIndex]) {
+    partialProduct3Refs.value[refIndex].focus()
+  }
+}
+
 const focusFinalAnswer = (fieldIndex) => {
+  // Final answer step: 3 for 2-digit multiplier, 4 for 3-digit multiplier
+  currentStep.value = multiplierDigits.value.length > 2 ? 4 : 3
   const refIndex = finalAnswerFields.value.length - 1 - fieldIndex
   if (finalAnswerRefs.value[refIndex]) {
     finalAnswerRefs.value[refIndex].focus()
@@ -372,12 +454,21 @@ const handlePartialProduct2Input = (event, index) => {
   })
 }
 
+// Handle input for partial product 3
+const handlePartialProduct3Input = (event, index) => {
+  handleGenericInput(event, index, partialProduct3Fields, partialProduct3Refs, () => {
+    validatePartialProduct3()
+  })
+}
+
 // Handle input for final answer
 const handleFinalAnswerInput = (event, index) => {
   handleGenericInput(event, index, finalAnswerFields, finalAnswerRefs, validateFinalAnswer)
 }
 
-// Generic input handler - RIGHT TO LEFT
+// Generic input handler - HYBRID: Start at rightmost (ones)
+// Only jump to leftmost if exactly 2 empty boxes remain, then type left-to-right
+// Otherwise continue right-to-left
 // Field indices: 0 = ones (rightmost), 1 = tens, 2 = hundreds...
 // Ref indices: 0 = leftmost visual, n-1 = rightmost visual
 const handleGenericInput = (event, index, fields, refs, validateFn) => {
@@ -401,11 +492,38 @@ const handleGenericInput = (event, index, fields, refs, validateFn) => {
   fields.value[index] = data
   validateFn()
 
-  // Move to next field to the left (higher field index = more significant digit)
-  // Field index -> ref index: refIndex = length - 1 - fieldIndex
-  // So moving to field index+1 means refIndex = length - 1 - (index + 1) = length - 2 - index
   nextTick(() => {
-    if (index < fields.value.length - 1) {
+    // Count how many empty boxes remain
+    const emptyCount = fields.value.filter(f => f === '').length
+    
+    if (emptyCount === 0) {
+      // All boxes filled - editing mode, stay in place (don't move focus)
+      return
+    } else if (emptyCount === 2) {
+      // Exactly 2 empty boxes remain: jump to leftmost empty, then left-to-right
+      // Find the leftmost empty box (highest field index that's empty)
+      for (let i = fields.value.length - 1; i >= 0; i--) {
+        if (fields.value[i] === '') {
+          const refIndex = fields.value.length - 1 - i
+          if (refs.value[refIndex]) {
+            refs.value[refIndex].focus()
+          }
+          break
+        }
+      }
+    } else if (emptyCount === 1) {
+      // Only 1 empty box left: focus on it
+      for (let i = 0; i < fields.value.length; i++) {
+        if (fields.value[i] === '') {
+          const refIndex = fields.value.length - 1 - i
+          if (refs.value[refIndex]) {
+            refs.value[refIndex].focus()
+          }
+          break
+        }
+      }
+    } else if (emptyCount > 2 && index < fields.value.length - 1) {
+      // More than 2 empty: continue right-to-left (move to higher field index / left visually)
       const nextRefIndex = fields.value.length - 2 - index
       if (refs.value[nextRefIndex]) {
         refs.value[nextRefIndex].focus()
@@ -424,21 +542,21 @@ const handleKeydown = (event, step, index) => {
       event.preventDefault()
       fields.value[index - 1] = ''
       nextTick(() => {
-        // Move focus to the right (lower index)
+        // Move focus to the right (lower field index)
         const refIndex = fields.value.length - index
         if (refs.value[refIndex]) refs.value[refIndex].focus()
       })
     }
   } else if (event.key === 'ArrowLeft') {
     event.preventDefault()
-    // Move to higher index (visually left)
+    // Move to higher field index (visually left)
     if (index < fields.value.length - 1) {
       const refIndex = fields.value.length - 2 - index
       if (refs.value[refIndex]) refs.value[refIndex].focus()
     }
   } else if (event.key === 'ArrowRight') {
     event.preventDefault()
-    // Move to lower index (visually right)
+    // Move to lower field index (visually right)
     if (index > 0) {
       const refIndex = fields.value.length - index
       if (refs.value[refIndex]) refs.value[refIndex].focus()
@@ -524,7 +642,43 @@ const validatePartialProduct2 = () => {
   
   if (partialProduct2Correct.value) {
     nextTick(() => {
-      currentStep.value = 3
+      if (multiplierDigits.value.length > 2) {
+        // 3-digit multiplier: move to partial product 3
+        currentStep.value = 3
+        carryDigits.value = Array(carryDigits.value.length).fill('')
+        nextTick(() => {
+          const rightmost = partialProduct3Fields.value.length - 1
+          if (partialProduct3Refs.value[rightmost]) partialProduct3Refs.value[rightmost].focus()
+        })
+      } else {
+        // 2-digit multiplier: move to final answer
+        currentStep.value = 3
+        nextTick(() => {
+          const rightmost = finalAnswerFields.value.length - 1
+          if (finalAnswerRefs.value[rightmost]) finalAnswerRefs.value[rightmost].focus()
+        })
+      }
+    })
+  }
+}
+
+// Validate partial product 3
+const validatePartialProduct3 = () => {
+  const hasEmptyField = partialProduct3Fields.value.some(f => f === '')
+  const answer = [...partialProduct3Fields.value].reverse().join('')
+  
+  if (answer === '' || hasEmptyField) {
+    showFeedback.value[3] = false
+    return
+  }
+  
+  const parsed = parseInt(answer, 10)
+  showFeedback.value[3] = true
+  partialProduct3Correct.value = parsed === expectedPartialProduct3.value
+  
+  if (partialProduct3Correct.value) {
+    nextTick(() => {
+      currentStep.value = 4
       nextTick(() => {
         const rightmost = finalAnswerFields.value.length - 1
         if (finalAnswerRefs.value[rightmost]) finalAnswerRefs.value[rightmost].focus()
@@ -535,20 +689,21 @@ const validatePartialProduct2 = () => {
 
 // Validate final answer
 const validateFinalAnswer = () => {
-  // Check if any field is empty
   const hasEmptyField = finalAnswerFields.value.some(f => f === '')
-  // Reverse because fields[0]=ones, fields[1]=tens, etc
   const answer = [...finalAnswerFields.value].reverse().join('')
   emit('update:modelValue', answer)
   
+  // Use feedback index 4 for 3-digit, 3 for 2-digit
+  const feedbackIndex = multiplierDigits.value.length > 2 ? 4 : 3
+  
   if (answer === '' || hasEmptyField) {
-    showFeedback.value[3] = false
+    showFeedback.value[feedbackIndex] = false
     emit('feedback', { show: false, isCorrect: false })
     return
   }
   
   const parsed = parseInt(answer, 10)
-  showFeedback.value[3] = true
+  showFeedback.value[feedbackIndex] = true
   finalAnswerCorrect.value = parsed === props.correctAnswer
   emit('feedback', { show: true, isCorrect: finalAnswerCorrect.value })
   
@@ -657,6 +812,7 @@ defineExpose({
 
 .shift-placeholder {
   opacity: 0;
+  margin: 0 1px;
 }
 
 .number-digit {
