@@ -71,7 +71,8 @@
           'active': currentStep === 1,
           'completed': currentStep > 1,
           'correct': currentStep > 1 && partialProduct1Correct,
-          'incorrect': showFeedback[1] && !partialProduct1Correct
+          'incorrect': showFeedback[1] && !partialProduct1Correct,
+          'answers-shown': showAnswers
         }"
         :style="{ 
           width: digitBoxSize, 
@@ -107,7 +108,8 @@
           'active': currentStep === 2,
           'completed': currentStep > 2,
           'correct': currentStep > 2 && partialProduct2Correct,
-          'incorrect': showFeedback[2] && !partialProduct2Correct
+          'incorrect': showFeedback[2] && !partialProduct2Correct,
+          'answers-shown': showAnswers
         }"
         :style="{ 
           width: digitBoxSize, 
@@ -153,7 +155,8 @@
         :class="{ 
           'active': currentStep === 3,
           'correct': showFeedback[3] && finalAnswerCorrect,
-          'incorrect': showFeedback[3] && !finalAnswerCorrect
+          'incorrect': showFeedback[3] && !finalAnswerCorrect,
+          'answers-shown': showAnswers
         }"
         :style="{ 
           width: digitBoxSize, 
@@ -200,6 +203,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  showAnswers: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -261,16 +268,46 @@ const initializeFields = () => {
   const finalLength = String(props.correctAnswer).length
   const carryLength = multiplicandDigits.value.length
 
-  partialProduct1Fields.value = Array(pp1Length).fill('')
-  partialProduct2Fields.value = pp2Length > 0 ? Array(pp2Length).fill('') : []
-  finalAnswerFields.value = Array(finalLength).fill('')
-  carryDigits.value = Array(carryLength).fill('')
+  // When showAnswers is true, pre-fill all the answer boxes
+  if (props.showAnswers) {
+    // Fill partial product 1
+    const pp1Str = String(expectedPartialProduct1.value)
+    partialProduct1Fields.value = pp1Str.split('').reverse()
+    
+    // Fill partial product 2 (if multi-digit multiplier)
+    if (pp2Length > 0) {
+      const pp2Str = String(expectedPartialProduct2.value)
+      partialProduct2Fields.value = pp2Str.split('').reverse()
+    } else {
+      partialProduct2Fields.value = []
+    }
+    
+    // Fill final answer (if multi-digit multiplier)
+    if (multiplierDigits.value.length > 1) {
+      const finalStr = String(props.correctAnswer)
+      finalAnswerFields.value = finalStr.split('').reverse()
+    } else {
+      finalAnswerFields.value = []
+    }
+    
+    // Set all steps as complete
+    currentStep.value = multiplierDigits.value.length > 1 ? 4 : 2 // Past all steps
+    partialProduct1Correct.value = true
+    partialProduct2Correct.value = true
+    finalAnswerCorrect.value = true
+    showFeedback.value = { 1: false, 2: false, 3: false } // Don't show feedback indicators
+  } else {
+    partialProduct1Fields.value = Array(pp1Length).fill('')
+    partialProduct2Fields.value = pp2Length > 0 ? Array(pp2Length).fill('') : []
+    finalAnswerFields.value = Array(finalLength).fill('')
+    currentStep.value = 1
+    partialProduct1Correct.value = false
+    partialProduct2Correct.value = false
+    finalAnswerCorrect.value = false
+    showFeedback.value = { 1: false, 2: false, 3: false }
+  }
   
-  currentStep.value = 1
-  partialProduct1Correct.value = false
-  partialProduct2Correct.value = false
-  finalAnswerCorrect.value = false
-  showFeedback.value = { 1: false, 2: false, 3: false }
+  carryDigits.value = Array(carryLength).fill('')
   
   // Reset refs
   partialProduct1Refs.value = []
@@ -521,13 +558,16 @@ const validateFinalAnswer = () => {
 }
 
 // Watch for prop changes to reinitialize
-watch(() => [props.num1, props.num2], () => {
+watch(() => [props.num1, props.num2, props.showAnswers], () => {
   initializeFields()
   nextTick(() => {
     // Focus rightmost box of partial product 1 (refs are visual: 0=left, n-1=right)
-    const rightmost = partialProduct1Fields.value.length - 1
-    if (partialProduct1Refs.value[rightmost]) {
-      partialProduct1Refs.value[rightmost].focus()
+    // Only focus if not showing answers
+    if (!props.showAnswers) {
+      const rightmost = partialProduct1Fields.value.length - 1
+      if (partialProduct1Refs.value[rightmost]) {
+        partialProduct1Refs.value[rightmost].focus()
+      }
     }
   })
 }, { immediate: true })
@@ -625,5 +665,15 @@ defineExpose({
 
 .carry-digit {
   font-weight: bold;
+}
+
+.input-box.answers-shown {
+  opacity: 1;
+  border-color: var(--color-deep);
+  background: transparent;
+}
+
+.input-box.answers-shown .digit-input {
+  opacity: 0.5;
 }
 </style>

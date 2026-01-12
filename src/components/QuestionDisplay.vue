@@ -54,10 +54,10 @@
           <!-- Long Multiplication Layout for multiplication operations -->
           <div v-else-if="isMultiplication(question)" class="flex flex-col items-center justify-center pt-2 pb-2" dir="ltr">
             <LongMultiplicationInput
-              v-if="!showAnswers"
               :num1="question.num1"
               :num2="question.num2"
               :correct-answer="question.answer"
+              :show-answers="showAnswers"
               v-model="question.userAnswer"
               :ref="el => setInputRef(el, index)"
               @feedback="(data) => handleFeedback(question.id, data)"
@@ -65,12 +65,6 @@
               @focus="focusedIndex = index"
               @blur="focusedIndex = -1"
             />
-            <div v-else class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold" style="font-family: 'Space Mono', monospace; color: var(--color-deep);">
-              <div class="text-right">{{ question.num1 }}</div>
-              <div class="text-left" style="margin-left: -0.5rem;">×</div>
-              <div class="text-right" style="border-bottom: 4px solid var(--color-deep); padding-bottom: 0.2em;">{{ question.num2 }}</div>
-              <div class="text-right opacity-60" style="margin-top: 0.3em;">{{ question.answer }}</div>
-            </div>
           </div>
 
           <!-- Standard Vertical Layout for other operations (addition, subtraction) -->
