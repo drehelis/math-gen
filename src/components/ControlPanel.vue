@@ -479,7 +479,11 @@ const optionsOptions = computed(() => {
   if (!props.hideOperation && !props.comparisonMode) {
     if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
       options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
-      options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+      // Only show Vertical Entry for non-multiplication operations
+      const hasNonMultiplication = localSettings.operations.some(op => op !== 'multiplication')
+      if (hasNonMultiplication) {
+        options.push({ value: 'columnByColumn', label: t('controls.columnByColumn') })
+      }
     }
   }
 
@@ -554,4 +558,10 @@ watch(() => props.tableMode, () => {
   const availableValues = optionsOptions.value.map(opt => opt.value)
   localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
 })
+
+watch(() => localSettings.operations, () => {
+  // When operations change, remove options that are no longer available (e.g., columnByColumn for multiplication)
+  const availableValues = optionsOptions.value.map(opt => opt.value)
+  localSettings.selectedOptions = localSettings.selectedOptions.filter(opt => availableValues.includes(opt))
+}, { deep: true })
 </script>
