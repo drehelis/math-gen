@@ -1,55 +1,15 @@
 import { ref, watch } from 'vue'
 import { checkEdgeCases } from './useEdgeCaseRules'
+import { useLocalStorage } from './useLocalStorage'
 
 let idCounter = 0
 
-const STORAGE_KEY_SETTINGS = 'math-gen-comparison-settings'
-const STORAGE_KEY_QUESTIONS = 'math-gen-comparison-questions'
-
-const loadSettings = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS)
-    if (saved) {
-      return JSON.parse(saved)
-    }
-  } catch (error) {
-    console.error('Failed to load settings:', error)
-  }
-  return null
-}
-
-const saveSettings = (settings) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings))
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-  }
-}
-
-const loadQuestions = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_QUESTIONS)
-    if (saved) {
-      return JSON.parse(saved)
-    }
-  } catch (error) {
-    console.error('Failed to load questions:', error)
-  }
-  return []
-}
-
-const saveQuestions = (questions) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questions))
-  } catch (error) {
-    console.error('Failed to save questions:', error)
-  }
-}
+const settingsStorage = useLocalStorage('math-gen-comparison-settings')
+const questionsStorage = useLocalStorage('math-gen-comparison-questions', [])
 
 export function useComparisonQuestionGenerator() {
-  const savedQuestions = loadQuestions()
-  const questions = ref(savedQuestions)
-  const savedSettings = loadSettings()
+  const questions = ref(questionsStorage.load())
+  const savedSettings = settingsStorage.load()
 
   let initialSettings = {
     count: 20,
@@ -69,11 +29,11 @@ export function useComparisonQuestionGenerator() {
   const settings = ref(initialSettings)
 
   watch(settings, (newSettings) => {
-    saveSettings(newSettings)
+    settingsStorage.save(newSettings)
   }, { deep: true })
 
   watch(questions, (newQuestions) => {
-    saveQuestions(newQuestions)
+    questionsStorage.save(newQuestions)
   }, { deep: true })
 
   const getRandomNumber = (max = null) => {

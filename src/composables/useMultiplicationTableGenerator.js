@@ -1,52 +1,12 @@
 import { ref, watch } from 'vue'
+import { useLocalStorage } from './useLocalStorage'
 
-const STORAGE_KEY_SETTINGS = 'math-gen-table-settings'
-const STORAGE_KEY_ANSWERS = 'math-gen-table-answers'
-
-const loadSettings = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS)
-    if (saved) {
-      return JSON.parse(saved)
-    }
-  } catch (error) {
-    console.error('Failed to load settings:', error)
-  }
-  return null
-}
-
-const saveSettings = (settings) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings))
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-  }
-}
-
-const loadAnswers = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_ANSWERS)
-    if (saved) {
-      return JSON.parse(saved)
-    }
-  } catch (error) {
-    console.error('Failed to load answers:', error)
-  }
-  return {}
-}
-
-const saveAnswers = (answers) => {
-  try {
-    localStorage.setItem(STORAGE_KEY_ANSWERS, JSON.stringify(answers))
-  } catch (error) {
-    console.error('Failed to save answers:', error)
-  }
-}
+const settingsStorage = useLocalStorage('math-gen-table-settings')
+const answersStorage = useLocalStorage('math-gen-table-answers', {})
 
 export function useMultiplicationTableGenerator() {
-  const savedAnswers = loadAnswers()
-  const userAnswers = ref(savedAnswers)
-  const savedSettings = loadSettings()
+  const userAnswers = ref(answersStorage.load())
+  const savedSettings = settingsStorage.load()
   const settings = ref(savedSettings || {
     showAnswers: false,
     prefillPercentage: 0,
@@ -58,11 +18,11 @@ export function useMultiplicationTableGenerator() {
   const questions = ref([]) // Keep for compatibility with ControlPanel
 
   watch(settings, (newSettings) => {
-    saveSettings(newSettings)
+    settingsStorage.save(newSettings)
   }, { deep: true })
 
   watch(userAnswers, (newAnswers) => {
-    saveAnswers(newAnswers)
+    answersStorage.save(newAnswers)
   }, { deep: true })
 
   const generateQuestions = () => {
