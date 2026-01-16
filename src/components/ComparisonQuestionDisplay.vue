@@ -50,21 +50,21 @@
                 <button
                   class="hover:opacity-70 transition-opacity cursor-pointer inline-block p-0 m-0 bg-transparent border-0"
                   style="color: var(--color-deep); font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
-                  @click="handleAnswer(question.id, 'num1', question)"
+                  @click="handleAnswer(question.id, 'num1', question, index)"
                 >
                   {{ question.num1 }}
                 </button>
                 <button
                   class="inline-block border-b-4 min-w-[3rem] text-center mx-2 hover:opacity-70 transition-opacity cursor-pointer p-0 bg-transparent border-x-0 border-t-0"
                   :style="{ borderBottomColor: 'var(--color-deep)', color: 'var(--color-deep)', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 'inherit' }"
-                  @click="handleAnswer(question.id, 'equal', question)"
+                  @click="handleAnswer(question.id, 'equal', question, index)"
                 >
                   <span :class="feedbackState[question.id]?.show ? '' : 'opacity-0'">{{ feedbackState[question.id]?.value || '_' }}</span>
                 </button>
                 <button
                   class="hover:opacity-70 transition-opacity cursor-pointer inline-block p-0 m-0 bg-transparent border-0"
                   style="color: var(--color-deep); font-family: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
-                  @click="handleAnswer(question.id, 'num2', question)"
+                  @click="handleAnswer(question.id, 'num2', question, index)"
                 >
                   {{ question.num2 }}
                 </button>
@@ -224,7 +224,7 @@
 </template>
 
 <script setup>
-import { watch, ref } from 'vue'
+import { watch, ref, onMounted } from 'vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
@@ -247,9 +247,9 @@ const { feedbackState, handleFeedback, clearAllFeedback, getCompletionStats, cor
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
-const focusedIndex = ref(-1)
+const focusedIndex = ref(0)
 
-const handleAnswer = (questionId, clickedNumber, question) => {
+const handleAnswer = (questionId, clickedNumber, question, index) => {
   // Get the actual values to compare (either simple numbers or calculated expression values)
   const leftValue = question.hasExpression ? question.leftValue : question.num1
   const rightValue = question.hasExpression ? question.rightValue : question.num2
@@ -277,6 +277,16 @@ const handleAnswer = (questionId, clickedNumber, question) => {
     isCorrect: isCorrect,
     value: displayedOperator
   })
+
+  // Auto-advance to next question if correct
+  if (isCorrect) {
+    const nextIndex = index + 1
+    if (nextIndex < props.questions.length) {
+      setTimeout(() => {
+        focusedIndex.value = nextIndex
+      }, 300)
+    }
+  }
 }
 
 watch(() => props.questions, (newQuestions, oldQuestions) => {
@@ -285,7 +295,7 @@ watch(() => props.questions, (newQuestions, oldQuestions) => {
         newQuestions[0]?.id !== oldQuestions[0]?.id) {
       clearAllFeedback()
       showCompletionOverlay.value = false
-      focusedIndex.value = -1
+      focusedIndex.value = 0
     }
   }
 }, { deep: true })
@@ -296,6 +306,20 @@ watch(correctCount, (newCount) => {
     setTimeout(() => {
       showCompletionOverlay.value = true
     }, 500)
+  }
+})
+
+onMounted(() => {
+  if (props.questions.length > 0 && !props.showAnswers) {
+    let firstUnsolvedIndex = 0
+    for (let i = 0; i < props.questions.length; i++) {
+      const questionId = props.questions[i].id
+      if (!feedbackState.value[questionId]?.isCorrect) {
+        firstUnsolvedIndex = i
+        break
+      }
+    }
+    focusedIndex.value = firstUnsolvedIndex
   }
 })
 
