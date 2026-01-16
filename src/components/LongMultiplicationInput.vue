@@ -1,7 +1,14 @@
 <template>
-  <div class="long-multiplication" style="font-family: 'Space Mono', monospace;" dir="ltr">
+  <div
+    class="long-multiplication"
+    style="font-family: 'Space Mono', monospace;"
+    dir="ltr"
+  >
     <!-- Carry digits row (above multiplicand) -->
-    <div class="carry-row" :style="{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.1em' }">
+    <div
+      class="carry-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.1em' }"
+    >
       <span
         v-for="(carry, index) in carryDigits"
         :key="`carry-${index}`"
@@ -20,7 +27,10 @@
     </div>
 
     <!-- Multiplicand (top number) -->
-    <div class="number-row" :style="{ display: 'flex', justifyContent: 'flex-end' }">
+    <div
+      class="number-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end' }"
+    >
       <span
         v-for="(digit, index) in multiplicandDigits"
         :key="`num1-${index}`"
@@ -36,8 +46,14 @@
     </div>
 
     <!-- Multiplier (bottom number with operator) -->
-    <div class="number-row" :style="{ display: 'flex', justifyContent: 'flex-end' }">
-      <span class="operator" :style="{ width: digitBoxSize, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }">×</span>
+    <div
+      class="number-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end' }"
+    >
+      <span
+        class="operator"
+        :style="{ width: digitBoxSize, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }"
+      >×</span>
       <span
         v-for="(digit, index) in multiplierDigits"
         :key="`num2-${index}`"
@@ -53,16 +69,22 @@
     </div>
 
     <!-- First separator line -->
-    <div class="separator" :style="{ 
-      width: `calc(${digitBoxSize} * ${maxWidth})`,
-      borderBottom: '3px solid var(--color-deep)', 
-      marginTop: '0.3em', 
-      marginBottom: '0.4em',
-      marginLeft: 'auto'
-    }"></div>
+    <div
+      class="separator"
+      :style="{ 
+        width: `calc(${digitBoxSize} * ${maxWidth})`,
+        borderBottom: '3px solid var(--color-deep)', 
+        marginTop: '0.3em', 
+        marginBottom: '0.4em',
+        marginLeft: 'auto'
+      }"
+    />
 
     <!-- Partial product 1 (multiplicand × ones digit of multiplier) -->
-    <div class="partial-product-row" :style="{ display: 'flex', justifyContent: 'flex-end' }">
+    <div
+      class="partial-product-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end' }"
+    >
       <div 
         v-for="(_, index) in partialProduct1Fields"
         :key="`pp1-box-${index}`"
@@ -83,23 +105,27 @@
         <input
           :ref="el => setPartialProduct1Ref(el, index)"
           :value="partialProduct1Fields[partialProduct1Fields.length - 1 - index]"
-          @beforeinput="(e) => handlePartialProduct1Input(e, partialProduct1Fields.length - 1 - index)"
-          @keydown="(e) => handleKeydown(e, 1, partialProduct1Fields.length - 1 - index)"
-          @click.stop="focusPartialProduct1(partialProduct1Fields.length - 1 - index)"
-          @focus="handleFocus"
-          @blur="emit('blur')"
           type="text"
           inputmode="numeric"
           maxlength="1"
           :disabled="showAnswers"
           class="digit-input"
           :style="{ cursor: showAnswers ? 'default' : 'text' }"
-        />
+          @beforeinput="(e) => handlePartialProduct1Input(e, partialProduct1Fields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, 1, partialProduct1Fields.length - 1 - index)"
+          @click.stop="focusPartialProduct1(partialProduct1Fields.length - 1 - index)"
+          @focus="handleFocus"
+          @blur="emit('blur')"
+        >
       </div>
     </div>
 
     <!-- Partial product 2 (multiplicand × tens digit of multiplier, shifted) -->
-    <div v-if="multiplierDigits.length > 1" class="partial-product-row" :style="{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.2em' }">
+    <div
+      v-if="multiplierDigits.length > 1"
+      class="partial-product-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.2em' }"
+    >
       <div 
         v-for="(_, index) in partialProduct2Fields"
         :key="`pp2-box-${index}`"
@@ -120,25 +146,32 @@
         <input
           :ref="el => setPartialProduct2Ref(el, index)"
           :value="partialProduct2Fields[partialProduct2Fields.length - 1 - index]"
-          @beforeinput="(e) => handlePartialProduct2Input(e, partialProduct2Fields.length - 1 - index)"
-          @keydown="(e) => handleKeydown(e, 2, partialProduct2Fields.length - 1 - index)"
-          @click.stop="focusPartialProduct2(partialProduct2Fields.length - 1 - index)"
-          @focus="handleFocus"
-          @blur="emit('blur')"
           type="text"
           inputmode="numeric"
           maxlength="1"
           :disabled="showAnswers"
           class="digit-input"
           :style="{ cursor: showAnswers ? 'default' : 'text' }"
-        />
+          @beforeinput="(e) => handlePartialProduct2Input(e, partialProduct2Fields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, 2, partialProduct2Fields.length - 1 - index)"
+          @click.stop="focusPartialProduct2(partialProduct2Fields.length - 1 - index)"
+          @focus="handleFocus"
+          @blur="emit('blur')"
+        >
       </div>
       <!-- Shift placeholder (ones place) -->
-      <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
+      <div
+        class="shift-placeholder"
+        :style="{ width: digitBoxSize, height: digitBoxSize }"
+      />
     </div>
 
     <!-- Partial product 3 (multiplicand × hundreds digit of multiplier, shifted 2 places) -->
-    <div v-if="multiplierDigits.length > 2" class="partial-product-row" :style="{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.2em' }">
+    <div
+      v-if="multiplierDigits.length > 2"
+      class="partial-product-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.2em' }"
+    >
       <div 
         v-for="(_, index) in partialProduct3Fields"
         :key="`pp3-box-${index}`"
@@ -159,35 +192,49 @@
         <input
           :ref="el => setPartialProduct3Ref(el, index)"
           :value="partialProduct3Fields[partialProduct3Fields.length - 1 - index]"
-          @beforeinput="(e) => handlePartialProduct3Input(e, partialProduct3Fields.length - 1 - index)"
-          @keydown="(e) => handleKeydown(e, 3, partialProduct3Fields.length - 1 - index)"
-          @click.stop="focusPartialProduct3(partialProduct3Fields.length - 1 - index)"
-          @focus="handleFocus"
-          @blur="emit('blur')"
           type="text"
           inputmode="numeric"
           maxlength="1"
           :disabled="showAnswers"
           class="digit-input"
           :style="{ cursor: showAnswers ? 'default' : 'text' }"
-        />
+          @beforeinput="(e) => handlePartialProduct3Input(e, partialProduct3Fields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, 3, partialProduct3Fields.length - 1 - index)"
+          @click.stop="focusPartialProduct3(partialProduct3Fields.length - 1 - index)"
+          @focus="handleFocus"
+          @blur="emit('blur')"
+        >
       </div>
       <!-- Shift placeholders (ones and tens places) -->
-      <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
-      <div class="shift-placeholder" :style="{ width: digitBoxSize, height: digitBoxSize }"></div>
+      <div
+        class="shift-placeholder"
+        :style="{ width: digitBoxSize, height: digitBoxSize }"
+      />
+      <div
+        class="shift-placeholder"
+        :style="{ width: digitBoxSize, height: digitBoxSize }"
+      />
     </div>
 
     <!-- Second separator line (before final answer) - only show for multi-digit multipliers -->
-    <div v-if="multiplierDigits.length > 1" class="separator" :style="{ 
-      width: `calc(${digitBoxSize} * ${maxWidth})`,
-      borderBottom: '3px solid var(--color-deep)', 
-      marginTop: '0.4em', 
-      marginBottom: '0.4em',
-      marginLeft: 'auto'
-    }"></div>
+    <div
+      v-if="multiplierDigits.length > 1"
+      class="separator"
+      :style="{ 
+        width: `calc(${digitBoxSize} * ${maxWidth})`,
+        borderBottom: '3px solid var(--color-deep)', 
+        marginTop: '0.4em', 
+        marginBottom: '0.4em',
+        marginLeft: 'auto'
+      }"
+    />
 
     <!-- Final answer row - only show for multi-digit multipliers -->
-    <div v-if="multiplierDigits.length > 1" class="final-answer-row" :style="{ display: 'flex', justifyContent: 'flex-end' }">
+    <div
+      v-if="multiplierDigits.length > 1"
+      class="final-answer-row"
+      :style="{ display: 'flex', justifyContent: 'flex-end' }"
+    >
       <div 
         v-for="(_, index) in finalAnswerFields"
         :key="`final-box-${index}`"
@@ -207,18 +254,18 @@
         <input
           :ref="el => setFinalAnswerRef(el, index)"
           :value="finalAnswerFields[finalAnswerFields.length - 1 - index]"
-          @beforeinput="(e) => handleFinalAnswerInput(e, finalAnswerFields.length - 1 - index)"
-          @keydown="(e) => handleKeydown(e, multiplierDigits.length > 2 ? 4 : 3, finalAnswerFields.length - 1 - index)"
-          @click.stop="focusFinalAnswer(finalAnswerFields.length - 1 - index)"
-          @focus="handleFocus"
-          @blur="emit('blur')"
           type="text"
           inputmode="numeric"
           maxlength="1"
           :disabled="showAnswers"
           class="digit-input"
           :style="{ cursor: showAnswers ? 'default' : 'text' }"
-        />
+          @beforeinput="(e) => handleFinalAnswerInput(e, finalAnswerFields.length - 1 - index)"
+          @keydown="(e) => handleKeydown(e, multiplierDigits.length > 2 ? 4 : 3, finalAnswerFields.length - 1 - index)"
+          @click.stop="focusFinalAnswer(finalAnswerFields.length - 1 - index)"
+          @focus="handleFocus"
+          @blur="emit('blur')"
+        >
       </div>
     </div>
   </div>

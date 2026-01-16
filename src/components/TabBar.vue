@@ -5,9 +5,9 @@
       <button
         v-for="tab in tabs"
         :key="tab.value"
-        @click="$emit('update:modelValue', tab.value)"
         class="px-4 py-3 font-bold text-sm rounded-xl transition-all"
         :style="getMobileTabStyle(tab.value)"
+        @click="$emit('update:modelValue', tab.value)"
       >
         {{ tab.label }}
       </button>
@@ -15,14 +15,17 @@
   </div>
 
   <!-- Desktop: Overlapping tabs -->
-  <div class="hidden md:flex gap-0 border-b-4 mb-8 justify-center" style="border-color: var(--color-deep);">
+  <div
+    class="hidden md:flex gap-0 border-b-4 mb-8 justify-center"
+    style="border-color: var(--color-deep);"
+  >
     <button
       v-for="tab in tabs"
       :key="tab.value"
-      @click="$emit('update:modelValue', tab.value)"
       class="px-6 py-3 font-bold text-lg rounded-t-2xl transition-all whitespace-nowrap relative"
       :class="modelValue === tab.value ? 'z-10' : 'z-0'"
       :style="getTabStyle(tab.value)"
+      @click="$emit('update:modelValue', tab.value)"
     >
       {{ tab.label }}
     </button>
@@ -30,7 +33,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -43,7 +45,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue'])
 
 const tabColors = {
   simple: 'var(--color-orange)',

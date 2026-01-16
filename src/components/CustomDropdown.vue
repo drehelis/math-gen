@@ -1,13 +1,19 @@
 <template>
-  <div class="relative" ref="dropdownRef">
+  <div
+    ref="dropdownRef"
+    class="relative"
+  >
     <button
-      @click="toggleDropdown"
       class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all flex items-center justify-between"
       :class="isOpen ? 'scale-105' : 'hover:scale-105'"
       :style="buttonStyle"
+      @click="toggleDropdown"
     >
       <span>{{ selectedLabel }}</span>
-      <span class="text-xl transition-transform duration-300" :class="{ 'rotate-180': isOpen }">▼</span>
+      <span
+        class="text-xl transition-transform duration-300"
+        :class="{ 'rotate-180': isOpen }"
+      >▼</span>
     </button>
 
     <transition
@@ -23,20 +29,26 @@
         class="absolute z-50 w-full mt-2 rounded-2xl border-2 shadow-2xl overflow-hidden"
         :style="dropdownStyle"
       >
-        <template v-for="option in options" :key="option.value">
+        <template
+          v-for="option in options"
+          :key="option.value"
+        >
           <!-- Parent option with children -->
           <div v-if="option.children">
             <div
-              @click="toggleParent(option.value)"
               class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 flex items-center justify-between"
               :class="[
                 { 'opacity-50': modelValue === option.value },
                 isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1'
               ]"
               :style="optionStyle"
+              @click="toggleParent(option.value)"
             >
               <span>{{ option.label }}</span>
-              <span class="text-sm transition-transform duration-200" :class="{ 'rotate-90': expandedParents[option.value] }">▶</span>
+              <span
+                class="text-sm transition-transform duration-200"
+                :class="{ 'rotate-90': expandedParents[option.value] }"
+              >▶</span>
             </div>
             <!-- Nested children with slide animation -->
             <transition
@@ -47,17 +59,20 @@
               leave-from-class="max-h-96 opacity-100"
               leave-to-class="max-h-0 opacity-0"
             >
-              <div v-if="expandedParents[option.value]" class="overflow-hidden">
+              <div
+                v-if="expandedParents[option.value]"
+                class="overflow-hidden"
+              >
                 <div
                   v-for="child in option.children"
                   :key="child.value"
-                  @click="selectOption(child)"
                   class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105"
                   :class="[
                     { 'opacity-50': modelValue === child.value },
                     isRTL ? 'pr-8 hover:-translate-x-1' : 'pl-8 hover:translate-x-1'
                   ]"
                   :style="{ ...optionStyle, opacity: modelValue === child.value ? '0.5' : '0.9' }"
+                  @click="selectOption(child)"
                 >
                   {{ child.label }}
                 </div>
@@ -67,13 +82,13 @@
           <!-- Regular option without children -->
           <div
             v-else
-            @click="selectOption(option)"
             class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105"
             :class="[
               { 'opacity-50': modelValue === option.value },
               isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1'
             ]"
             :style="optionStyle"
+            @click="selectOption(option)"
           >
             {{ option.label }}
           </div>
@@ -120,7 +135,8 @@ const isRTL = computed(() => {
 })
 
 const selectedLabel = computed(() => {
-  let option = props.options.find(opt => opt.value === props.modelValue)
+  if (!props.options) return ''
+  const option = props.options.find(opt => opt.value === props.modelValue)
   if (option) return option.label
   
   for (const parent of props.options) {

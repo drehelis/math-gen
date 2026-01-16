@@ -1,13 +1,16 @@
 <template>
   <div class="no-print">
-    <div class="flex gap-1 sm:gap-2 items-center" dir="ltr">
+    <div
+      class="flex gap-1 sm:gap-2 items-center"
+      dir="ltr"
+    >
       <button
         v-for="lang in languages"
         :key="lang.code"
-        @click="$emit('change-locale', lang.code)"
         class="px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl transition-all transform hover:scale-105 min-w-[60px] sm:min-w-[100px]"
         :class="currentLocale === lang.code ? 'scale-105' : 'opacity-60'"
         :style="getButtonStyle(lang.code)"
+        @click="$emit('change-locale', lang.code)"
       >
         <span class="inline-block">{{ lang.label }}</span>
       </button>

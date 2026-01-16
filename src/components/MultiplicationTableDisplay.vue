@@ -8,7 +8,10 @@
 
     <div class="print:hidden">
       <!-- Interactive Scrollable Table -->
-      <div class="no-print relative mb-12" dir="ltr">
+      <div
+        class="no-print relative mb-12"
+        dir="ltr"
+      >
         <div class="table-wrapper">
           <div class="scroll-container">
             <table class="interactive-table">
@@ -36,7 +39,10 @@
                   :class="{ 'row-highlighted': highlightedRow === row }"
                 >
                   <!-- Row header -->
-                  <th class="row-header" :class="{ 'row-header-highlighted': highlightedRow === row }">
+                  <th
+                    class="row-header"
+                    :class="{ 'row-header-highlighted': highlightedRow === row }"
+                  >
                     <span class="header-text">{{ row }}</span>
                   </th>
                   <!-- Data cells -->
@@ -55,17 +61,20 @@
                       v-show="!showAnswers"
                       :ref="el => setCellRef(el, row, col)"
                       v-model="cellValues[getCellKey(row, col)]"
-                      @input="(e) => handleInput(row, col, e.target.value)"
-                      @keydown="(e) => handleKeydown(e, row, col)"
-                      @focus="handleCellFocus(row, col)"
-                      @blur="handleCellBlur()"
                       type="text"
                       inputmode="numeric"
                       pattern="[0-9]*"
                       maxlength="3"
                       class="cell-input"
-                    />
-                    <span v-show="showAnswers" class="cell-answer">{{ getAnswer(row, col) }}</span>
+                      @input="(e) => handleInput(row, col, e.target.value)"
+                      @keydown="(e) => handleKeydown(e, row, col)"
+                      @focus="handleCellFocus(row, col)"
+                      @blur="handleCellBlur()"
+                    >
+                    <span
+                      v-show="showAnswers"
+                      class="cell-answer"
+                    >{{ getAnswer(row, col) }}</span>
                   </td>
                 </tr>
               </tbody>
@@ -74,10 +83,13 @@
         </div>
 
         <!-- Clear button at bottom -->
-        <div v-if="!showAnswers && (correctCount > 0 || incorrectCount > 0)" class="mt-6 text-center">
+        <div
+          v-if="!showAnswers && (correctCount > 0 || incorrectCount > 0)"
+          class="mt-6 text-center"
+        >
           <button
-            @click="clearTable"
             class="clear-button"
+            @click="clearTable"
           >
             Clear All
           </button>
@@ -85,30 +97,70 @@
       </div>
 
       <div class="text-center py-8">
-        <a href="https://github.com/drehelis/math-gen" target="_blank" rel="noopener noreferrer" class="inline-block hover:opacity-70 transition-opacity" style="color: var(--color-purple);" :title="$t('emptyState.github')">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        <a
+          href="https://github.com/drehelis/math-gen"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block hover:opacity-70 transition-opacity"
+          style="color: var(--color-purple);"
+          :title="$t('emptyState.github')"
+        >
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
           </svg>
         </a>
       </div>
     </div>
 
     <!-- Print Layout -->
-    <div class="hidden print:block" dir="ltr">
+    <div
+      class="hidden print:block"
+      dir="ltr"
+    >
       <div class="print-page">
-        <h2 class="text-xl font-bold mb-6 text-center" style="color: black;">{{ $t('tabs.table') }}</h2>
-        <div class="print-table" style="font-family: 'Space Mono', monospace;">
+        <h2
+          class="text-xl font-bold mb-6 text-center"
+          style="color: black;"
+        >
+          {{ $t('tabs.table') }}
+        </h2>
+        <div
+          class="print-table"
+          style="font-family: 'Space Mono', monospace;"
+        >
           <table class="multiplication-print-table">
             <thead>
               <tr>
-                <th class="print-header-cell">×</th>
-                <th v-for="col in tableSize" :key="`print-header-${col}`" class="print-header-cell">{{ col }}</th>
+                <th class="print-header-cell">
+                  ×
+                </th>
+                <th
+                  v-for="col in tableSize"
+                  :key="`print-header-${col}`"
+                  class="print-header-cell"
+                >
+                  {{ col }}
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in tableSize" :key="`print-row-${row}`">
-                <th class="print-header-cell">{{ row }}</th>
-                <td v-for="col in tableSize" :key="`print-cell-${row}-${col}`" class="print-data-cell">
+              <tr
+                v-for="row in tableSize"
+                :key="`print-row-${row}`"
+              >
+                <th class="print-header-cell">
+                  {{ row }}
+                </th>
+                <td
+                  v-for="col in tableSize"
+                  :key="`print-cell-${row}-${col}`"
+                  class="print-data-cell"
+                >
                   <span v-if="showAnswers">{{ getAnswer(row, col) }}</span>
                   <span v-else>&nbsp;</span>
                 </td>
@@ -299,11 +351,7 @@ const clearTable = () => {
   }
 }
 
-const gridStyle = computed(() => ({
-  display: 'grid',
-  gridTemplateColumns: `repeat(${props.tableSize + 1}, minmax(0, 1fr))`,
-  gap: '0'
-}))
+
 
 // Watch for completion
 watch(correctCount, (newCount) => {

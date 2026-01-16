@@ -15,23 +15,26 @@ export function useQuestionGenerator() {
     let min = 0
     let max = 10
 
+    switch (settings.value.difficulty) {
       case 'easy':
-  max = 10;
-  break;
+        max = 10
+        break
       case 'beginners':
-  min = 0;
-  max = 10;
-  break;
+        min = 0
+        max = 10
+        break
       case 'basic':
-  max = 20;
-  break;
+        max = 20
+        break
       case 'medium':
-  max = 100;
-  break;
+        max = 100
+        break
       case 'hard':
-  max = 1000;
-  break; return Math.floor(Math.random() * (max - min + 1)) + min
-}
+        max = 1000
+        break
+    }
+    return Math.floor(Math.random() * (max - min + 1)) + min
+  }
 
 const generateQuestion = () => {
   let num1 = getRandomNumber()

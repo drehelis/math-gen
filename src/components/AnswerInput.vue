@@ -1,18 +1,22 @@
 <template>
-  <span class="relative inline-block" :class="[{ 'border-b-4': showBorder }, customWidth || 'w-[4rem] sm:w-[4.5rem]']" :style="{ borderColor: showBorder ? borderColor : 'transparent' }">
+  <span
+    class="relative inline-block"
+    :class="[{ 'border-b-4': showBorder }, customWidth || 'w-[4rem] sm:w-[4.5rem]']"
+    :style="{ borderColor: showBorder ? borderColor : 'transparent' }"
+  >
     <input
       ref="inputElement"
       :value="userAnswer"
-      @input="handleInput"
-      @focus="emit('focus')"
-      @blur="emit('blur')"
       type="text"
       inputmode="numeric"
       :maxlength="maxLength"
       class="w-full bg-transparent font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
       :class="[inputClasses, `text-${textAlign}`]"
       style="color: var(--color-deep);"
-    />
+      @input="handleInput"
+      @focus="emit('focus')"
+      @blur="emit('blur')"
+    >
   </span>
 </template>
 
@@ -134,18 +138,11 @@ const validateAnswer = () => {
   }
 }
 
-const feedbackIcon = computed(() => {
-  return isCorrect.value ? '✔' : '✖'
-})
-
 const inputClasses = computed(() => {
   if (!showFeedback.value) return ''
   return isCorrect.value ? 'text-green-600' : 'text-red-600'
 })
 
-const feedbackColor = computed(() => {
-  return isCorrect.value ? '#15803d' : '#b91c1c'
-})
 
 const borderColor = computed(() => {
   if (!showFeedback.value) return 'var(--color-deep)'

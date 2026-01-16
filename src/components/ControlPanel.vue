@@ -8,12 +8,11 @@
       }"
       :style="'border-color: var(--color-deep);'"
     >
-
       <!-- Mobile: Collapse badge on bottom border -->
       <button
-        @click="isCollapsed = !isCollapsed"
         class="md:hidden absolute left-1/2 -translate-x-1/2 -bottom-5 z-20 px-4 py-1 rounded-full border-4 transition-all shadow-lg"
         style="background: var(--color-deep); border-color: var(--color-deep); color: white;"
+        @click="isCollapsed = !isCollapsed"
       >
         <svg
           class="w-5 h-5 transition-transform duration-300"
@@ -22,7 +21,12 @@
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -35,145 +39,193 @@
         }"
       >
         <div class="relative text-center mb-8">
-          <div class="mb-4 lg:mb-0 lg:absolute lg:top-0 flex justify-center" :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }">
-            <slot name="language-switcher"></slot>
+          <div
+            class="mb-4 lg:mb-0 lg:absolute lg:top-0 flex justify-center"
+            :style="{ [currentLocale === 'he' ? 'right' : 'left']: currentLocale === 'he' ? '0' : '0' }"
+          >
+            <slot name="language-switcher" />
           </div>
 
-          <h1 class="text-5xl md:text-6xl font-bold mb-2" style="color: var(--color-deep); letter-spacing: -0.02em;">
+          <h1
+            class="text-5xl md:text-6xl font-bold mb-2"
+            style="color: var(--color-deep); letter-spacing: -0.02em;"
+          >
             {{ $t('app.title') }}
           </h1>
           <div class="flex items-center justify-center gap-3 text-4xl font-bold">
-            <span class="animate-pulse" style="color: var(--color-orange);">+</span>
-            <span class="animate-pulse" style="color: var(--color-coral); animation-delay: 0.2s;">-</span>
-            <span class="animate-pulse" style="color: var(--color-sky); animation-delay: 0.4s;">×</span>
-            <span class="animate-pulse" style="color: var(--color-mint); animation-delay: 0.6s;">÷</span>
+            <span
+              class="animate-pulse"
+              style="color: var(--color-orange);"
+            >+</span>
+            <span
+              class="animate-pulse"
+              style="color: var(--color-coral); animation-delay: 0.2s;"
+            >-</span>
+            <span
+              class="animate-pulse"
+              style="color: var(--color-sky); animation-delay: 0.4s;"
+            >×</span>
+            <span
+              class="animate-pulse"
+              style="color: var(--color-mint); animation-delay: 0.6s;"
+            >÷</span>
           </div>
         </div>
 
-      <slot name="tabs"></slot>
+        <slot name="tabs" />
 
-      <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div v-if="!tableMode">
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('controls.howMany') }}
-          </label>
-          <CustomDropdown
-            v-if="!showCustomCount"
-            v-model="localSettings.count"
-            :options="countOptions"
-            border-color="var(--color-sunshine)"
-            background-color="var(--color-sunshine)"
-            text-color="var(--color-deep)"
-          />
-          <input
-            v-else
-            v-model.number="customCountValue"
-            @blur="handleCustomCountBlur"
-            @keyup.enter="handleCustomCountBlur"
-            type="number"
-            min="1"
-            max="500"
-            autofocus
-            class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all"
-            style="border-color: var(--color-sunshine); background: var(--color-sunshine); color: var(--color-deep);"
-            :placeholder="$t('controls.enterNumber')"
-          />
-        </div>
-
-        <div v-if="tableMode">
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('table.tableSize') }}
-          </label>
-          <CustomDropdown
-            v-model="localSettings.tableSize"
-            :options="tableSizeOptions"
-            border-color="var(--color-sunshine)"
-            background-color="var(--color-sunshine)"
-            text-color="var(--color-deep)"
-          />
-        </div>
-
-        <div v-if="tableMode">
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('table.prefillPercentage') }}
-          </label>
-          <CustomDropdown
-            v-model="localSettings.prefillPercentage"
-            :options="prefillOptions"
-            border-color="var(--color-sky)"
-            background-color="var(--color-sky)"
-            text-color="white"
-          />
-        </div>
-
-        <div v-if="!tableMode">
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('controls.operation') }}
-          </label>
-          <MultiSelectDropdown
-            v-model="localSettings.operations"
-            :options="comparisonMode ? comparisonOperationOptions : hideOperation ? [
-              { value: 'addition', label: $t('missingOperation.addition') },
-              { value: 'subtraction', label: $t('missingOperation.subtraction') }
-            ] : operationOptions"
-            border-color="var(--color-sky)"
-            background-color="var(--color-sky)"
-            text-color="white"
-          />
-        </div>
-
-        <div v-if="!tableMode">
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('controls.difficulty') }}
-          </label>
-          <CustomDropdown
-            v-model="localSettings.difficulty"
-            :options="difficultyOptions"
-            border-color="var(--color-coral)"
-            background-color="var(--color-coral)"
-            text-color="white"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-bold mb-3" style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;">
-            {{ $t('controls.options') }}
-          </label>
-          <MultiSelectDropdown
-            v-model="localSettings.selectedOptions"
-            :options="optionsOptions"
-            border-color="var(--color-mint)"
-            background-color="var(--color-mint)"
-            text-color="white"
-            :allow-empty="true"
-          />
-        </div>
-      </div>
-
-      <div v-if="showControls" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button
-          @click="handleGenerate"
-          :disabled="tableMode && localSettings.prefillPercentage === 0"
-          class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
-          :style="(tableMode && localSettings.prefillPercentage === 0) ? 'background: #ccc; border-color: #999; color: #666;' : 'background: var(--color-sky); border-color: var(--color-deep); color: white;'"
+        <div
+          v-if="showControls"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          {{ tableMode ? $t('controls.prefillTable') : $t('controls.generateQuestions') }}
-        </button>
+          <div v-if="!tableMode">
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('controls.howMany') }}
+            </label>
+            <CustomDropdown
+              v-if="!showCustomCount"
+              v-model="localSettings.count"
+              :options="countOptions"
+              border-color="var(--color-sunshine)"
+              background-color="var(--color-sunshine)"
+              text-color="var(--color-deep)"
+            />
+            <input
+              v-else
+              v-model.number="customCountValue"
+              type="number"
+              min="1"
+              max="500"
+              autofocus
+              class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all"
+              style="border-color: var(--color-sunshine); background: var(--color-sunshine); color: var(--color-deep);"
+              :placeholder="$t('controls.enterNumber')"
+              @blur="handleCustomCountBlur"
+              @keyup.enter="handleCustomCountBlur"
+            >
+          </div>
 
-        <button
-          @click="handlePrint"
-          :disabled="!hasQuestions"
-          class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
-          :style="hasQuestions ? 'background: var(--color-purple); border-color: var(--color-deep); color: white;' : 'background: #ccc; border-color: #999; color: #666;'"
+          <div v-if="tableMode">
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('table.tableSize') }}
+            </label>
+            <CustomDropdown
+              v-model="localSettings.tableSize"
+              :options="tableSizeOptions"
+              border-color="var(--color-sunshine)"
+              background-color="var(--color-sunshine)"
+              text-color="var(--color-deep)"
+            />
+          </div>
+
+          <div v-if="tableMode">
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('table.prefillPercentage') }}
+            </label>
+            <CustomDropdown
+              v-model="localSettings.prefillPercentage"
+              :options="prefillOptions"
+              border-color="var(--color-sky)"
+              background-color="var(--color-sky)"
+              text-color="white"
+            />
+          </div>
+
+          <div v-if="!tableMode">
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('controls.operation') }}
+            </label>
+            <MultiSelectDropdown
+              v-model="localSettings.operations"
+              :options="comparisonMode ? comparisonOperationOptions : hideOperation ? [
+                { value: 'addition', label: $t('missingOperation.addition') },
+                { value: 'subtraction', label: $t('missingOperation.subtraction') }
+              ] : operationOptions"
+              border-color="var(--color-sky)"
+              background-color="var(--color-sky)"
+              text-color="white"
+            />
+          </div>
+
+          <div v-if="!tableMode">
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('controls.difficulty') }}
+            </label>
+            <CustomDropdown
+              v-model="localSettings.difficulty"
+              :options="difficultyOptions"
+              border-color="var(--color-coral)"
+              background-color="var(--color-coral)"
+              text-color="white"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-bold mb-3"
+              style="color: var(--color-deep); text-transform: uppercase; letter-spacing: 0.05em;"
+            >
+              {{ $t('controls.options') }}
+            </label>
+            <MultiSelectDropdown
+              v-model="localSettings.selectedOptions"
+              :options="optionsOptions"
+              border-color="var(--color-mint)"
+              background-color="var(--color-mint)"
+              text-color="white"
+              :allow-empty="true"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="showControls"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          {{ $t('controls.printMe') }}
-        </button>
-      </div>
+          <button
+            :disabled="tableMode && localSettings.prefillPercentage === 0"
+            class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
+            :style="(tableMode && localSettings.prefillPercentage === 0) ? 'background: #ccc; border-color: #999; color: #666;' : 'background: var(--color-sky); border-color: var(--color-deep); color: white;'"
+            @click="handleGenerate"
+          >
+            {{ tableMode ? $t('controls.prefillTable') : $t('controls.generateQuestions') }}
+          </button>
+
+          <button
+            :disabled="!hasQuestions"
+            class="py-5 px-8 font-bold text-xl rounded-2xl border-4 transition-all transform hover:scale-105 hover:-translate-y-1 active:translate-y-0 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
+            :style="hasQuestions ? 'background: var(--color-purple); border-color: var(--color-deep); color: white;' : 'background: #ccc; border-color: #999; color: #666;'"
+            @click="handlePrint"
+          >
+            {{ $t('controls.printMe') }}
+          </button>
+        </div>
       </div> <!-- End Collapsible content wrapper -->
     </div>
 
-    <div class="absolute -top-4 -right-4 w-24 h-24 rounded-full -z-10" style="background: var(--color-sunshine);"></div>
-    <div class="absolute -bottom-4 -left-4 w-20 h-20 rotate-45 -z-10" style="background: var(--color-coral);"></div>
+    <div
+      class="absolute -top-4 -right-4 w-24 h-24 rounded-full -z-10"
+      style="background: var(--color-sunshine);"
+    />
+    <div
+      class="absolute -bottom-4 -left-4 w-20 h-20 rotate-45 -z-10"
+      style="background: var(--color-coral);"
+    />
   </div>
 </template>
 
@@ -419,11 +471,7 @@ const comparisonOperationOptions = computed(() => {
   }
 })
 
-const missingPositionOptions = computed(() => [
-  { value: 'random', label: t('missingPosition.random') },
-  { value: 'first', label: t('missingPosition.first') },
-  { value: 'second', label: t('missingPosition.second') }
-])
+
 
 const tableSizeOptions = computed(() => [
   { value: 10, label: t('table.size.10') },
@@ -458,12 +506,6 @@ const difficultyOptions = computed(() => {
   
   return options
 })
-
-const formatOptions = computed(() => [
-  { value: 'standard', label: t('questionFormat.standard') },
-  { value: 'both-sides', label: t('questionFormat.bothSides') },
-  { value: 'missing-both', label: t('questionFormat.missingBoth') }
-])
 
 const optionsOptions = computed(() => {
   const options = [
