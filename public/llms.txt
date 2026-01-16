@@ -1,0 +1,24 @@
+# Math-Gen
+
+> Elementary school math exercise generator. Create printable math worksheets for addition, subtraction, multiplication, division, and comparison exercises.
+
+## About
+
+Math-Gen is a free, open-source web application that generates customizable math exercises for elementary school students. Teachers and parents can use it to create printable practice worksheets.
+
+## Features
+
+- Simple arithmetic exercises (addition, subtraction, multiplication, division)
+- Missing number exercises (find the missing operand)
+- Comparison exercises (greater than, less than, equal to)
+- Long-form exercises (multi-digit addition, subtraction, multiplication)
+- Multiplication table practice
+- Customizable difficulty settings (number ranges, exercise count)
+- Multi-language support (English and Hebrew)
+- Print-friendly output
+- Mobile-responsive design
+
+## Links
+
+- [Website](https://math-gen.com/)
+- [Source Code](https://github.com/drehelis/math-gen)
