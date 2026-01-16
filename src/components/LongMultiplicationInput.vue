@@ -824,91 +824,14 @@ defineExpose({
 })
 </script>
 
+<style>
+@import '../styles/digit-input.css';
+</style>
+
 <style scoped>
 .long-multiplication {
   font-size: 1.1em;
   line-height: 1.2;
   color: var(--color-deep);
-}
-
-.input-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--color-deep);
-  border-radius: 4px;
-  margin: 0 1px;
-  opacity: 0.4;
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.input-box.active {
-  opacity: 1;
-  border-color: var(--color-deep);
-  background: rgba(255, 255, 255, 0.3);
-  cursor: text;
-}
-
-.input-box.completed {
-  opacity: 0.6;
-  background: rgba(16, 185, 129, 0.1);
-}
-
-.input-box.correct {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.2);
-}
-
-.input-box.incorrect {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.digit-input {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  text-align: center;
-  font-weight: bold;
-  font-size: inherit;
-  font-family: inherit;
-  color: var(--color-deep);
-  outline: none;
-  padding: 0;
-  margin: 0;
-}
-
-.digit-input:disabled {
-  color: var(--color-deep);
-  cursor: default;
-}
-
-.digit-input:focus {
-  outline: none;
-}
-
-.shift-placeholder {
-  opacity: 0;
-  margin: 0 1px;
-}
-
-.number-digit {
-  font-weight: bold;
-}
-
-.carry-digit {
-  font-weight: bold;
-}
-
-.input-box.answers-shown {
-  opacity: 1;
-  border-color: var(--color-deep);
-  background: transparent;
-}
-
-.input-box.answers-shown .digit-input {
-  opacity: 0.5;
 }
 </style>

@@ -88,7 +88,28 @@
             />
           </div>
 
-          <!-- Standard Vertical Layout for other operations (addition, subtraction) -->
+          <!-- Long Addition/Subtraction Layout for addition/subtraction operations -->
+          <div
+            v-else-if="isAdditionOrSubtraction(question)"
+            class="flex flex-col items-center justify-center pt-2 pb-2"
+            dir="ltr"
+          >
+            <LongAdditionSubtractionInput
+              :ref="el => setInputRef(el, index)"
+              v-model="question.userAnswer"
+              :num1="question.num1"
+              :num2="question.num2"
+              :correct-answer="question.answer"
+              :operation="question.operation"
+              :show-answers="showAnswers"
+              @feedback="(data) => handleFeedback(question.id, data)"
+              @correct-answer="() => focusNextInput(index, questions.length)"
+              @focus="focusedIndex = index"
+              @blur="focusedIndex = -1"
+            />
+          </div>
+
+          <!-- Fallback Vertical Layout for other operations -->
           <div
             v-else
             class="flex flex-col items-center justify-center pt-4 pb-2"
@@ -308,6 +329,7 @@ import { watch, onMounted, ref, computed } from 'vue'
 import AnswerInput from './AnswerInput.vue'
 import VerticalAnswerInput from './VerticalAnswerInput.vue'
 import LongMultiplicationInput from './LongMultiplicationInput.vue'
+import LongAdditionSubtractionInput from './LongAdditionSubtractionInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
@@ -344,6 +366,11 @@ const useVerticalFormat = computed(() => {
 // Check if a question is a multiplication operation
 const isMultiplication = (question) => {
   return question.operation === '×'
+}
+
+// Check if a question is addition or subtraction
+const isAdditionOrSubtraction = (question) => {
+  return question.operation === '+' || question.operation === '-'
 }
 
 const operatorMarginLeft = computed(() => {
