@@ -6,8 +6,16 @@
       :class="{ 'print:break-before-page': pageIndex > 0 || forcePageBreak }"
     >
       <div class="print:mb-4">
-        <h2 class="text-xl font-bold" style="color: black;">
-          <slot name="title" :page-index="pageIndex">{{ title }}</slot>
+        <h2
+          class="text-xl font-bold"
+          style="color: black;"
+        >
+          <slot
+            name="title"
+            :page-index="pageIndex"
+          >
+            {{ title }}
+          </slot>
         </h2>
       </div>
       <div
@@ -16,7 +24,12 @@
         :style="getPageGridStyle(page.length)"
         dir="ltr"
       >
-        <slot name="item" v-for="item in page" :item="item" :key="item.id"></slot>
+        <slot
+          v-for="item in page"
+          :key="item.id"
+          name="item"
+          :item="item"
+        />
       </div>
     </div>
   </div>

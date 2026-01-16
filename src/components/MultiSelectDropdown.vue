@@ -1,13 +1,19 @@
 <template>
-  <div class="relative" ref="dropdownRef">
+  <div
+    ref="dropdownRef"
+    class="relative"
+  >
     <button
-      @click="toggleDropdown"
       class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all flex items-center justify-between"
       :class="isOpen ? 'scale-105' : 'hover:scale-105'"
       :style="buttonStyle"
+      @click="toggleDropdown"
     >
       <span>{{ selectedLabel }}</span>
-      <span class="text-xl transition-transform duration-300" :class="{ 'rotate-180': isOpen }">▼</span>
+      <span
+        class="text-xl transition-transform duration-300"
+        :class="{ 'rotate-180': isOpen }"
+      >▼</span>
     </button>
 
     <transition
@@ -26,9 +32,9 @@
         <div
           v-for="option in options"
           :key="option.value"
-          @click="toggleOption(option)"
           class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 ltr:hover:translate-x-1 rtl:hover:-translate-x-1 flex items-center gap-3"
           :style="optionStyle"
+          @click="toggleOption(option)"
         >
           <div
             class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
@@ -37,7 +43,11 @@
               backgroundColor: 'transparent'
             }"
           >
-            <div v-if="isSelected(option.value)" class="w-3 h-3 sm:w-2.5 sm:h-2.5 rounded-full" :style="{ backgroundColor: textColor }"></div>
+            <div
+              v-if="isSelected(option.value)"
+              class="w-3 h-3 sm:w-2.5 sm:h-2.5 rounded-full"
+              :style="{ backgroundColor: textColor }"
+            />
           </div>
           <span>{{ option.label }}</span>
         </div>

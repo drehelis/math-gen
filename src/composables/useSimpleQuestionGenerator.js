@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { edgeCaseRules, checkEdgeCases } from './useEdgeCaseRules'
+import { checkEdgeCases } from './useEdgeCaseRules'
 
 let idCounter = 0
 

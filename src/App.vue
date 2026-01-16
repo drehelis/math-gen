@@ -1,12 +1,45 @@
 <template>
-  <div class="min-h-screen p-6 md:p-8 print:bg-white print:p-0" style="background: var(--color-bg);">
+  <div
+    class="min-h-screen p-6 md:p-8 print:bg-white print:p-0"
+    style="background: var(--color-bg);"
+  >
     <div class="no-print fixed inset-0 overflow-hidden pointer-events-none opacity-20">
-      <div class="absolute top-10 left-10 font-bold" style="color: var(--color-orange); animation: float 6s ease-in-out infinite; font-size: 15rem;">+</div>
-      <div class="absolute top-40 right-20 font-bold" style="color: var(--color-coral); animation: float 8s ease-in-out infinite 1s; font-size: 12rem;">-</div>
-      <div class="absolute bottom-20 left-1/4 font-bold" style="color: var(--color-sky); animation: float 7s ease-in-out infinite 2s; font-size: 16rem;">×</div>
-      <div class="absolute bottom-40 right-1/3 font-bold" style="color: var(--color-mint); animation: float 9s ease-in-out infinite 0.5s; font-size: 11rem;">÷</div>
-      <div class="absolute top-1/2 right-10 font-bold" style="color: var(--color-purple); animation: float 10s ease-in-out infinite 1.5s; font-size: 13rem;">=</div>
-      <div class="absolute top-1/3 left-1/3 font-bold" style="color: var(--color-sunshine); animation: float 11s ease-in-out infinite 2.5s; font-size: 10rem;">+</div>
+      <div
+        class="absolute top-10 left-10 font-bold"
+        style="color: var(--color-orange); animation: float 6s ease-in-out infinite; font-size: 15rem;"
+      >
+        +
+      </div>
+      <div
+        class="absolute top-40 right-20 font-bold"
+        style="color: var(--color-coral); animation: float 8s ease-in-out infinite 1s; font-size: 12rem;"
+      >
+        -
+      </div>
+      <div
+        class="absolute bottom-20 left-1/4 font-bold"
+        style="color: var(--color-sky); animation: float 7s ease-in-out infinite 2s; font-size: 16rem;"
+      >
+        ×
+      </div>
+      <div
+        class="absolute bottom-40 right-1/3 font-bold"
+        style="color: var(--color-mint); animation: float 9s ease-in-out infinite 0.5s; font-size: 11rem;"
+      >
+        ÷
+      </div>
+      <div
+        class="absolute top-1/2 right-10 font-bold"
+        style="color: var(--color-purple); animation: float 10s ease-in-out infinite 1.5s; font-size: 13rem;"
+      >
+        =
+      </div>
+      <div
+        class="absolute top-1/3 left-1/3 font-bold"
+        style="color: var(--color-sunshine); animation: float 11s ease-in-out infinite 2.5s; font-size: 10rem;"
+      >
+        +
+      </div>
     </div>
 
     <div class="max-w-7xl mx-auto relative z-10">
@@ -24,7 +57,10 @@
           <LanguageSwitcher @change-locale="changeLocale" />
         </template>
         <template #tabs>
-          <TabBar v-model="activeTab" :tabs="tabs" />
+          <TabBar
+            v-model="activeTab"
+            :tabs="tabs"
+          />
         </template>
       </ControlPanel>
 

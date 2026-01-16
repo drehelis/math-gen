@@ -5,10 +5,6 @@
       :key="index"
       :ref="el => setInputRef(el, index)"
       :value="fields[index]"
-      @beforeinput="(e) => handleBeforeInput(e, index)"
-      @keydown="(e) => handleKeydown(e, index)"
-      @focus="emit('focus')"
-      @blur="emit('blur')"
       type="text"
       inputmode="numeric"
       class="bg-transparent text-right font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
@@ -18,7 +14,11 @@
         color: 'var(--color-deep)',
         fontFamily: '\'Space Mono\', monospace'
       }"
-    />
+      @beforeinput="(e) => handleBeforeInput(e, index)"
+      @keydown="(e) => handleKeydown(e, index)"
+      @focus="emit('focus')"
+      @blur="emit('blur')"
+    >
   </div>
 </template>
 
@@ -43,7 +43,6 @@ const props = defineProps({
 const emit = defineEmits(['feedback', 'update:modelValue', 'correctAnswer', 'focus', 'blur'])
 
 const inputRefs = ref([])
-const answerLength = computed(() => Math.abs(props.correctAnswer).toString().length)
 const numFields = computed(() => {
   // Base number of fields on difficulty, not answer length
   if (props.difficulty === 'medium') return 2

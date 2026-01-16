@@ -28,21 +28,39 @@
           @click.stop
         >
           <div class="text-center mb-8">
-            <h2 class="text-4xl md:text-5xl font-bold mb-2" style="color: var(--color-deep);">
+            <h2
+              class="text-4xl md:text-5xl font-bold mb-2"
+              style="color: var(--color-deep);"
+            >
               {{ $t('completion.title') }}
             </h2>
-            <p class="text-xl font-semibold" style="color: var(--color-orange);">
+            <p
+              class="text-xl font-semibold"
+              style="color: var(--color-orange);"
+            >
               {{ $t('completion.subtitle') }}
             </p>
           </div>
 
           <div class="space-y-4 mb-8">
-            <div class="flex justify-between items-center p-4 rounded-2xl border-4" style="background: var(--color-sunshine); border-color: var(--color-deep);">
-              <span class="font-bold text-lg" style="color: var(--color-deep);">{{ $t('completion.total') }}:</span>
-              <span class="font-bold text-2xl" style="color: var(--color-deep);">{{ stats.total }}</span>
+            <div
+              class="flex justify-between items-center p-4 rounded-2xl border-4"
+              style="background: var(--color-sunshine); border-color: var(--color-deep);"
+            >
+              <span
+                class="font-bold text-lg"
+                style="color: var(--color-deep);"
+              >{{ $t('completion.total') }}:</span>
+              <span
+                class="font-bold text-2xl"
+                style="color: var(--color-deep);"
+              >{{ stats.total }}</span>
             </div>
 
-            <div class="flex justify-between items-center p-4 rounded-2xl border-4" style="background: var(--color-sky); border-color: var(--color-deep);">
+            <div
+              class="flex justify-between items-center p-4 rounded-2xl border-4"
+              style="background: var(--color-sky); border-color: var(--color-deep);"
+            >
               <span class="font-bold text-lg text-white">{{ $t('completion.time') }}:</span>
               <span class="font-bold text-2xl text-white">{{ formattedTime }}</span>
             </div>
@@ -50,9 +68,9 @@
 
           <div class="flex justify-center">
             <button
-              @click="handleClose"
               class="px-6 py-2 font-semibold text-base rounded-xl border-3 transition-all transform hover:scale-105 active:scale-95"
               style="background: var(--color-purple); border-color: var(--color-deep); color: white;"
+              @click="handleClose"
             >
               {{ $t('completion.close') }}
             </button>
@@ -73,13 +91,7 @@ const props = defineProps({
   },
   stats: {
     type: Object,
-    required: true,
-    default: () => ({
-      total: 0,
-      firstTry: 0,
-      timeInSeconds: 0,
-      accuracy: 100
-    })
+    required: true
   }
 })
 
