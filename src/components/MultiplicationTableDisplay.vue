@@ -230,6 +230,63 @@ const handleInput = (row, col, value) => {
   if (multiplicationTableTab) {
     multiplicationTableTab.setUserAnswer(row, col, sanitized)
   }
+
+  // Auto-advance to next cell if the answer is correct
+  const correctAnswer = getAnswer(row, col)
+  const correctAnswerLength = String(correctAnswer).length
+  if (sanitized.length === correctAnswerLength && parseInt(sanitized) === correctAnswer) {
+    // Find and focus the next unfilled cell
+    advanceToNextCell(row, col)
+  }
+}
+
+const advanceToNextCell = (currentRow, currentCol) => {
+  // Find next unfilled cell, starting from current position
+  for (let row = currentRow; row <= props.tableSize; row++) {
+    const startCol = row === currentRow ? currentCol + 1 : 1
+    for (let col = startCol; col <= props.tableSize; col++) {
+      const key = getCellKey(row, col)
+      const value = cellValues.value[key]
+      const correctAnswer = getAnswer(row, col)
+      const correctAnswerLength = String(correctAnswer).length
+      // Skip if already correctly filled
+      if (value && value.length === correctAnswerLength && parseInt(value) === correctAnswer) {
+        continue
+      }
+      // Focus this cell
+      const nextInput = cellRefs.value[key]
+      if (nextInput) {
+        nextTick(() => {
+          nextInput.focus()
+          nextInput.select()
+        })
+      }
+      return
+    }
+  }
+  // If no unfilled cell found after current position, wrap to beginning
+  for (let row = 1; row <= currentRow; row++) {
+    const endCol = row === currentRow ? currentCol : props.tableSize
+    for (let col = 1; col <= endCol; col++) {
+      const key = getCellKey(row, col)
+      const value = cellValues.value[key]
+      const correctAnswer = getAnswer(row, col)
+      const correctAnswerLength = String(correctAnswer).length
+      // Skip if already correctly filled
+      if (value && value.length === correctAnswerLength && parseInt(value) === correctAnswer) {
+        continue
+      }
+      // Focus this cell
+      const nextInput = cellRefs.value[key]
+      if (nextInput) {
+        nextTick(() => {
+          nextInput.focus()
+          nextInput.select()
+        })
+      }
+      return
+    }
+  }
 }
 
 const isCorrect = (row, col) => {
@@ -560,9 +617,8 @@ watch(cellValues, (newValues) => {
 
 .data-cell.cell-focused {
   background: var(--color-sunshine);
-  transform: scale(1.05);
   z-index: 10;
-  box-shadow: 0 0 0 3px var(--color-deep);
+  box-shadow: inset 0 0 0 3px var(--color-deep);
 }
 
 /* Input and answer styling */
@@ -643,13 +699,13 @@ watch(cellValues, (newValues) => {
 /* Animations */
 @keyframes pop {
   0% {
-    transform: scale(1);
+    box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.3);
   }
   50% {
-    transform: scale(1.1);
+    box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.3);
   }
   100% {
-    transform: scale(1);
+    box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.3);
   }
 }
 
