@@ -68,6 +68,7 @@
         v-show="activeTab === 'simple'"
         :questions="simpleTab.questions.value"
         :show-answers="simpleTab.settings.value.showAnswers"
+        :show-guide="simpleTab.settings.value.showGuide"
         :difficulty="simpleTab.settings.value.difficulty"
         :input-mode="simpleTab.settings.value.inputMode"
       />

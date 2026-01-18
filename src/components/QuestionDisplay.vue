@@ -11,6 +11,13 @@
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
         dir="ltr"
       >
+        <!-- Cuisenaire Rod Guide -->
+        <CuisenaireGuide
+          v-if="showGuide && questions.length > 0"
+          :num1="guideExample.num1"
+          :num2="guideExample.num2"
+          :answer="guideExample.answer"
+        />
         <div
           v-for="(question, index) in questions"
           :key="question.id"
@@ -332,6 +339,7 @@ import LongMultiplicationInput from './LongMultiplicationInput.vue'
 import LongAdditionSubtractionInput from './LongAdditionSubtractionInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
+import CuisenaireGuide from './CuisenaireGuide.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
 const props = defineProps({
@@ -340,6 +348,10 @@ const props = defineProps({
     required: true
   },
   showAnswers: {
+    type: Boolean,
+    default: false
+  },
+  showGuide: {
     type: Boolean,
     default: false
   },
@@ -361,6 +373,21 @@ const focusedIndex = ref(-1)
 
 const useVerticalFormat = computed(() => {
   return props.difficulty === 'medium' || props.difficulty === 'hard'
+})
+
+// Example for the Cuisenaire guide (find first valid addition with both numbers > 0)
+const guideExample = computed(() => {
+  // Find first addition question where both numbers are > 0
+  const validQuestion = props.questions.find(q => 
+    q.operation === '+' && q.num1 > 0 && q.num2 > 0
+  )
+  
+  if (validQuestion) {
+    return { num1: validQuestion.num1, num2: validQuestion.num2, answer: validQuestion.answer }
+  }
+  
+  // Fallback to a good default
+  return { num1: 5, num2: 3, answer: 8 }
 })
 
 // Check if a question is a multiplication operation

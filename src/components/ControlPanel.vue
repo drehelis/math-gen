@@ -272,6 +272,7 @@ const localSettings = reactive({
   operations: props.settings.operations || ['addition'],
   varySecondNumber: props.settings.varySecondNumber || false,
   showAnswers: props.settings.showAnswers || false,
+  showGuide: props.settings.showGuide || false,
   inputMode: props.settings.inputMode || 'native',
   questionFormat: props.settings.questionFormat || 'standard',
   missingPosition: props.settings.missingPosition || 'random',
@@ -519,6 +520,12 @@ const optionsOptions = computed(() => {
 
   // For Simple tab (not hideOperation)
   if (!props.hideOperation && !props.comparisonMode) {
+    // Show guide option only for Addition + Beginners
+    const isAdditionBeginners = localSettings.operations.includes('addition') && localSettings.difficulty === 'beginners'
+    if (isAdditionBeginners) {
+      options.push({ value: 'showGuide', label: t('controls.showGuide') })
+    }
+    
     if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
       options.push({ value: 'varySecondNumber', label: t('controls.varySecondNumber') })
       // Only show Vertical Entry for non-multiplication operations
@@ -547,6 +554,7 @@ const optionsOptions = computed(() => {
 const initializeOptions = () => {
   const selected = []
   if (localSettings.showAnswers) selected.push('showAnswers')
+  if (localSettings.showGuide) selected.push('showGuide')
 
   // Add options for medium or hard difficulty
   if (localSettings.difficulty === 'medium' || localSettings.difficulty === 'hard') {
@@ -571,6 +579,7 @@ initializeOptions()
 
 watch(() => localSettings.selectedOptions, (newOptions) => {
   localSettings.showAnswers = newOptions.includes('showAnswers')
+  localSettings.showGuide = newOptions.includes('showGuide')
   localSettings.varySecondNumber = newOptions.includes('varySecondNumber')
   localSettings.inputMode = newOptions.includes('columnByColumn') ? 'column-by-column' : 'native'
 
