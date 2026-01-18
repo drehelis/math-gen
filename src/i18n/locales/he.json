@@ -14,6 +14,7 @@
     "format": "פורמט",
     "none": "ללא",
     "showAnswers": "הצג תשובות",
+    "showGuide": "הצג דוגמה",
     "varySecondNumber": "אורך משתנה",
     "columnByColumn": "פתרון אנכי",
     "generateQuestions": "צור תרגילים",
@@ -93,5 +94,11 @@
       "12": "12×12",
       "15": "15×15"
     }
+  },
+  "cuisenaireGuide": {
+    "title": "איך לחבר",
+    "showGuide": "הצג",
+    "hideGuide": "הסתר",
+    "tip": "חברו את הבדידים כדי למצוא את התשובה!"
   }
 }
