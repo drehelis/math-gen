@@ -14,6 +14,7 @@
     "format": "פורמט",
     "none": "ללא",
     "showAnswers": "הצג תשובות",
+    "showGuide": "הצג דוגמה",
     "varySecondNumber": "אורך משתנה",
     "columnByColumn": "פתרון אנכי",
     "generateQuestions": "צור תרגילים",
@@ -93,5 +94,13 @@
       "12": "12×12",
       "15": "15×15"
     }
+  },
+  "fruitGuide": {
+    "titleAdd": "איך לחבר",
+    "titleSub": "איך לחסר",
+    "showGuide": "הצג",
+    "hideGuide": "הסתר",
+    "tipAdd": "ספרו את הפירות כדי למצוא את התשובה!",
+    "tipSub": "הפחיתו מהפירות כדי למצוא את התשובה!"
   }
 }

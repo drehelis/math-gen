@@ -6,11 +6,22 @@
       @close="showCompletionOverlay = false"
     />
 
-    <div class="print:hidden">
+    <div class="print:hidden relative">
+      <!-- Fruit Guide (Floating) -->
+      <FruitGuide
+        v-if="showGuide && questions.length > 0"
+        :num1="guideExample.num1"
+        :num2="guideExample.num2"
+        :answer="guideExample.answer"
+        :operation="guideExample.operation"
+      />
+
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
         dir="ltr"
       >
+        <!-- Fruit Guide (Moved outside grid) -->
+
         <div
           v-for="(question, index) in questions"
           :key="question.id"
@@ -332,6 +343,7 @@ import LongMultiplicationInput from './LongMultiplicationInput.vue'
 import LongAdditionSubtractionInput from './LongAdditionSubtractionInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
+import FruitGuide from './FruitGuide.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
 const props = defineProps({
@@ -340,6 +352,10 @@ const props = defineProps({
     required: true
   },
   showAnswers: {
+    type: Boolean,
+    default: false
+  },
+  showGuide: {
     type: Boolean,
     default: false
   },
@@ -361,6 +377,33 @@ const focusedIndex = ref(-1)
 
 const useVerticalFormat = computed(() => {
   return props.difficulty === 'medium' || props.difficulty === 'hard'
+})
+
+// Example for the Fruit guide
+const guideExample = computed(() => {
+  // Try to find an addition question first
+  let validQuestion = props.questions.find(q => 
+    q.operation === '+' && q.num1 > 0 && q.num2 > 0
+  )
+  
+  // If no addition, try subtraction
+  if (!validQuestion) {
+    validQuestion = props.questions.find(q => 
+      q.operation === '-' && q.num1 > 0 && q.num2 > 0
+    )
+  }
+  
+  if (validQuestion) {
+    return { 
+      num1: validQuestion.num1, 
+      num2: validQuestion.num2, 
+      answer: validQuestion.answer,
+      operation: validQuestion.operation
+    }
+  }
+  
+  // Fallback
+  return { num1: 5, num2: 3, answer: 8, operation: '+' }
 })
 
 // Check if a question is a multiplication operation

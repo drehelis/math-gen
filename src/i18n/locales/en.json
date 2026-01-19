@@ -14,6 +14,7 @@
     "format": "Format",
     "none": "None",
     "showAnswers": "Show Answers",
+    "showGuide": "Show How-To Guide",
     "varySecondNumber": "Uneven Digits",
     "columnByColumn": "Vertical Entry",
     "generateQuestions": "Generate Questions",
@@ -93,5 +94,13 @@
       "12": "12×12",
       "15": "15×15"
     }
+  },
+  "fruitGuide": {
+    "titleAdd": "How to add",
+    "titleSub": "How to subtract",
+    "showGuide": "Show",
+    "hideGuide": "Hide",
+    "tipAdd": "Add the fruits together to find the answer!",
+    "tipSub": "Subtract the fruits to find the answer!"
   }
 }
