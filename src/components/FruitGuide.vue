@@ -46,7 +46,7 @@
       <div class="expanded">
         <!-- Problem -->
         <div class="step">
-          <div class="fruit-start-group flex gap-1">
+          <div class="fruit-start-group flex gap-1" dir="ltr">
             <div 
               v-for="i in num1" 
               :key="`n1-${i}`" 
@@ -59,7 +59,7 @@
         
           <span class="operator">+</span>
 
-          <div class="fruit-end-group flex gap-1">
+          <div class="fruit-end-group flex gap-1" dir="ltr">
             <div 
               v-for="i in num2" 
               :key="`n2-${i}`" 
@@ -70,7 +70,7 @@
             </div>
           </div>
         
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2" dir="ltr">
             <span class="operator">=</span>
             <div class="answer-text">
               {{ answer }}
