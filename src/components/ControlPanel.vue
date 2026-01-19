@@ -520,9 +520,11 @@ const optionsOptions = computed(() => {
 
   // For Simple tab (not hideOperation)
   if (!props.hideOperation && !props.comparisonMode) {
-    // Show guide option only for Addition + Beginners
-    const isAdditionBeginners = localSettings.operations.includes('addition') && localSettings.difficulty === 'beginners'
-    if (isAdditionBeginners) {
+    // Show guide option for Addition + (Beginners or Easy)
+    const isAdditionSimple = localSettings.operations.includes('addition') && 
+      (localSettings.difficulty === 'beginners' || localSettings.difficulty === 'easy')
+      
+    if (isAdditionSimple) {
       options.push({ value: 'showGuide', label: t('controls.showGuide') })
     }
     

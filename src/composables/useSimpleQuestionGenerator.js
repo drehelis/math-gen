@@ -10,15 +10,19 @@ const questionsStorage = useLocalStorage('math-gen-simple-questions', [])
 export function useSimpleQuestionGenerator() {
   const questions = ref(questionsStorage.load())
   const savedSettings = settingsStorage.load()
-  const settings = ref(savedSettings || {
+  
+  const defaultSettings = {
     count: 20,
     difficulty: 'easy',
     operation: 'addition',
     operations: ['addition'],
     showAnswers: false,
+    showGuide: true,
     varySecondNumber: false,
     inputMode: 'native'
-  })
+  }
+  
+  const settings = ref({ ...defaultSettings, ...(savedSettings || {}) })
 
   watch(settings, (newSettings) => {
     settingsStorage.save(newSettings)

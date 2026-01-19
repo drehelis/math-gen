@@ -6,18 +6,21 @@
       @close="showCompletionOverlay = false"
     />
 
-    <div class="print:hidden">
+    <div class="print:hidden relative">
+      <!-- Cuisenaire Rod Guide (Floating) -->
+      <CuisenaireGuide
+        v-if="showGuide && questions.length > 0"
+        :num1="guideExample.num1"
+        :num2="guideExample.num2"
+        :answer="guideExample.answer"
+      />
+
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
         dir="ltr"
       >
-        <!-- Cuisenaire Rod Guide -->
-        <CuisenaireGuide
-          v-if="showGuide && questions.length > 0"
-          :num1="guideExample.num1"
-          :num2="guideExample.num2"
-          :answer="guideExample.answer"
-        />
+        <!-- Cuisenaire Rod Guide (Moved outside grid) -->
+
         <div
           v-for="(question, index) in questions"
           :key="question.id"

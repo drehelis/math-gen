@@ -1,15 +1,30 @@
 <template>
   <div
-    class="cuisenaire-guide relative rounded-2xl p-4 sm:p-5 border-4 cursor-pointer"
+    class="cuisenaire-guide relative rounded-2xl p-4 sm:p-5 border-4"
+    :class="{ 'cursor-move': true, 'active': isDragging }"
     :style="{
-      background: 'linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%)',
-      borderColor: 'var(--color-deep)',
+      position: 'fixed',
+      left: `${position.x}px`,
+      top: `${position.y}px`,
+      zIndex: 50,
+      background: isMinimized ? 'transparent' : 'linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%)',
+      borderColor: isMinimized ? 'transparent' : 'var(--color-deep)',
+      pointerEvents: isMinimized ? 'none' : 'auto',
       ...cellStyle
     }"
-    @click="toggleExpanded"
+    @mousedown="startDrag"
+    @touchstart="startDrag"
   >
     <!-- Badge -->
-    <div class="badge">💡</div>
+    <div 
+      class="badge cursor-pointer"
+      @click="toggleMinimize"
+      style="pointer-events: auto;"
+    >
+      💡
+    </div>
+
+    <div v-show="!isMinimized">
 
     <!-- Header -->
     <div 
@@ -19,39 +34,36 @@
       <h3 class="title">
         {{ $t('cuisenaireGuide.title') }}
       </h3>
-      <button
-        class="toggle-btn"
-        @click.stop="toggleExpanded"
-      >
-        {{ isExpanded ? $t('cuisenaireGuide.hideGuide') : $t('cuisenaireGuide.showGuide') }}
-      </button>
     </div>
 
-    <!-- Collapsed preview -->
-    <div v-if="!isExpanded" class="preview">
-      <div class="rod" :style="{ '--rod-color': getColor(num1), '--text-color': getTextColor(num1), '--separator-color': getSeparatorColor(num1) }">
-        <span v-for="i in num1" :key="i" class="cell">{{ i }}</span>
-      </div>
-      <span class="operator">+</span>
-      <div class="rod" :style="{ '--rod-color': getColor(num2), '--text-color': getTextColor(num2), '--separator-color': getSeparatorColor(num2) }">
-        <span v-for="i in num2" :key="i" class="cell">{{ i }}</span>
-      </div>
-    </div>
-
-    <!-- Expanded -->
-    <div v-if="isExpanded" class="expanded">
+    <!-- Content (Always Visible) -->
+    <div class="expanded">
       <!-- Problem -->
       <div class="step">
-        <div class="rod" :style="{ '--rod-color': getColor(num1), '--text-color': getTextColor(num1), '--separator-color': getSeparatorColor(num1) }">
-          <span v-for="i in num1" :key="i" class="cell">{{ i }}</span>
+        <div
+          class="rod"
+          :style="{ '--rod-color': getColor(num1), '--text-color': getTextColor(num1), '--separator-color': getSeparatorColor(num1) }"
+        >
+          <span
+            v-for="i in num1"
+            :key="i"
+            class="cell"
+          >{{ i }}</span>
         </div>
         <span class="operator">+</span>
-        <div class="rod" :style="{ '--rod-color': getColor(num2), '--text-color': getTextColor(num2), '--separator-color': getSeparatorColor(num2) }">
-          <span v-for="i in num2" :key="i" class="cell">{{ i }}</span>
+        <div
+          class="rod"
+          :style="{ '--rod-color': getColor(num2), '--text-color': getTextColor(num2), '--separator-color': getSeparatorColor(num2) }"
+        >
+          <span
+            v-for="i in num2"
+            :key="i"
+            class="cell"
+          >{{ i }}</span>
         </div>
-      </div>
+        </div>
+  </div>
 
-      <!-- Tip -->
       <!-- Tip -->
       <div 
         class="tip" 
@@ -63,30 +75,102 @@
       <!-- Answer -->
       <div class="answer-section">
         <div class="combined-rods">
-          <div class="rod" :style="{ '--rod-color': getColor(num1), '--text-color': getTextColor(num1), '--separator-color': getSeparatorColor(num1) }">
-            <span v-for="i in num1" :key="'c1-'+i" class="cell">{{ i }}</span>
+          <div
+            class="rod"
+            :style="{ '--rod-color': getColor(num1), '--text-color': getTextColor(num1), '--separator-color': getSeparatorColor(num1) }"
+          >
+            <span
+              v-for="i in num1"
+              :key="'c1-'+i"
+              class="cell"
+            >{{ i }}</span>
           </div>
-          <div class="rod" :style="{ '--rod-color': getColor(num2), '--text-color': getTextColor(num2), '--separator-color': getSeparatorColor(num2) }">
-            <span v-for="i in num2" :key="'c2-'+i" class="cell">{{ num1 + i }}</span>
+          <div
+            class="rod"
+            :style="{ '--rod-color': getColor(num2), '--text-color': getTextColor(num2), '--separator-color': getSeparatorColor(num2) }"
+          >
+            <span
+              v-for="i in num2"
+              :key="'c2-'+i"
+              class="cell"
+            >{{ num1 + i }}</span>
           </div>
         </div>
-        <div class="answer-text">= {{ answer }}</div>
+        <div class="answer-text">
+          = {{ answer }}
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+const position = ref({ x: 20, y: 150 }) // Default position
+const isDragging = ref(false)
+const hasMoved = ref(false)
+const isMinimized = ref(false)
+const dragOffset = ref({ x: 0, y: 0 })
+
+const startDrag = (e) => {
+  isDragging.value = true
+  hasMoved.value = false
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  
+  dragOffset.value = {
+    x: clientX - position.value.x,
+    y: clientY - position.value.y
+  }
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  
+  // Check if actually moved
+  const newX = clientX - dragOffset.value.x
+  const newY = clientY - dragOffset.value.y
+  
+  if (Math.abs(newX - position.value.x) > 2 || Math.abs(newY - position.value.y) > 2) {
+    hasMoved.value = true
+  }
+
+  position.value = { x: newX, y: newY }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+}
+
+const toggleMinimize = () => {
+  if (!hasMoved.value) {
+    isMinimized.value = !isMinimized.value
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('mousemove', onDrag)
+  window.addEventListener('mouseup', stopDrag)
+  window.addEventListener('touchmove', onDrag)
+  window.addEventListener('touchend', stopDrag)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
+  window.removeEventListener('touchmove', onDrag)
+  window.removeEventListener('touchend', stopDrag)
+})
 
 const props = defineProps({
   num1: { type: Number, default: 5 },
   num2: { type: Number, default: 3 },
   answer: { type: Number, default: 8 }
 })
-
-const isExpanded = ref(false)
-const toggleExpanded = () => { isExpanded.value = !isExpanded.value }
 
 const colors = {
   1: '#E0E0E0', 2: '#EF5350', 3: '#66BB6A', 4: '#AB47BC', 5: '#FFEE58',
@@ -114,10 +198,17 @@ const cellStyle = computed(() => ({
 
 <style scoped>
 .cuisenaire-guide {
-  transition: all 0.2s ease;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  user-select: none;
+  touch-action: none;
+  width: max-content;
+  max-width: 90vw;
 }
-.cuisenaire-guide:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+
+.cuisenaire-guide:active, .cuisenaire-guide.active {
+  cursor: grabbing;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: scale(1.02);
 }
 
 .badge {
@@ -142,22 +233,7 @@ const cellStyle = computed(() => ({
   color: var(--color-deep);
 }
 
-.toggle-btn {
-  padding: 6px 14px;
-  background: var(--color-deep);
-  color: white;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-.toggle-btn:hover {
-  transform: scale(1.05);
-}
-
-.preview, .step {
+.step {
   display: flex;
   align-items: center;
   justify-content: center;
