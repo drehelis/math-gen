@@ -520,11 +520,12 @@ const optionsOptions = computed(() => {
 
   // For Simple tab (not hideOperation)
   if (!props.hideOperation && !props.comparisonMode) {
-    // Show guide option for Addition + (Beginners or Easy)
-    const isAdditionSimple = localSettings.operations.includes('addition') && 
+    // Show guide option for Addition or Subtraction + (Beginners or Easy) + Single Operation Only
+    const isGuideAvailable = localSettings.operations.length === 1 && 
+      (localSettings.operations.includes('addition') || localSettings.operations.includes('subtraction')) && 
       (localSettings.difficulty === 'beginners' || localSettings.difficulty === 'easy')
       
-    if (isAdditionSimple) {
+    if (isGuideAvailable) {
       options.push({ value: 'showGuide', label: t('controls.showGuide') })
     }
     

@@ -13,6 +13,7 @@
         :num1="guideExample.num1"
         :num2="guideExample.num2"
         :answer="guideExample.answer"
+        :operation="guideExample.operation"
       />
 
       <div
@@ -378,19 +379,31 @@ const useVerticalFormat = computed(() => {
   return props.difficulty === 'medium' || props.difficulty === 'hard'
 })
 
-// Example for the Fruit guide (find first valid addition with both numbers > 0)
+// Example for the Fruit guide
 const guideExample = computed(() => {
-  // Find first addition question where both numbers are > 0
-  const validQuestion = props.questions.find(q => 
+  // Try to find an addition question first
+  let validQuestion = props.questions.find(q => 
     q.operation === '+' && q.num1 > 0 && q.num2 > 0
   )
   
-  if (validQuestion) {
-    return { num1: validQuestion.num1, num2: validQuestion.num2, answer: validQuestion.answer }
+  // If no addition, try subtraction
+  if (!validQuestion) {
+    validQuestion = props.questions.find(q => 
+      q.operation === '-' && q.num1 > 0 && q.num2 > 0
+    )
   }
   
-  // Fallback to a good default
-  return { num1: 5, num2: 3, answer: 8 }
+  if (validQuestion) {
+    return { 
+      num1: validQuestion.num1, 
+      num2: validQuestion.num2, 
+      answer: validQuestion.answer,
+      operation: validQuestion.operation
+    }
+  }
+  
+  // Fallback
+  return { num1: 5, num2: 3, answer: 8, operation: '+' }
 })
 
 // Check if a question is a multiplication operation

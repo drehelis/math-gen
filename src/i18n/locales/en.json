@@ -96,9 +96,11 @@
     }
   },
   "fruitGuide": {
-    "title": "How to add",
+    "titleAdd": "How to add",
+    "titleSub": "How to subtract",
     "showGuide": "Show",
     "hideGuide": "Hide",
-    "tip": "Add the fruits together to find the answer!"
+    "tipAdd": "Add the fruits together to find the answer!",
+    "tipSub": "Subtract the fruits to find the answer!"
   }
 }

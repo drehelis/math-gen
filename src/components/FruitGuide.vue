@@ -30,7 +30,7 @@
         :dir="$i18n.locale === 'he' ? 'rtl' : 'ltr'"
       >
         <h3 class="title">
-          {{ $t('fruitGuide.title') }}
+          {{ $t(titleKey) }}
         </h3>
       </div>
 
@@ -39,38 +39,80 @@
         class="tip" 
         :dir="$i18n.locale === 'he' ? 'rtl' : 'ltr'"
       >
-        {{ $t('fruitGuide.tip') }}
+        {{ $t(tipKey) }}
       </div>
 
       <!-- Content (Always Visible) -->
       <div class="expanded">
         <!-- Problem -->
         <div class="step">
-          <div class="fruit-start-group flex gap-1" dir="ltr">
-            <div 
-              v-for="i in num1" 
-              :key="`n1-${i}`" 
-              class="fruit-item flex flex-col items-center"
+          <!-- ADDITION LAYOUT -->
+          <template v-if="operation === '+'">
+            <div
+              class="fruit-start-group flex gap-1"
+              dir="ltr"
             >
-              <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
-              <span class="fruit">{{ getFruit(num1) }}</span>
+              <div 
+                v-for="i in num1" 
+                :key="`n1-${i}`" 
+                class="fruit-item flex flex-col items-center"
+              >
+                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <span class="fruit">{{ getFruit(num1) }}</span>
+              </div>
             </div>
-          </div>
-        
-          <span class="operator">+</span>
+          
+            <span class="operator">+</span>
 
-          <div class="fruit-end-group flex gap-1" dir="ltr">
-            <div 
-              v-for="i in num2" 
-              :key="`n2-${i}`" 
-              class="fruit-item flex flex-col items-center"
+            <div
+              class="fruit-end-group flex gap-1"
+              dir="ltr"
             >
-              <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
-              <span class="fruit">{{ getFruit(num2) }}</span>
+              <div 
+                v-for="i in num2" 
+                :key="`n2-${i}`" 
+                class="fruit-item flex flex-col items-center"
+              >
+                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <span class="fruit">{{ getFruit(num2) }}</span>
+              </div>
             </div>
-          </div>
+          </template>
+
+          <!-- SUBTRACTION LAYOUT -->
+          <template v-else>
+            <div
+              class="fruit-subtraction-group flex gap-1"
+              dir="ltr"
+            >
+              <div 
+                v-for="i in num1" 
+                :key="`n1-${i}`" 
+                class="relative flex flex-col items-center justify-end"
+                :class="{ 'opacity-50 grayscale': i > (num1 - num2) }"
+              >
+                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <div class="relative">
+                  <span class="fruit">{{ getFruit(num1) }}</span>
+                  <!-- Crossing out X for subtracted items -->
+                  <div 
+                    v-if="i > (num1 - num2)"
+                    class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  >
+                    <span
+                      class="text-red-600 text-3xl font-bold"
+                      style="text-shadow: 0 0 2px white;"
+                    >✕</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
         
-          <div class="flex items-center gap-2" dir="ltr">
+          <div
+            class="flex items-center gap-2"
+            dir="ltr"
+          >
             <span class="operator">=</span>
             <div class="answer-text">
               {{ answer }}
@@ -83,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const position = ref({ x: 20, y: 150 }) // Default position
 const isDragging = ref(false)
@@ -131,6 +173,14 @@ const toggleMinimize = () => {
 }
 
 onMounted(() => {
+  // Center the guide initially
+  const guideWidth = 330
+  const guideHeight = 400 // Approximate height
+  position.value = {
+    x: (window.innerWidth - guideWidth) / 2,
+    y: Math.max(20, (window.innerHeight - guideHeight) / 2)
+  }
+
   window.addEventListener('mousemove', onDrag)
   window.addEventListener('mouseup', stopDrag)
   window.addEventListener('touchmove', onDrag)
@@ -144,11 +194,15 @@ onUnmounted(() => {
   window.removeEventListener('touchend', stopDrag)
 })
 
-defineProps({
+const props = defineProps({
   num1: { type: Number, default: 5 },
   num2: { type: Number, default: 3 },
-  answer: { type: Number, default: 8 }
+  answer: { type: Number, default: 8 },
+  operation: { type: String, default: '+' }
 })
+
+const titleKey = computed(() => props.operation === '+' ? 'fruitGuide.titleAdd' : 'fruitGuide.titleSub')
+const tipKey = computed(() => props.operation === '+' ? 'fruitGuide.tipAdd' : 'fruitGuide.tipSub')
 
 const fruitEmojis = {
   1: '🍓', // Strawberry
