@@ -7,8 +7,8 @@
     />
 
     <div class="print:hidden relative">
-      <!-- Cuisenaire Rod Guide (Floating) -->
-      <CuisenaireGuide
+      <!-- Fruit Guide (Floating) -->
+      <FruitGuide
         v-if="showGuide && questions.length > 0"
         :num1="guideExample.num1"
         :num2="guideExample.num2"
@@ -19,7 +19,7 @@
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
         dir="ltr"
       >
-        <!-- Cuisenaire Rod Guide (Moved outside grid) -->
+        <!-- Fruit Guide (Moved outside grid) -->
 
         <div
           v-for="(question, index) in questions"
@@ -342,7 +342,7 @@ import LongMultiplicationInput from './LongMultiplicationInput.vue'
 import LongAdditionSubtractionInput from './LongAdditionSubtractionInput.vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
-import CuisenaireGuide from './CuisenaireGuide.vue'
+import FruitGuide from './FruitGuide.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
 const props = defineProps({
@@ -378,7 +378,7 @@ const useVerticalFormat = computed(() => {
   return props.difficulty === 'medium' || props.difficulty === 'hard'
 })
 
-// Example for the Cuisenaire guide (find first valid addition with both numbers > 0)
+// Example for the Fruit guide (find first valid addition with both numbers > 0)
 const guideExample = computed(() => {
   // Find first addition question where both numbers are > 0
   const validQuestion = props.questions.find(q => 

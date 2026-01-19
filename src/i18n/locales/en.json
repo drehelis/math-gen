@@ -95,10 +95,10 @@
       "15": "15×15"
     }
   },
-  "cuisenaireGuide": {
-    "title": "How to Add",
+  "fruitGuide": {
+    "title": "How to add",
     "showGuide": "Show",
     "hideGuide": "Hide",
-    "tip": "Put the rods together to find the answer!"
+    "tip": "Add the fruits together to find the answer!"
   }
 }
