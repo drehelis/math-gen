@@ -320,10 +320,6 @@ const getFruit = (n) => fruitEmojis[n] || fruitEmojis[10]
 }
 
 /* Windows-specific adjustments for wider emoji rendering */
-.is-windows.fruit-guide {
-  width: 360px;
-}
-
 .is-windows .fruit {
   font-size: 20px;
 }
