@@ -320,19 +320,23 @@ const getFruit = (n) => fruitEmojis[n] || fruitEmojis[10]
 }
 
 /* Windows-specific adjustments for wider emoji rendering */
+.is-windows.fruit-guide {
+  width: 360px;
+}
+
 .is-windows .fruit {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .is-windows .fruit-number {
-  font-size: 9px;
-  margin-bottom: 2px;
+  font-size: 8px;
+  margin-bottom: 1px;
 }
 
 .is-windows .fruit-start-group,
 .is-windows .fruit-end-group,
 .is-windows .fruit-subtraction-group {
-  gap: 2px;
+  gap: 0px;
 }
 
 @media print {
