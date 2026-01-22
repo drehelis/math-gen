@@ -1,7 +1,7 @@
 <template>
   <div
     class="fruit-guide relative rounded-2xl p-4 sm:p-5 border-4"
-    :class="{ 'cursor-move': true, 'active': isDragging }"
+    :class="{ 'cursor-move': true, 'active': isDragging, 'is-windows': isWindows }"
     :style="{
       position: 'fixed',
       left: `${position.x}px`,
@@ -57,7 +57,7 @@
                 :key="`n1-${i}`" 
                 class="fruit-item flex flex-col items-center"
               >
-                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <span class="fruit-number">{{ i }}</span>
                 <span class="fruit">{{ getFruit(num1) }}</span>
               </div>
             </div>
@@ -73,7 +73,7 @@
                 :key="`n2-${i}`" 
                 class="fruit-item flex flex-col items-center"
               >
-                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <span class="fruit-number">{{ i }}</span>
                 <span class="fruit">{{ getFruit(num2) }}</span>
               </div>
             </div>
@@ -91,7 +91,7 @@
                 class="relative flex flex-col items-center justify-end"
                 :class="{ 'opacity-50 grayscale': i > (num1 - num2) }"
               >
-                <span class="text-[10px] font-bold opacity-60 leading-none mb-1">{{ i }}</span>
+                <span class="fruit-number">{{ i }}</span>
                 <div class="relative">
                   <span class="fruit">{{ getFruit(num1) }}</span>
                   <!-- Crossing out X for subtracted items -->
@@ -132,6 +132,12 @@ const isDragging = ref(false)
 const hasMoved = ref(false)
 const isMinimized = ref(false)
 const dragOffset = ref({ x: 0, y: 0 })
+const isWindows = ref(false)
+
+// Detect Windows OS for emoji sizing adjustments
+if (typeof navigator !== 'undefined') {
+  isWindows.value = navigator.userAgent.includes('Windows')
+}
 
 const startDrag = (e) => {
   isDragging.value = true
@@ -278,6 +284,14 @@ const getFruit = (n) => fruitEmojis[n] || fruitEmojis[10]
 /* === FRUITS === */
 /* .fruit-group removed, using Tailwind classes */
 
+.fruit-number {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
 .fruit {
   font-size: 28px;
   line-height: 1;
@@ -298,10 +312,27 @@ const getFruit = (n) => fruitEmojis[n] || fruitEmojis[10]
   margin: 0 0 12px;
   opacity: 0.85;
 }
+
 .answer-text {
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-mint);
+}
+
+/* Windows-specific adjustments for wider emoji rendering */
+.is-windows .fruit {
+  font-size: 24px;
+}
+
+.is-windows .fruit-number {
+  font-size: 9px;
+  margin-bottom: 2px;
+}
+
+.is-windows .fruit-start-group,
+.is-windows .fruit-end-group,
+.is-windows .fruit-subtraction-group {
+  gap: 2px;
 }
 
 @media print {
