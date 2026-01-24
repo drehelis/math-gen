@@ -25,17 +25,11 @@
             <span>{{ index + 1 }}</span>
           </div>
 
-          <div
+          <FeedbackBadge
             v-if="!showAnswers && feedbackState[question.id]?.show"
-            class="absolute -top-3 -right-3 w-10 h-10 rounded-lg flex items-center justify-center font-bold border-4"
-            :style="{
-              backgroundColor: feedbackState[question.id]?.isCorrect ? '#15803d' : '#b91c1c',
-              borderColor: 'var(--color-deep)',
-              color: 'white'
-            }"
-          >
-            <span class="text-xl">{{ feedbackState[question.id]?.isCorrect ? '✓' : '✗' }}</span>
-          </div>
+            :is-correct="feedbackState[question.id]?.isCorrect"
+            @click="handleBadgeClick(index)"
+          />
 
           <div
             class="flex items-center justify-center pt-2"
@@ -179,6 +173,7 @@
 import { watch, ref, onMounted } from 'vue'
 import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
+import FeedbackBadge from './FeedbackBadge.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
 
 const props = defineProps({
@@ -196,7 +191,7 @@ const props = defineProps({
   }
 })
 
-const { feedbackState, handleFeedback, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-comparison-feedback')
+const { feedbackState, handleFeedback, clearAllFeedback, getCompletionStats, correctCount, handleBadgeClick: handleBadgeClickHelper } = useQuestionFeedback('math-gen-comparison-feedback')
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
@@ -382,6 +377,24 @@ const paginateQuestions = (questions, itemsPerPage) => {
   }
 
   return pages
+}
+
+const handleBadgeClick = (index) => {
+  const question = props.questions[index]
+  handleBadgeClickHelper(question, index,
+    // Custom reset logic
+    () => {
+      handleFeedback(question.id, {
+        show: false,
+        isCorrect: false,
+        value: null
+      })
+    },
+    // Custom focus logic
+    () => {
+      focusedIndex.value = index
+    }
+  )
 }
 </script>
 

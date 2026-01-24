@@ -396,6 +396,18 @@ watch(() => [props.num1, props.num2, props.showAnswers], () => {
   })
 }, { immediate: true })
 
+watch(() => props.modelValue, (newValue) => {
+  if (newValue === '') {
+    const answerLength = String(props.correctAnswer).length
+    answerFields.value = Array(answerLength).fill('')
+    isComplete.value = false
+    isCorrect.value = false
+    showFeedback.value = false
+    carryDigits.value = Array(carryDigits.value.length).fill('')
+    emit('feedback', { show: false, isCorrect: false })
+  }
+})
+
 // Expose focus method
 defineExpose({
   focus: () => {

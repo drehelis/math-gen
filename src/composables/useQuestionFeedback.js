@@ -312,6 +312,23 @@ export function useQuestionFeedback(storageKey) {
     resetStats,
     clearAllFeedback,
     getCompletionStats,
-    correctCount
+    correctCount,
+    handleBadgeClick: (question, index, customReset = null, customFocus = null) => {
+      const feedback = feedbackState.value[question.id]
+      
+      if (feedback && !feedback.isCorrect) {
+        if (customReset) {
+          customReset()
+        } else {
+          question.userAnswer = ''
+        }
+        
+        if (customFocus) {
+          customFocus()
+        } else {
+          focusInput(index)
+        }
+      }
+    }
   }
 }

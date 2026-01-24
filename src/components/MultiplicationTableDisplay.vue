@@ -187,6 +187,15 @@ const completionStats = ref({
 const startTime = ref(null)
 
 const handleCellFocus = (row, col) => {
+  // If the cell is currently incorrect, clear it upon focus (user click/tap)
+  if (isIncorrect(row, col)) {
+    const key = getCellKey(row, col)
+    cellValues.value[key] = ''
+    if (multiplicationTableTab) {
+      multiplicationTableTab.setUserAnswer(row, col, '')
+    }
+  }
+
   focusedCell.value = getCellKey(row, col)
   highlightedRow.value = row
   highlightedCol.value = col

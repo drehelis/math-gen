@@ -376,6 +376,67 @@ describe('useQuestionFeedback', () => {
     })
   })
 
+  describe('handleBadgeClick', () => {
+    it('does nothing if feedback is correct', () => {
+      const question = { id: 'q1', userAnswer: '42' }
+      feedback.handleFeedback('q1', { isCorrect: true, show: true })
+      
+      const focusSpy = vi.spyOn(feedback, 'focusInput')
+      feedback.handleBadgeClick(question, 0)
+      
+      expect(question.userAnswer).toBe('42')
+      expect(focusSpy).not.toHaveBeenCalled()
+    })
+
+    it('does nothing if no feedback exists', () => {
+      const question = { id: 'q1', userAnswer: '42' }
+      
+      const focusSpy = vi.spyOn(feedback, 'focusInput')
+      feedback.handleBadgeClick(question, 0)
+      
+      expect(question.userAnswer).toBe('42')
+      expect(focusSpy).not.toHaveBeenCalled()
+    })
+
+    it('clears answer and focuses input when incorrect (default behavior)', () => {
+      const question = { id: 'q1', userAnswer: '41' }
+      feedback.handleFeedback('q1', { isCorrect: false, show: true })
+      
+      // Mock the ref so focusInput works
+      const mockElement = { focus: vi.fn() }
+      feedback.setInputRef(mockElement, 0)
+      
+      feedback.handleBadgeClick(question, 0)
+      
+      expect(question.userAnswer).toBe('')
+      expect(mockElement.focus).toHaveBeenCalled()
+    })
+
+    it('uses custom reset logic if provided', () => {
+      const question = { id: 'q1', userAnswer: '41' }
+      feedback.handleFeedback('q1', { isCorrect: false, show: true })
+      
+      const customReset = vi.fn()
+      feedback.handleBadgeClick(question, 0, customReset)
+      
+      expect(customReset).toHaveBeenCalled()
+      expect(question.userAnswer).toBe('41') // Should not be cleared by default logic
+    })
+
+    it('uses custom focus logic if provided', () => {
+      const question = { id: 'q1', userAnswer: '41' }
+      feedback.handleFeedback('q1', { isCorrect: false, show: true })
+      
+      const customFocus = vi.fn()
+      const defaultFocusSpy = vi.spyOn(feedback, 'focusInput')
+      
+      feedback.handleBadgeClick(question, 0, null, customFocus)
+      
+      expect(customFocus).toHaveBeenCalled()
+      expect(defaultFocusSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe('without storageKey', () => {
     it('works without persistence', () => {
       const noStorageFeedback = useQuestionFeedback(null)

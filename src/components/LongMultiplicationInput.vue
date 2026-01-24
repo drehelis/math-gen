@@ -806,6 +806,30 @@ watch(() => [props.num1, props.num2, props.showAnswers], () => {
   })
 }, { immediate: true })
 
+watch(() => props.modelValue, (newValue) => {
+  if (newValue === '') {
+    const pp1Length = String(expectedPartialProduct1.value).length
+    const pp2Length = multiplierDigits.value.length > 1 ? String(expectedPartialProduct2.value).length : 0
+    const pp3Length = multiplierDigits.value.length > 2 ? String(expectedPartialProduct3.value).length : 0
+    const finalLength = String(props.correctAnswer).length
+    const carryLength = multiplicandDigits.value.length
+
+    partialProduct1Fields.value = Array(pp1Length).fill('')
+    partialProduct2Fields.value = pp2Length > 0 ? Array(pp2Length).fill('') : []
+    partialProduct3Fields.value = pp3Length > 0 ? Array(pp3Length).fill('') : []
+    finalAnswerFields.value = Array(finalLength).fill('')
+    
+    currentStep.value = 1
+    partialProduct1Correct.value = false
+    partialProduct2Correct.value = false
+    partialProduct3Correct.value = false
+    finalAnswerCorrect.value = false
+    showFeedback.value = { 1: false, 2: false, 3: false, 4: false }
+    carryDigits.value = Array(carryLength).fill('')
+    emit('feedback', { show: false, isCorrect: false })
+  }
+})
+
 // Expose focus method
 defineExpose({
   focus: () => {
