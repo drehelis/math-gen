@@ -36,17 +36,11 @@
             <span>{{ index + 1 }}</span>
           </div>
 
-          <div
+          <FeedbackBadge
             v-if="!showAnswers && feedbackState[question.id]?.show"
-            class="absolute -top-3 -right-3 w-10 h-10 rounded-lg flex items-center justify-center font-bold border-4"
-            :style="{
-              backgroundColor: feedbackState[question.id]?.isCorrect ? '#15803d' : '#b91c1c',
-              borderColor: 'var(--color-deep)',
-              color: 'white'
-            }"
-          >
-            <span class="text-xl">{{ feedbackState[question.id]?.isCorrect ? '✓' : '✗' }}</span>
-          </div>
+            :is-correct="feedbackState[question.id]?.isCorrect"
+            @click="handleBadgeClick(index)"
+          />
 
           <div
             v-if="!useVerticalFormat"
@@ -345,6 +339,7 @@ import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
 import FruitGuide from './FruitGuide.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
+import FeedbackBadge from './FeedbackBadge.vue'
 
 const props = defineProps({
   questions: {
@@ -369,7 +364,7 @@ const props = defineProps({
   }
 })
 
-const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, focusInput, clearAllFeedback, getCompletionStats, correctCount } = useQuestionFeedback('math-gen-simple-feedback')
+const { feedbackState, handleFeedback, setInputRef, focusNextInput, focusFirstInput, focusInput, clearAllFeedback, getCompletionStats, correctCount, handleBadgeClick: handleBadgeClickHelper } = useQuestionFeedback('math-gen-simple-feedback')
 
 const showCompletionOverlay = ref(false)
 const completionStats = ref({ total: 0, firstTry: 0, timeInSeconds: 0, accuracy: 100 })
@@ -554,6 +549,10 @@ const paginateQuestions = (questions, itemsPerPage) => {
   }
 
   return pages
+}
+
+const handleBadgeClick = (index) => {
+  handleBadgeClickHelper(props.questions[index], index)
 }
 
 
