@@ -7,6 +7,7 @@
       :value="fields[index]"
       type="text"
       inputmode="numeric"
+      pattern="[0-9]*"
       class="bg-transparent text-right font-bold outline-none appearance-none px-0 leading-none border-0 focus:outline-none focus:ring-0 answer-input"
       :class="inputClasses"
       :style="{

@@ -106,6 +106,7 @@
           :value="answerFields[answerFields.length - 1 - index]"
           type="text"
           inputmode="numeric"
+          pattern="[0-9]*"
           maxlength="1"
           :disabled="showAnswers"
           class="digit-input"

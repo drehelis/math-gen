@@ -97,6 +97,8 @@
               v-else
               v-model.number="customCountValue"
               type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="500"
               autofocus
