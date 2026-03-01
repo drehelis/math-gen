@@ -91,7 +91,7 @@
             class="clear-button"
             @click="clearTable"
           >
-            Clear All
+            {{ $t('table.clearAll') }}
           </button>
         </div>
       </div>

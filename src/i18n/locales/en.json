@@ -93,7 +93,8 @@
       "10": "10×10",
       "12": "12×12",
       "15": "15×15"
-    }
+    },
+    "clearAll": "Clear All"
   },
   "fruitGuide": {
     "titleAdd": "How to add",

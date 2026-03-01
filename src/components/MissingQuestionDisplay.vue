@@ -356,7 +356,7 @@
 <script setup>
 import { watch, onMounted, ref } from 'vue'
 import AnswerInput from './AnswerInput.vue'
-// Imports handled above
+import CompletionOverlay from './CompletionOverlay.vue'
 import PageFooter from './PageFooter.vue'
 import FeedbackBadge from './FeedbackBadge.vue'
 import { useQuestionFeedback } from '../composables/useQuestionFeedback'
