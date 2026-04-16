@@ -13,3 +13,6 @@ coverage
 
 tests-report.json
 vitest-summary.md
+
+# AI
+.agent/

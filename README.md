@@ -7,17 +7,20 @@ Source code for https://math-gen.com
 ## Build and Run Locally
 
 ### Prerequisites
+
 - [Bun](https://bun.sh/)
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/drehelis/math-gen.git
 cd math-gen
 ```
 
 2. Install dependencies:
+
 ```bash
 bun install
 ```
@@ -25,6 +28,7 @@ bun install
 ### Development
 
 Run the development server:
+
 ```bash
 bun run dev
 ```

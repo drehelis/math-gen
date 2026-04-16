@@ -6,31 +6,31 @@
 export function useLocalStorage(key, defaultValue = null) {
   const load = () => {
     try {
-      const saved = localStorage.getItem(key)
+      const saved = localStorage.getItem(key);
       if (saved) {
-        return JSON.parse(saved)
+        return JSON.parse(saved);
       }
     } catch (error) {
-      console.error(`Failed to load ${key}:`, error)
+      console.error(`Failed to load ${key}:`, error);
     }
-    return defaultValue
-  }
+    return defaultValue;
+  };
 
   const save = (value) => {
     try {
-      localStorage.setItem(key, JSON.stringify(value))
+      localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.error(`Failed to save ${key}:`, error)
+      console.error(`Failed to save ${key}:`, error);
     }
-  }
+  };
 
   const remove = () => {
     try {
-      localStorage.removeItem(key)
+      localStorage.removeItem(key);
     } catch (error) {
-      console.error(`Failed to remove ${key}:`, error)
+      console.error(`Failed to remove ${key}:`, error);
     }
-  }
+  };
 
-  return { load, save, remove }
+  return { load, save, remove };
 }

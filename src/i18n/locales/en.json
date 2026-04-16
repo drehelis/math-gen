@@ -47,6 +47,7 @@
     "easy": "Easy",
     "beginners": "Beginners (0-10)",
     "basic": "Basic (1-20)",
+    "tens": "Full Tens (10-200)",
     "medium": "Medium (10-100)",
     "hard": "Hard (100-900)"
   },
