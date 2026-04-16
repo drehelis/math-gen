@@ -172,154 +172,75 @@ export function useQuestionFeedback(storageKey) {
 
   const triggerConfetti = (milestone) => {
     const effects = [
-      // Effect 1: Classic burst from sides
       () => {
-        const duration = 3000;
-        const animationEnd = Date.now() + duration;
-        const defaults = {
-          startVelocity: 30,
-          spread: 360,
-          ticks: 60,
-          zIndex: 9999,
-        };
-
-        function randomInRange(min, max) {
-          return Math.random() * (max - min) + min;
-        }
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-
-          const particleCount = 50 * (timeLeft / duration);
+        // Classic burst
+        const end = Date.now() + 3000;
+        const interval = setInterval(() => {
+          if (Date.now() > end) return clearInterval(interval);
           confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            startVelocity: 30,
+            spread: 360,
+            zIndex: 9999,
+            particleCount: 50,
+            origin: { x: Math.random() * 0.2 + 0.1, y: Math.random() - 0.2 },
           });
           confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            startVelocity: 30,
+            spread: 360,
+            zIndex: 9999,
+            particleCount: 50,
+            origin: { x: Math.random() * 0.2 + 0.7, y: Math.random() - 0.2 },
           });
         }, 250);
       },
-
-      // Effect 2: Fireworks
       () => {
-        const duration = 2000;
-        const animationEnd = Date.now() + duration;
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-
+        // Fireworks
+        const end = Date.now() + 2000;
+        const interval = setInterval(() => {
+          if (Date.now() > end) return clearInterval(interval);
           confetti({
             particleCount: 100,
             startVelocity: 45,
             spread: 360,
             zIndex: 9999,
-            origin: {
-              x: Math.random(),
-              y: Math.random() * 0.6,
-            },
-            colors: ["#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A"],
+            origin: { x: Math.random(), y: Math.random() * 0.6 },
           });
         }, 400);
       },
-
-      // Effect 3: Confetti cannon from bottom
       () => {
-        const count = 200;
-        const defaults = {
-          origin: { y: 0.9 },
-          zIndex: 9999,
-        };
-
-        function fire(particleRatio, opts) {
+        // Cannon
+        const fire = (ratio, opts) =>
           confetti({
-            ...defaults,
             ...opts,
-            particleCount: Math.floor(count * particleRatio),
+            origin: { y: 0.9 },
+            zIndex: 9999,
+            particleCount: Math.floor(200 * ratio),
           });
-        }
-
         fire(0.25, { spread: 26, startVelocity: 55 });
         fire(0.2, { spread: 60 });
         fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
         fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-        fire(0.1, { spread: 120, startVelocity: 45 });
       },
-
-      // Effect 4: Stars from center
       () => {
-        const duration = 2500;
-        const animationEnd = Date.now() + duration;
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-
-          confetti({
+        // Stars
+        const end = Date.now() + 2500;
+        const interval = setInterval(() => {
+          if (Date.now() > end) return clearInterval(interval);
+          const common = {
             particleCount: 2,
-            angle: 60,
             spread: 55,
             origin: { x: 0.5, y: 0.5 },
             colors: ["#bb0000", "#ffffff"],
             shapes: ["star"],
             scalar: 1.5,
             zIndex: 9999,
-          });
-          confetti({
-            particleCount: 2,
-            angle: 120,
-            spread: 55,
-            origin: { x: 0.5, y: 0.5 },
-            colors: ["#bb0000", "#ffffff"],
-            shapes: ["star"],
-            scalar: 1.5,
-            zIndex: 9999,
-          });
-        }, 100);
-      },
-
-      // Effect 5: Rainbow cascade
-      () => {
-        const duration = 3000;
-        const animationEnd = Date.now() + duration;
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-
-          const particleCount = 3;
-          confetti({
-            particleCount,
-            startVelocity: 30,
-            spread: 360,
-            ticks: 100,
-            zIndex: 9999,
-            origin: {
-              x: Math.random(),
-              y: 0,
-            },
-            colors: [
-              "#FF0000",
-              "#FF7F00",
-              "#FFFF00",
-              "#00FF00",
-              "#0000FF",
-              "#4B0082",
-              "#9400D3",
-            ],
-          });
+          };
+          confetti({ ...common, angle: 60 });
+          confetti({ ...common, angle: 120 });
         }, 100);
       },
     ];
-
-    // Cycle through effects based on milestone
-    const effectIndex = (milestone - 1) % effects.length;
-    effects[effectIndex]();
+    effects[(milestone - 1) % effects.length]();
   };
 
   return {
@@ -333,23 +254,16 @@ export function useQuestionFeedback(storageKey) {
     clearAllFeedback,
     getCompletionStats,
     correctCount,
-    handleBadgeClick: (
-      question,
-      index,
-      customReset = null,
-      customFocus = null,
-    ) => {
-      const feedback = feedbackState.value[question.id];
-
-      if (feedback && !feedback.isCorrect) {
-        if (customReset) {
-          customReset();
+    handleBadgeClick: (question, index, reset = null, focus = null) => {
+      if (feedbackState.value[question.id]?.isCorrect === false) {
+        if (reset) {
+          reset();
         } else {
           question.userAnswer = "";
         }
 
-        if (customFocus) {
-          customFocus();
+        if (focus) {
+          focus();
         } else {
           focusInput(index);
         }

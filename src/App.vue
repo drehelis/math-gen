@@ -1,3 +1,77 @@
+<script setup lang="ts">
+import { ref, computed, watch, provide } from "vue";
+import { useSimpleQuestionGenerator } from "./composables/useSimpleQuestionGenerator";
+import { useMissingQuestionGenerator } from "./composables/useMissingQuestionGenerator";
+import { useComparisonQuestionGenerator } from "./composables/useComparisonQuestionGenerator";
+import { useMultiplicationTableGenerator } from "./composables/useMultiplicationTableGenerator";
+import ControlPanel from "./components/ControlPanel.vue";
+import QuestionDisplay from "./components/QuestionDisplay.vue";
+import MissingQuestionDisplay from "./components/MissingQuestionDisplay.vue";
+import ComparisonQuestionDisplay from "./components/ComparisonQuestionDisplay.vue";
+import MultiplicationTableDisplay from "./components/MultiplicationTableDisplay.vue";
+import LanguageSwitcher from "./components/LanguageSwitcher.vue";
+import TabBar from "./components/TabBar.vue";
+import { useI18n } from "vue-i18n";
+
+const { locale, t } = useI18n();
+
+const simpleTab = useSimpleQuestionGenerator();
+const missingTab = useMissingQuestionGenerator();
+const comparisonTab = useComparisonQuestionGenerator();
+const multiplicationTableTab = useMultiplicationTableGenerator();
+
+// Provide the multiplicationTableTab to child components
+provide("multiplicationTableTab", multiplicationTableTab);
+
+const loadActiveTab = (): string => {
+  try {
+    const saved = localStorage.getItem("math-gen-active-tab");
+    if (
+      saved === "simple" ||
+      saved === "complex" ||
+      saved === "comparison" ||
+      saved === "table"
+    ) {
+      return saved;
+    }
+    return "simple";
+  } catch (error) {
+    console.error("Failed to load active tab:", error);
+    return "simple";
+  }
+};
+
+const activeTab = ref(loadActiveTab());
+
+watch(activeTab, (newTab) => {
+  try {
+    localStorage.setItem("math-gen-active-tab", newTab);
+  } catch (error) {
+    console.error("Failed to save active tab:", error);
+  }
+});
+
+const currentTabData = computed(() => {
+  if (activeTab.value === "simple") return simpleTab;
+  if (activeTab.value === "complex") return missingTab;
+  if (activeTab.value === "comparison") return comparisonTab;
+  return multiplicationTableTab;
+});
+
+const tabs = computed(() => [
+  { value: "simple", label: t("tabs.simple") },
+  { value: "complex", label: t("tabs.complex") },
+  { value: "comparison", label: t("tabs.comparison") },
+  { value: "table", label: t("tabs.table") },
+]);
+
+const changeLocale = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem("locale", lang);
+  document.documentElement.setAttribute("dir", lang === "he" ? "rtl" : "ltr");
+};
+</script>
+
 <template>
   <div
     class="min-h-screen p-6 md:p-8 print:bg-white print:p-0"
@@ -123,77 +197,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed, watch, provide } from "vue";
-import { useSimpleQuestionGenerator } from "./composables/useSimpleQuestionGenerator";
-import { useMissingQuestionGenerator } from "./composables/useMissingQuestionGenerator";
-import { useComparisonQuestionGenerator } from "./composables/useComparisonQuestionGenerator";
-import { useMultiplicationTableGenerator } from "./composables/useMultiplicationTableGenerator";
-import ControlPanel from "./components/ControlPanel.vue";
-import QuestionDisplay from "./components/QuestionDisplay.vue";
-import MissingQuestionDisplay from "./components/MissingQuestionDisplay.vue";
-import ComparisonQuestionDisplay from "./components/ComparisonQuestionDisplay.vue";
-import MultiplicationTableDisplay from "./components/MultiplicationTableDisplay.vue";
-import LanguageSwitcher from "./components/LanguageSwitcher.vue";
-import TabBar from "./components/TabBar.vue";
-import { useI18n } from "vue-i18n";
-
-const { locale, t } = useI18n();
-
-const simpleTab = useSimpleQuestionGenerator();
-const missingTab = useMissingQuestionGenerator();
-const comparisonTab = useComparisonQuestionGenerator();
-const multiplicationTableTab = useMultiplicationTableGenerator();
-
-// Provide the multiplicationTableTab to child components
-provide("multiplicationTableTab", multiplicationTableTab);
-
-const loadActiveTab = () => {
-  try {
-    const saved = localStorage.getItem("math-gen-active-tab");
-    if (
-      saved === "simple" ||
-      saved === "complex" ||
-      saved === "comparison" ||
-      saved === "table"
-    ) {
-      return saved;
-    }
-    return "simple";
-  } catch (error) {
-    console.error("Failed to load active tab:", error);
-    return "simple";
-  }
-};
-
-const activeTab = ref(loadActiveTab());
-
-watch(activeTab, (newTab) => {
-  try {
-    localStorage.setItem("math-gen-active-tab", newTab);
-  } catch (error) {
-    console.error("Failed to save active tab:", error);
-  }
-});
-
-const currentTabData = computed(() => {
-  if (activeTab.value === "simple") return simpleTab;
-  if (activeTab.value === "complex") return missingTab;
-  if (activeTab.value === "comparison") return comparisonTab;
-  return multiplicationTableTab;
-});
-
-const tabs = computed(() => [
-  { value: "simple", label: t("tabs.simple") },
-  { value: "complex", label: t("tabs.complex") },
-  { value: "comparison", label: t("tabs.comparison") },
-  { value: "table", label: t("tabs.table") },
-]);
-
-const changeLocale = (lang) => {
-  locale.value = lang;
-  localStorage.setItem("locale", lang);
-  document.documentElement.setAttribute("dir", lang === "he" ? "rtl" : "ltr");
-};
-</script>

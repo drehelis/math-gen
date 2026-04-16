@@ -369,7 +369,7 @@ describe("useQuestionFeedback", () => {
       }
 
       // Check if confetti was called
-      expect(vi.mocked(confetti)).toHaveBeenCalled();
+      expect(confetti).toHaveBeenCalled();
 
       dateNowSpy.mockRestore();
       vi.useRealTimers();

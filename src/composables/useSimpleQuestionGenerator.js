@@ -40,117 +40,73 @@ export function useSimpleQuestionGenerator() {
     { deep: true },
   );
 
-  const getRandomNumber = (isSecondNumber = false) => {
-    let min = 0;
-    let max = 10;
-
-    if (settings.value.difficulty === "easy") {
-      min = 0;
-      max = 10;
-    } else if (settings.value.difficulty === "beginners") {
-      min = 0;
-      max = 10;
-    } else if (settings.value.difficulty === "basic") {
-      min = 1;
-      max = 20;
-
-      if (isSecondNumber && settings.value.varySecondNumber) {
-        const useSmaller = Math.random() < 0.5;
-        if (useSmaller) {
-          min = 1;
-          max = 10;
-        }
-      }
-    } else if (settings.value.difficulty === "medium") {
-      min = 10;
-      max = 100;
-
-      if (isSecondNumber && settings.value.varySecondNumber) {
-        const useSmaller = Math.random() < 0.5;
-        if (useSmaller) {
-          min = 1;
-          max = 10;
-        }
-      }
-    } else if (settings.value.difficulty === "hard") {
-      min = 100;
-      max = 900;
-
-      if (isSecondNumber && settings.value.varySecondNumber) {
-        const rand = Math.random();
-        if (rand < 0.5) {
-          min = 1;
-          max = 10;
-        } else {
-          min = 10;
-          max = 100;
-        }
-      }
-    } else if (settings.value.difficulty === "tens") {
-      min = 10;
-      max = 200;
-      const range = (max - min) / 10;
-      return Math.floor(Math.random() * (range + 1)) * 10 + min;
+  const getRandomNumber = (isSecond = false) => {
+    const d = settings.value.difficulty;
+    let [min, max] = [0, 10];
+    if (d === "basic") [min, max] = [1, 20];
+    else if (d === "medium") [min, max] = [10, 100];
+    else if (d === "hard") [min, max] = [100, 900];
+    else if (d === "tens") {
+      const r = (200 - 10) / 10;
+      return Math.floor(Math.random() * (r + 1)) * 10 + 10;
     }
 
+    if (
+      isSecond &&
+      settings.value.varySecondNumber &&
+      d !== "easy" &&
+      d !== "beginners"
+    ) {
+      if (d === "hard") [min, max] = Math.random() < 0.5 ? [1, 10] : [10, 100];
+      else if (Math.random() < 0.5) [min, max] = [1, 10];
+    }
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
   const generateQuestion = () => {
-    const availableOperations = settings.value.operations || [
-      settings.value.operation,
-    ];
-    const selectedOperation =
-      availableOperations[
-        Math.floor(Math.random() * availableOperations.length)
-      ];
+    const ops = settings.value.operations || [settings.value.operation];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    const vary = settings.value.varySecondNumber;
+    let n1 = getRandomNumber(vary && Math.random() < 0.5);
+    let n2 = getRandomNumber(vary && !vary); // Wait, varySecondNumber && !varyFirst
 
+    // Correction: let n1 = getRandomNumber(vary && varyFirst);
     const varyFirst = Math.random() < 0.5;
-    let num1 = getRandomNumber(settings.value.varySecondNumber && varyFirst);
-    let num2 = getRandomNumber(settings.value.varySecondNumber && !varyFirst);
-    let answer;
-    let operation;
+    n1 = getRandomNumber(vary && varyFirst);
+    n2 = getRandomNumber(vary && !varyFirst);
 
-    if (selectedOperation === "subtraction") {
-      if (num1 < num2) {
-        [num1, num2] = [num2, num1];
-      }
-      answer = num1 - num2;
-      operation = "-";
-    } else if (selectedOperation === "multiplication") {
-      answer = num1 * num2;
-      operation = "×";
-    } else if (selectedOperation === "division") {
-      let divisorMax = 12;
-      if (settings.value.difficulty === "easy") {
-        divisorMax = 10;
-      }
-
-      num2 = Math.floor(Math.random() * divisorMax) + 1;
-
-      if (num1 % num2 !== 0) {
-        num1 = num2 * Math.floor(num1 / num2);
-        if (num1 === 0) num1 = num2;
-      }
-
-      answer = num1 / num2;
-      operation = "÷";
+    let ans, symbol;
+    if (op === "subtraction") {
+      if (n1 < n2) [n1, n2] = [n2, n1];
+      ans = n1 - n2;
+      symbol = "-";
+    } else if (op === "multiplication") {
+      ans = n1 * n2;
+      symbol = "×";
+    } else if (op === "division") {
+      n2 =
+        Math.floor(
+          Math.random() * (settings.value.difficulty === "easy" ? 10 : 12),
+        ) + 1;
+      if (n1 % n2 !== 0) n1 = n2 * Math.floor(n1 / n2) || n2;
+      ans = n1 / n2;
+      symbol = "÷";
     } else {
-      answer = num1 + num2;
-      operation = "+";
+      ans = n1 + n2;
+      symbol = "+";
     }
 
     return {
       id: `q-${Date.now()}-${++idCounter}`,
-      num1,
-      num2,
-      answer,
-      operation,
+      num1: n1,
+      num2: n2,
+      answer: ans,
+      operation: symbol,
       userAnswer: "",
     };
   };
 
-  const generateQuestions = () => {
+  const generateQuestions = async () => {
     const newQuestions = [];
     const seen = new Set();
     const maxAttempts = settings.value.count * 10;
@@ -179,6 +135,11 @@ export function useSimpleQuestionGenerator() {
       if (!seen.has(key)) {
         seen.add(key);
         newQuestions.push(question);
+      }
+
+      // Yield every 50 questions to keep UI responsive
+      if (newQuestions.length % 50 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
       }
     }
 

@@ -1,3 +1,361 @@
+<script setup lang="ts">
+import { reactive, watch, computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import CustomDropdown from "./CustomDropdown.vue";
+import MultiSelectDropdown from "./MultiSelectDropdown.vue";
+
+interface Settings {
+  count: number | string;
+  operations: string[];
+  difficulty: string;
+  varySecondNumber: boolean;
+  showAnswers: boolean;
+  showGuide: boolean;
+  inputMode: string;
+  questionFormat: string;
+  missingPosition: string;
+  prefillPercentage: number;
+  tableSize: number;
+  selectedOptions?: (string | number)[];
+}
+
+const props = defineProps<{
+  settings: Settings;
+  hasQuestions?: boolean;
+  showControls?: boolean;
+  hideOperation?: boolean;
+  comparisonMode?: boolean;
+  tableMode?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "update:settings", value: Settings): void;
+  (e: "generate"): void;
+  (e: "print"): void;
+}>();
+
+const { locale, t } = useI18n();
+const currentLocale = computed(() => locale.value);
+
+interface LocalSettings {
+  count: number | string;
+  difficulty: string;
+  operations: string[];
+  missingPosition: string;
+  prefillPercentage: number;
+  tableSize: number;
+  selectedOptions: (string | number)[];
+  varySecondNumber: boolean;
+  showAnswers: boolean;
+  showGuide: boolean;
+  inputMode: string;
+  questionFormat: string;
+  [key: string]: unknown;
+}
+
+const localSettings = reactive<LocalSettings>({
+  ...props.settings,
+  operations: props.settings.operations || ["addition"],
+  varySecondNumber: props.settings.varySecondNumber || false,
+  showAnswers: props.settings.showAnswers || false,
+  showGuide: props.settings.showGuide || false,
+  inputMode: props.settings.inputMode || "native",
+  questionFormat: props.settings.questionFormat || "standard",
+  missingPosition: props.settings.missingPosition || "random",
+  prefillPercentage: props.settings.prefillPercentage || 0,
+  tableSize: props.settings.tableSize || 10,
+  selectedOptions: props.settings.selectedOptions || [],
+});
+
+const isCollapsed = ref(props.hasQuestions);
+const showCustomCount = ref(false);
+const customCountValue = ref<number | null>(null);
+
+// Auto-expand menu when there are no questions
+watch(
+  () => props.hasQuestions,
+  (has) => {
+    if (!has) isCollapsed.value = false;
+  },
+);
+
+// Update settings when props change
+watch(
+  () => props.hideOperation,
+  (isHidden) => {
+    if (isHidden) {
+      const validOps = localSettings.operations.filter(
+        (op) => op === "addition" || op === "subtraction",
+      );
+      localSettings.operations = validOps.length > 0 ? validOps : ["addition"];
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => props.comparisonMode,
+  (isComp) => {
+    if (!isComp) {
+      if (localSettings.operations.includes("none")) {
+        localSettings.operations = ["addition"];
+      }
+      return;
+    }
+
+    if (localSettings.difficulty === "hard") {
+      localSettings.difficulty = "medium";
+    }
+
+    const isBasicOrMed = ["basic", "medium"].includes(localSettings.difficulty);
+    if (isBasicOrMed) {
+      const hasAddSub = localSettings.operations.some((op) =>
+        ["addition", "subtraction"].includes(op),
+      );
+      if (!hasAddSub) localSettings.operations = ["addition"];
+    } else if (!localSettings.operations.includes("none")) {
+      localSettings.operations = ["none"];
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => localSettings.difficulty,
+  (newDiff) => {
+    if (!props.comparisonMode) return;
+
+    if (["beginners", "easy"].includes(newDiff)) {
+      localSettings.operations = ["none"];
+    } else if (
+      ["basic", "medium"].includes(newDiff) &&
+      localSettings.operations.includes("none")
+    ) {
+      localSettings.operations = ["addition"];
+    }
+  },
+);
+
+// Sync local settings to parent
+watch(
+  localSettings,
+  (newValue) => {
+    emit("update:settings", newValue);
+  },
+  { deep: true },
+);
+
+// Universal regenerator for settings changes
+const settingsToWatch = [
+  () => localSettings.count,
+  () => localSettings.operations,
+  () => localSettings.difficulty,
+  () => localSettings.varySecondNumber,
+  () => localSettings.questionFormat,
+  () => localSettings.missingPosition,
+  () => localSettings.prefillPercentage,
+  () => localSettings.tableSize,
+];
+
+settingsToWatch.forEach((source) => {
+  watch(
+    source,
+    () => {
+      if (props.tableMode || props.hasQuestions) {
+        emit("generate");
+      }
+    },
+    { deep: true },
+  );
+});
+
+const handleGenerate = () => emit("generate");
+const handlePrint = () => window.print();
+
+const handleCustomCountBlur = () => {
+  const val = Number(customCountValue.value);
+  const isValid = val && val >= 1 && val <= 500;
+  localSettings.count = isValid ? val : 20;
+  showCustomCount.value = false;
+};
+
+const countOptions = computed(() => {
+  const base: { value: string | number; label: string }[] = [
+    10, 20, 30, 50,
+  ].map((v) => ({ value: v, label: t(`questions.count.${v}`) }));
+  if (
+    typeof localSettings.count === "number" &&
+    ![10, 20, 30, 50].includes(localSettings.count)
+  ) {
+    base.push({
+      value: localSettings.count,
+      label: `${localSettings.count} ${t("questions.count.10").includes("Questions") ? "Questions" : "תרגילים"}`,
+    });
+  }
+  base.push({ value: "custom", label: t("questions.count.custom") });
+  return base;
+});
+
+watch(
+  () => localSettings.count,
+  (nv) => {
+    if (nv === "custom") {
+      showCustomCount.value = true;
+      customCountValue.value = null;
+    }
+  },
+);
+
+const operationOptions = computed(() => [
+  { value: "addition", label: t("operation.addition") },
+  { value: "subtraction", label: t("operation.subtraction") },
+  { value: "multiplication", label: t("operation.multiplication") },
+  { value: "division", label: t("operation.division") },
+]);
+
+const comparisonOperationOptions = computed(() => {
+  if (["basic", "medium"].includes(localSettings.difficulty)) {
+    return operationOptions.value;
+  }
+  return [{ value: "none", label: t("controls.none") }];
+});
+
+const tableSizeOptions = computed(() =>
+  [10, 12, 15].map((v) => ({ value: v, label: t(`table.size.${v}`) })),
+);
+const prefillOptions = computed(() =>
+  [0, 25, 45, 75].map((v) => ({ value: v, label: t(`table.prefill.${v}`) })),
+);
+
+const difficultyOptions = computed(() => {
+  const options = [
+    {
+      value: "easy",
+      label: t("difficulty.easy"),
+      children: [
+        { value: "beginners", label: t("difficulty.beginners") },
+        { value: "basic", label: t("difficulty.basic") },
+        { value: "tens", label: t("difficulty.tens") },
+      ],
+    },
+    { value: "medium", label: t("difficulty.medium") },
+  ];
+  if (!props.comparisonMode)
+    options.push({ value: "hard", label: t("difficulty.hard") });
+  return options;
+});
+
+const optionsOptions = computed(() => {
+  const options = [{ value: "showAnswers", label: t("controls.showAnswers") }];
+  if (props.tableMode) return options;
+
+  if (!props.hideOperation && !props.comparisonMode) {
+    const canShowGuide =
+      localSettings.operations.length === 1 &&
+      ["addition", "subtraction"].includes(localSettings.operations[0]) &&
+      ["beginners", "easy"].includes(localSettings.difficulty);
+
+    if (canShowGuide)
+      options.push({ value: "showGuide", label: t("controls.showGuide") });
+
+    if (["medium", "hard"].includes(localSettings.difficulty)) {
+      options.push({
+        value: "varySecondNumber",
+        label: t("controls.varySecondNumber"),
+      });
+      if (localSettings.operations.some((op) => op !== "multiplication")) {
+        options.push({
+          value: "columnByColumn",
+          label: t("controls.columnByColumn"),
+        });
+      }
+    }
+  }
+
+  if (props.hideOperation) {
+    if (["medium", "hard"].includes(localSettings.difficulty)) {
+      options.push({
+        value: "varySecondNumber",
+        label: t("controls.varySecondNumber"),
+      });
+    }
+    if (!["beginners", "basic"].includes(localSettings.difficulty)) {
+      options.push({
+        value: "bothSides",
+        label: t("questionFormat.bothSides"),
+      });
+    }
+  }
+  return options;
+});
+
+const syncSelectedOptions = () => {
+  const selected: string[] = [];
+  if (localSettings.showAnswers) selected.push("showAnswers");
+  if (localSettings.showGuide) selected.push("showGuide");
+
+  if (["medium", "hard"].includes(localSettings.difficulty)) {
+    if (localSettings.varySecondNumber) selected.push("varySecondNumber");
+    if (
+      !props.hideOperation &&
+      localSettings.inputMode === "column-by-column"
+    ) {
+      selected.push("columnByColumn");
+    }
+  }
+
+  if (
+    props.hideOperation &&
+    localSettings.questionFormat === "both-sides-mixed"
+  ) {
+    selected.push("bothSides");
+  }
+
+  localSettings.selectedOptions = selected;
+};
+
+syncSelectedOptions();
+
+watch(
+  () => localSettings.selectedOptions,
+  (newOptions) => {
+    if (!newOptions) return;
+    localSettings.showAnswers = newOptions.includes("showAnswers");
+    localSettings.showGuide = newOptions.includes("showGuide");
+    localSettings.varySecondNumber = newOptions.includes("varySecondNumber");
+    localSettings.inputMode = newOptions.includes("columnByColumn")
+      ? "column-by-column"
+      : "native";
+
+    if (props.hideOperation) {
+      localSettings.questionFormat = newOptions.includes("bothSides")
+        ? "both-sides-mixed"
+        : "standard";
+    }
+  },
+  { deep: true },
+);
+
+// Filter out options that are no longer available when context changes
+watch(
+  [
+    () => localSettings.difficulty,
+    () => props.hideOperation,
+    () => props.tableMode,
+    () => localSettings.operations,
+  ],
+  () => {
+    const available = optionsOptions.value.map((opt) => opt.value);
+    if (localSettings.selectedOptions) {
+      localSettings.selectedOptions = localSettings.selectedOptions.filter(
+        (opt) => (available as (string | number)[]).includes(opt),
+      );
+    }
+  },
+  { deep: true },
+);
+</script>
+
 <template>
   <div class="no-print relative mb-12">
     <div
@@ -108,25 +466,57 @@
               background-color="var(--color-sunshine)"
               text-color="var(--color-deep)"
             />
-            <input
-              v-else
-              v-model.number="customCountValue"
-              type="number"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              min="1"
-              max="500"
-              autofocus
-              class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all"
-              style="
-                border-color: var(--color-sunshine);
-                background: var(--color-sunshine);
-                color: var(--color-deep);
-              "
-              :placeholder="$t('controls.enterNumber')"
-              @blur="handleCustomCountBlur"
-              @keyup.enter="handleCustomCountBlur"
-            />
+            <div v-else class="relative flex items-center">
+              <button
+                class="absolute left-2 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-2 shadow-sm"
+                style="
+                  color: var(--color-deep);
+                  background: white;
+                  border-color: var(--color-sunshine);
+                "
+                @click="
+                  customCountValue = Math.max(1, (customCountValue || 20) - 1)
+                "
+              >
+                <span class="text-2xl font-bold leading-none select-none"
+                  >−</span
+                >
+              </button>
+              <input
+                ref="customCountInput"
+                v-model.number="customCountValue"
+                type="number"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                min="1"
+                max="500"
+                autofocus
+                class="w-full px-14 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all text-center no-spinner"
+                style="
+                  border-color: var(--color-sunshine);
+                  background: var(--color-sunshine);
+                  color: var(--color-deep);
+                "
+                :placeholder="$t('controls.enterNumber')"
+                @blur="handleCustomCountBlur"
+                @keyup.enter="handleCustomCountBlur"
+              />
+              <button
+                class="absolute right-2 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-2 shadow-sm"
+                style="
+                  color: var(--color-deep);
+                  background: white;
+                  border-color: var(--color-sunshine);
+                "
+                @click="
+                  customCountValue = Math.min(500, (customCountValue || 20) + 1)
+                "
+              >
+                <span class="text-2xl font-bold leading-none select-none"
+                  >+</span
+                >
+              </button>
+            </div>
           </div>
 
           <div v-if="tableMode">
@@ -292,512 +682,21 @@
   </div>
 </template>
 
-<script setup>
-import { reactive, watch, computed, ref } from "vue";
-import { useI18n } from "vue-i18n";
-import CustomDropdown from "./CustomDropdown.vue";
-import MultiSelectDropdown from "./MultiSelectDropdown.vue";
+<style scoped>
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
-const { locale, t } = useI18n();
-const currentLocale = computed(() => locale.value);
+input[type="number"] {
+  -moz-appearance: textfield;
+}
 
-const props = defineProps({
-  settings: {
-    type: Object,
-    required: true,
-  },
-  hasQuestions: {
-    type: Boolean,
-    default: false,
-  },
-  showControls: {
-    type: Boolean,
-    default: true,
-  },
-  hideOperation: {
-    type: Boolean,
-    default: false,
-  },
-  comparisonMode: {
-    type: Boolean,
-    default: false,
-  },
-  tableMode: {
-    type: Boolean,
-    default: false,
-  },
-});
-
-const emit = defineEmits(["update:settings", "generate", "print"]);
-
-const localSettings = reactive({
-  ...props.settings,
-  operations: props.settings.operations || ["addition"],
-  varySecondNumber: props.settings.varySecondNumber || false,
-  showAnswers: props.settings.showAnswers || false,
-  showGuide: props.settings.showGuide || false,
-  inputMode: props.settings.inputMode || "native",
-  questionFormat: props.settings.questionFormat || "standard",
-  missingPosition: props.settings.missingPosition || "random",
-  prefillPercentage: props.settings.prefillPercentage || 0,
-  tableSize: props.settings.tableSize || 10,
-  selectedOptions: [],
-});
-
-// Mobile collapse state - start expanded if no questions
-const isCollapsed = ref(props.hasQuestions);
-
-// Auto-expand menu when there are no questions
-watch(
-  () => props.hasQuestions,
-  (hasQuestions) => {
-    if (!hasQuestions) {
-      isCollapsed.value = false;
-    }
-  },
-);
-
-watch(
-  () => props.hideOperation,
-  (isHidden) => {
-    if (isHidden) {
-      const validOps = localSettings.operations.filter(
-        (op) => op === "addition" || op === "subtraction",
-      );
-      if (validOps.length === 0) {
-        localSettings.operations = ["addition"];
-      } else {
-        localSettings.operations = validOps;
-      }
-    }
-  },
-  { immediate: true },
-);
-
-watch(
-  () => props.comparisonMode,
-  (isComparison) => {
-    if (isComparison) {
-      // If switching to comparison mode with hard difficulty, reset to medium
-      if (localSettings.difficulty === "hard") {
-        localSettings.difficulty = "medium";
-      }
-
-      if (
-        localSettings.difficulty === "basic" ||
-        localSettings.difficulty === "medium"
-      ) {
-        // For basic/medium difficulty, default to addition if not already set
-        if (
-          !localSettings.operations.includes("addition") &&
-          !localSettings.operations.includes("subtraction")
-        ) {
-          localSettings.operations = ["addition"];
-        }
-      } else if (!localSettings.operations.includes("none")) {
-        localSettings.operations = ["none"];
-      }
-    } else if (!isComparison && localSettings.operations.includes("none")) {
-      // When leaving comparison mode, reset to default operations
-      localSettings.operations = ["addition"];
-    }
-  },
-  { immediate: true },
-);
-
-watch(
-  () => localSettings.difficulty,
-  (newDifficulty) => {
-    if (props.comparisonMode) {
-      if (newDifficulty === "beginners" || newDifficulty === "easy") {
-        localSettings.operations = ["none"];
-      } else if (newDifficulty === "basic" || newDifficulty === "medium") {
-        // Switch to addition for basic/medium difficulty
-        if (localSettings.operations.includes("none")) {
-          localSettings.operations = ["addition"];
-        }
-      }
-    }
-  },
-);
-
-const showCustomCount = ref(false);
-const customCountValue = ref(null);
-
-watch(
-  localSettings,
-  (newValue) => {
-    emit("update:settings", newValue);
-  },
-  { deep: true },
-);
-
-watch(
-  () => localSettings.count,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.operation,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.operations,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-  { deep: true },
-);
-
-watch(
-  () => localSettings.difficulty,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.varySecondNumber,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.questionFormat,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.missingPosition,
-  () => {
-    if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.prefillPercentage,
-  () => {
-    if (props.tableMode) {
-      // For table mode, always regenerate immediately when prefill changes
-      emit("generate");
-    } else if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-watch(
-  () => localSettings.tableSize,
-  () => {
-    if (props.tableMode) {
-      // For table mode, always regenerate immediately when size changes
-      emit("generate");
-    } else if (props.hasQuestions) {
-      emit("generate");
-    }
-  },
-);
-
-const handleGenerate = () => {
-  emit("generate");
-};
-
-const handlePrint = () => {
-  window.print();
-};
-
-const handleCustomCountBlur = () => {
-  if (
-    customCountValue.value &&
-    customCountValue.value >= 1 &&
-    customCountValue.value <= 500
-  ) {
-    localSettings.count = customCountValue.value;
-    showCustomCount.value = false;
-  } else {
-    customCountValue.value = 20;
-    localSettings.count = 20;
-    showCustomCount.value = false;
-  }
-};
-
-const countOptions = computed(() => {
-  const baseOptions = [
-    { value: 10, label: t("questions.count.10") },
-    { value: 20, label: t("questions.count.20") },
-    { value: 30, label: t("questions.count.30") },
-    { value: 50, label: t("questions.count.50") },
-  ];
-
-  if (
-    typeof localSettings.count === "number" &&
-    ![10, 20, 30, 50].includes(localSettings.count)
-  ) {
-    baseOptions.push({
-      value: localSettings.count,
-      label: `${localSettings.count} ${t("questions.count.10").includes("Questions") ? "Questions" : "תרגילים"}`,
-    });
-  }
-
-  baseOptions.push({ value: "custom", label: t("questions.count.custom") });
-  return baseOptions;
-});
-
-watch(
-  () => localSettings.count,
-  (newValue) => {
-    if (newValue === "custom") {
-      showCustomCount.value = true;
-      customCountValue.value = null;
-    }
-  },
-);
-
-const operationOptions = computed(() => [
-  { value: "addition", label: t("operation.addition") },
-  { value: "subtraction", label: t("operation.subtraction") },
-  { value: "multiplication", label: t("operation.multiplication") },
-  { value: "division", label: t("operation.division") },
-]);
-
-const comparisonOperationOptions = computed(() => {
-  if (
-    localSettings.difficulty === "basic" ||
-    localSettings.difficulty === "medium"
-  ) {
-    return [
-      { value: "addition", label: t("operation.addition") },
-      { value: "subtraction", label: t("operation.subtraction") },
-      { value: "multiplication", label: t("operation.multiplication") },
-      { value: "division", label: t("operation.division") },
-    ];
-  } else {
-    return [{ value: "none", label: t("controls.none") }];
-  }
-});
-
-const tableSizeOptions = computed(() => [
-  { value: 10, label: t("table.size.10") },
-  { value: 12, label: t("table.size.12") },
-  { value: 15, label: t("table.size.15") },
-]);
-
-const prefillOptions = computed(() => [
-  { value: 0, label: t("table.prefill.0") },
-  { value: 25, label: t("table.prefill.25") },
-  { value: 45, label: t("table.prefill.45") },
-  { value: 75, label: t("table.prefill.75") },
-]);
-
-const difficultyOptions = computed(() => {
-  const options = [
-    {
-      value: "easy",
-      label: t("difficulty.easy"),
-      children: [
-        { value: "beginners", label: t("difficulty.beginners") },
-        { value: "basic", label: t("difficulty.basic") },
-        { value: "tens", label: t("difficulty.tens") },
-      ],
-    },
-    { value: "medium", label: t("difficulty.medium") },
-  ];
-
-  // Only exclude hard for comparison mode
-  if (!props.comparisonMode) {
-    options.push({ value: "hard", label: t("difficulty.hard") });
-  }
-
-  return options;
-});
-
-const optionsOptions = computed(() => {
-  const options = [{ value: "showAnswers", label: t("controls.showAnswers") }];
-
-  // For table mode, only show answers option is relevant
-  if (props.tableMode) {
-    return options;
-  }
-
-  // For Simple tab (not hideOperation)
-  if (!props.hideOperation && !props.comparisonMode) {
-    // Show guide option for Addition or Subtraction + (Beginners or Easy) + Single Operation Only
-    const isGuideAvailable =
-      localSettings.operations.length === 1 &&
-      (localSettings.operations.includes("addition") ||
-        localSettings.operations.includes("subtraction")) &&
-      (localSettings.difficulty === "beginners" ||
-        localSettings.difficulty === "easy");
-
-    if (isGuideAvailable) {
-      options.push({ value: "showGuide", label: t("controls.showGuide") });
-    }
-
-    if (
-      localSettings.difficulty === "medium" ||
-      localSettings.difficulty === "hard"
-    ) {
-      options.push({
-        value: "varySecondNumber",
-        label: t("controls.varySecondNumber"),
-      });
-      // Only show Vertical Entry for non-multiplication operations
-      const hasNonMultiplication = localSettings.operations.some(
-        (op) => op !== "multiplication",
-      );
-      if (hasNonMultiplication) {
-        options.push({
-          value: "columnByColumn",
-          label: t("controls.columnByColumn"),
-        });
-      }
-    }
-  }
-
-  // For Missing Number tab (hideOperation)
-  if (props.hideOperation) {
-    // Show Uneven Digits for medium and hard difficulty
-    if (
-      localSettings.difficulty === "medium" ||
-      localSettings.difficulty === "hard"
-    ) {
-      options.push({
-        value: "varySecondNumber",
-        label: t("controls.varySecondNumber"),
-      });
-    }
-    // Only show Both Sides for medium and hard difficulty
-    if (
-      localSettings.difficulty !== "beginners" &&
-      localSettings.difficulty !== "basic"
-    ) {
-      options.push({
-        value: "bothSides",
-        label: t("questionFormat.bothSides"),
-      });
-    }
-  }
-
-  return options;
-});
-
-const initializeOptions = () => {
-  const selected = [];
-  if (localSettings.showAnswers) selected.push("showAnswers");
-  if (localSettings.showGuide) selected.push("showGuide");
-
-  // Add options for medium or hard difficulty
-  if (
-    localSettings.difficulty === "medium" ||
-    localSettings.difficulty === "hard"
-  ) {
-    if (localSettings.varySecondNumber) selected.push("varySecondNumber");
-    // Only add columnByColumn for Simple tab
-    if (
-      !props.hideOperation &&
-      localSettings.inputMode === "column-by-column"
-    ) {
-      selected.push("columnByColumn");
-    }
-  }
-
-  // Add format options for Missing Number tab
-  if (props.hideOperation) {
-    if (localSettings.questionFormat === "both-sides-mixed") {
-      selected.push("bothSides");
-    }
-  }
-
-  localSettings.selectedOptions = selected;
-};
-
-initializeOptions();
-
-watch(
-  () => localSettings.selectedOptions,
-  (newOptions) => {
-    localSettings.showAnswers = newOptions.includes("showAnswers");
-    localSettings.showGuide = newOptions.includes("showGuide");
-    localSettings.varySecondNumber = newOptions.includes("varySecondNumber");
-    localSettings.inputMode = newOptions.includes("columnByColumn")
-      ? "column-by-column"
-      : "native";
-
-    // Handle format options for Missing Number tab
-    if (newOptions.includes("bothSides")) {
-      localSettings.questionFormat = "both-sides-mixed";
-    } else if (props.hideOperation) {
-      // Only reset to standard if on Missing Number tab
-      localSettings.questionFormat = "standard";
-    }
-  },
-  { deep: true },
-);
-
-watch(
-  () => localSettings.difficulty,
-  () => {
-    // When difficulty changes, remove options that are no longer available
-    const availableValues = optionsOptions.value.map((opt) => opt.value);
-    localSettings.selectedOptions = localSettings.selectedOptions.filter(
-      (opt) => availableValues.includes(opt),
-    );
-  },
-);
-
-watch(
-  () => props.hideOperation,
-  () => {
-    // When switching tabs, remove options that are no longer available
-    const availableValues = optionsOptions.value.map((opt) => opt.value);
-    localSettings.selectedOptions = localSettings.selectedOptions.filter(
-      (opt) => availableValues.includes(opt),
-    );
-  },
-);
-
-watch(
-  () => props.tableMode,
-  () => {
-    // When switching to/from table mode, remove options that are no longer available
-    const availableValues = optionsOptions.value.map((opt) => opt.value);
-    localSettings.selectedOptions = localSettings.selectedOptions.filter(
-      (opt) => availableValues.includes(opt),
-    );
-  },
-);
-
-watch(
-  () => localSettings.operations,
-  () => {
-    // When operations change, remove options that are no longer available (e.g., columnByColumn for multiplication)
-    const availableValues = optionsOptions.value.map((opt) => opt.value);
-    localSettings.selectedOptions = localSettings.selectedOptions.filter(
-      (opt) => availableValues.includes(opt),
-    );
-  },
-  { deep: true },
-);
-</script>
+.no-spinner {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+</style>

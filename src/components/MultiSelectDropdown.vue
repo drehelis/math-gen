@@ -27,70 +27,74 @@
         class="absolute z-50 w-full mt-2 rounded-2xl border-2 shadow-2xl overflow-hidden"
         :style="dropdownStyle"
       >
-        <div
-          v-for="option in options"
-          :key="option.value"
-          class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 ltr:hover:translate-x-1 rtl:hover:-translate-x-1 flex items-center gap-3"
-          :style="optionStyle"
-          @click="toggleOption(option)"
-        >
+        <template v-for="(option, index) in options" :key="option.value">
           <div
-            class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
-            :style="{
-              borderColor: textColor,
-              backgroundColor: 'transparent',
-            }"
+            class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 ltr:hover:translate-x-1 rtl:hover:-translate-x-1 flex items-center gap-3"
+            :style="optionStyle"
+            @click="toggleOption(option)"
           >
             <div
-              v-if="isSelected(option.value)"
-              class="w-3 h-3 sm:w-2.5 sm:h-2.5 rounded-full"
-              :style="{ backgroundColor: textColor }"
-            />
+              class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
+              :style="{
+                borderColor: textColor,
+                backgroundColor: 'transparent',
+              }"
+            >
+              <div
+                v-if="isSelected(option.value)"
+                class="w-3 h-3 sm:w-2.5 sm:h-2.5 rounded-full"
+                :style="{ backgroundColor: textColor }"
+              />
+            </div>
+            <span>{{ option.label }}</span>
           </div>
-          <span>{{ option.label }}</span>
-        </div>
+
+          <!-- Separator -->
+          <div
+            v-if="index < options.length - 1"
+            class="h-0.5 opacity-10 mx-4 rounded-full"
+            :style="{ backgroundColor: textColor }"
+          />
+        </template>
       </div>
     </transition>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
-const props = defineProps({
-  modelValue: {
-    type: Array,
-    required: true,
-  },
-  options: {
-    type: Array,
-    required: true,
-  },
-  borderColor: {
-    type: String,
-    default: "var(--color-sunshine)",
-  },
-  backgroundColor: {
-    type: String,
-    default: "var(--color-sunshine)",
-  },
-  textColor: {
-    type: String,
-    default: "var(--color-deep)",
-  },
-  allowEmpty: {
-    type: Boolean,
-    default: false,
-  },
-});
+interface Option {
+  value: string | number;
+  label: string;
+}
 
-const emit = defineEmits(["update:modelValue"]);
+const props = withDefaults(
+  defineProps<{
+    modelValue: (string | number)[];
+    options: Option[];
+    borderColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    allowEmpty?: boolean;
+  }>(),
+  {
+    borderColor: "var(--color-sunshine)",
+    backgroundColor: "var(--color-sunshine)",
+    textColor: "var(--color-deep)",
+    allowEmpty: false,
+  },
+);
+
+const emit = defineEmits<{
+  (_e: "update:modelValue", _value: (string | number)[]): void;
+}>();
 
 const isOpen = ref(false);
-const dropdownRef = ref(null);
+const dropdownRef = ref<HTMLElement | null>(null);
 
 const selectedLabel = computed(() => {
   if (props.modelValue.length === 0) {
@@ -127,11 +131,11 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value;
 };
 
-const isSelected = (value) => {
+const isSelected = (value: string | number) => {
   return props.modelValue.includes(value);
 };
 
-const toggleOption = (option) => {
+const toggleOption = (option: Option) => {
   const newValue = [...props.modelValue];
   const index = newValue.indexOf(option.value);
 
@@ -146,8 +150,8 @@ const toggleOption = (option) => {
   emit("update:modelValue", newValue);
 };
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+const handleClickOutside = (event: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     isOpen.value = false;
   }
 };

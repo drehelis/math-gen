@@ -1,3 +1,105 @@
+<script setup lang="ts">
+import { watch, onMounted, ref } from "vue";
+import AnswerInput from "./AnswerInput.vue";
+import CompletionOverlay from "./CompletionOverlay.vue";
+import PageFooter from "./PageFooter.vue";
+import FeedbackBadge from "./FeedbackBadge.vue";
+import { useQuestionFeedback } from "../composables/useQuestionFeedback";
+import { useStyles } from "../composables/useStyles";
+
+interface Question {
+  id: string;
+  num1: number;
+  num2: number;
+  num3?: number;
+  num4?: number;
+  operation: string;
+  operation2?: string;
+  result?: number;
+  answer: number;
+  userAnswer: string;
+  format: string;
+  missingPosition: string;
+  displayIndex?: number;
+}
+
+const props = defineProps<{
+  questions: Question[];
+  showAnswers?: boolean;
+  difficulty?: string;
+}>();
+
+import type { QuestionFeedback } from "../types/feedback";
+
+const {
+  feedbackState,
+  handleFeedback,
+  setInputRef,
+  focusNextInput,
+  focusFirstInput,
+  focusInput,
+  clearAllFeedback,
+  getCompletionStats,
+  correctCount,
+  handleBadgeClick: handleBadgeClickHelper,
+} = useQuestionFeedback(
+  "math-gen-missing-feedback",
+) as unknown as QuestionFeedback<Question>;
+
+const showCompletionOverlay = ref(false);
+const completionStats = ref({
+  total: 0,
+  firstTry: 0,
+  timeInSeconds: 0,
+  accuracy: 100,
+});
+const focusedIndex = ref(-1);
+
+const { getCardStyle, getBadgeStyle, paginateQuestions } = useStyles(
+  props,
+  feedbackState,
+  focusedIndex,
+);
+
+onMounted(() => {
+  if (props.questions.length > 0 && !props.showAnswers)
+    focusFirstInput(props.questions);
+});
+
+watch(
+  () => props.questions,
+  (newQuestions, oldQuestions) => {
+    if (newQuestions.length > 0 && !props.showAnswers) {
+      if (
+        !oldQuestions ||
+        newQuestions.length !== oldQuestions.length ||
+        newQuestions[0]?.id !== oldQuestions[0]?.id
+      ) {
+        clearAllFeedback();
+        showCompletionOverlay.value = false;
+      }
+      focusFirstInput(newQuestions);
+    }
+  },
+);
+
+watch(() => correctCount.value, (newCount) => {
+  if (
+    newCount === props.questions.length &&
+    props.questions.length > 0 &&
+    !props.showAnswers
+  ) {
+    completionStats.value = getCompletionStats(props.questions.length);
+    setTimeout(() => {
+      showCompletionOverlay.value = true;
+    }, 500);
+  }
+});
+
+const handleBadgeClick = (index: number) =>
+  handleBadgeClickHelper(props.questions[index], index);
+</script>
+
 <template>
   <div v-if="questions.length > 0">
     <CompletionOverlay
@@ -19,7 +121,7 @@
           @click="focusInput(index)"
         >
           <div
-            class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4"
+            class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 z-10"
             :style="getBadgeStyle(index)"
           >
             <span>{{ index + 1 }}</span>
@@ -27,7 +129,7 @@
 
           <FeedbackBadge
             v-if="!showAnswers && feedbackState[question.id]?.show"
-            :is-correct="feedbackState[question.id]?.isCorrect"
+            :is-correct="feedbackState[question.id]?.isCorrect ?? false"
             @click="handleBadgeClick(index)"
           />
 
@@ -40,17 +142,16 @@
               class="text-base sm:text-lg md:text-lg lg:text-xl font-bold whitespace-nowrap"
               style="color: var(--color-deep)"
             >
-              <!-- Standard format: ___ + 5 = 10 or 2 + ___ = 7 -->
               <template
                 v-if="!question.format || question.format === 'standard'"
               >
                 <template v-if="question.missingPosition === 'first'">
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -77,10 +178,10 @@
                   {{ question.num1 + " " + question.operation + " " }}
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -98,7 +199,6 @@
                 </template>
               </template>
 
-              <!-- Both-sides format: various positions -->
               <template v-else-if="question.format === 'both-sides'">
                 <template v-if="question.missingPosition === 'right-second'">
                   {{
@@ -115,10 +215,10 @@
                   }}
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -146,10 +246,10 @@
                   }}
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -176,10 +276,10 @@
                   {{ question.num1 + " " + question.operation + " " }}
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -205,10 +305,10 @@
                 <template v-else-if="question.missingPosition === 'left-first'">
                   <AnswerInput
                     v-if="!showAnswers"
-                    :ref="(el) => setInputRef(el, index)"
+                    :ref="(el) => setInputRef(el as any, index)"
                     v-model="question.userAnswer"
                     :correct-answer="question.answer"
-                    @feedback="(data) => handleFeedback(question.id, data)"
+                    @feedback="(data: any) => handleFeedback(question.id, data)"
                     @correct-answer="
                       () => focusNextInput(index, questions.length)
                     "
@@ -258,18 +358,19 @@
           </h2>
           <div class="print-horizontal-grid" dir="ltr">
             <div
-              v-for="question in page"
+              v-for="question in Array.isArray(page) ? page : []"
               :key="question.id"
               class="print-horizontal-item"
             >
-              <span class="equation-number">{{ question.displayIndex }})</span>
+              <span class="equation-number"
+                >{{ (question as any).displayIndex }})</span
+              >
               <span class="equation">
-                <!-- Standard format -->
                 <template
                   v-if="!question.format || question.format === 'standard'"
                 >
                   <template v-if="question.missingPosition === 'first'">
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                     <span class="operator">{{ question.operation }}</span>
                     <span class="number">{{ question.num2 }}</span>
                     <span class="equals">=</span>
@@ -278,13 +379,12 @@
                   <template v-else>
                     <span class="number">{{ question.num1 }}</span>
                     <span class="operator">{{ question.operation }}</span>
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                     <span class="equals">=</span>
                     <span class="number">{{ question.result }}</span>
                   </template>
                 </template>
 
-                <!-- Both-sides format -->
                 <template v-else-if="question.format === 'both-sides'">
                   <template v-if="question.missingPosition === 'right-second'">
                     <span class="number">{{ question.num1 }}</span>
@@ -295,7 +395,7 @@
                     <span class="operator">{{
                       question.operation2 || question.operation
                     }}</span>
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                   </template>
                   <template
                     v-else-if="question.missingPosition === 'right-first'"
@@ -304,7 +404,7 @@
                     <span class="operator">{{ question.operation }}</span>
                     <span class="number">{{ question.num2 }}</span>
                     <span class="equals">=</span>
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                     <span class="operator">{{
                       question.operation2 || question.operation
                     }}</span>
@@ -315,7 +415,7 @@
                   >
                     <span class="number">{{ question.num1 }}</span>
                     <span class="operator">{{ question.operation }}</span>
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                     <span class="equals">=</span>
                     <span class="number">{{ question.num3 }}</span>
                     <span class="operator">{{
@@ -326,7 +426,7 @@
                   <template
                     v-else-if="question.missingPosition === 'left-first'"
                   >
-                    <span class="answer-blank">_______</span>
+                    <span class="answer-blank"></span>
                     <span class="operator">{{ question.operation }}</span>
                     <span class="number">{{ question.num2 }}</span>
                     <span class="equals">=</span>
@@ -354,15 +454,14 @@
             </h2>
             <div class="print-horizontal-grid" dir="ltr">
               <div
-                v-for="question in page"
+                v-for="question in Array.isArray(page) ? page : []"
                 :key="question.id"
                 class="print-horizontal-item"
               >
                 <span class="equation-number"
-                  >{{ question.displayIndex }})</span
+                  >{{ (question as any).displayIndex }})</span
                 >
                 <span class="equation">
-                  <!-- Standard format answer key -->
                   <template
                     v-if="!question.format || question.format === 'standard'"
                   >
@@ -373,7 +472,6 @@
                     <span class="number">{{ question.result }}</span>
                   </template>
 
-                  <!-- Both-sides format answer key -->
                   <template v-else-if="question.format === 'both-sides'">
                     <template
                       v-if="question.missingPosition === 'right-second'"
@@ -440,205 +538,6 @@
   <PageFooter v-else :show-empty-message="true" />
 </template>
 
-<script setup>
-import { watch, onMounted, ref } from "vue";
-import AnswerInput from "./AnswerInput.vue";
-import CompletionOverlay from "./CompletionOverlay.vue";
-import PageFooter from "./PageFooter.vue";
-import FeedbackBadge from "./FeedbackBadge.vue";
-import { useQuestionFeedback } from "../composables/useQuestionFeedback";
-
-const props = defineProps({
-  questions: {
-    type: Array,
-    required: true,
-  },
-  showAnswers: {
-    type: Boolean,
-    default: false,
-  },
-  difficulty: {
-    type: String,
-    default: "easy",
-  },
-});
-
-const {
-  feedbackState,
-  handleFeedback,
-  setInputRef,
-  focusNextInput,
-  focusFirstInput,
-  focusInput,
-  clearAllFeedback,
-  getCompletionStats,
-  correctCount,
-  handleBadgeClick: handleBadgeClickHelper,
-} = useQuestionFeedback("math-gen-missing-feedback");
-
-const showCompletionOverlay = ref(false);
-const completionStats = ref({
-  total: 0,
-  firstTry: 0,
-  timeInSeconds: 0,
-  accuracy: 100,
-});
-const focusedIndex = ref(-1);
-
-onMounted(() => {
-  if (props.questions.length > 0 && !props.showAnswers) {
-    focusFirstInput(props.questions);
-  }
-});
-
-watch(
-  () => props.questions,
-  (newQuestions, oldQuestions) => {
-    if (newQuestions.length > 0 && !props.showAnswers) {
-      if (
-        !oldQuestions ||
-        newQuestions.length !== oldQuestions.length ||
-        newQuestions[0]?.id !== oldQuestions[0]?.id
-      ) {
-        clearAllFeedback();
-        showCompletionOverlay.value = false;
-      }
-      focusFirstInput(newQuestions);
-    }
-  },
-);
-
-watch(correctCount, (newCount) => {
-  if (
-    newCount === props.questions.length &&
-    props.questions.length > 0 &&
-    !props.showAnswers
-  ) {
-    completionStats.value = getCompletionStats(props.questions.length);
-    setTimeout(() => {
-      showCompletionOverlay.value = true;
-    }, 500);
-  }
-});
-
-const cardColors = [
-  "var(--color-sunshine)",
-  "var(--color-coral)",
-  "var(--color-mint)",
-  "var(--color-sky)",
-];
-
-const getCardStyle = (index) => {
-  const color = cardColors[index % cardColors.length];
-  const questionId = props.questions[index]?.id;
-  const feedback = feedbackState.value[questionId];
-  const isAnsweredCorrectly = feedback && feedback.isCorrect;
-  const isFocused = index === focusedIndex.value;
-  const isUnanswered = !feedback || !feedback.isCorrect;
-
-  if (isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: "#d1fae5",
-      borderColor: "var(--color-deep)",
-      opacity: "0.7",
-      transition: "all 0.3s ease",
-    };
-  }
-
-  if (isFocused && !isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: color,
-      borderColor: "var(--color-deep)",
-      opacity: "1",
-      transform: "scale(1.02)",
-      transition: "all 0.3s ease",
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    };
-  }
-
-  if (isUnanswered && !isFocused && !props.showAnswers) {
-    return {
-      background: color,
-      borderColor: "var(--color-deep)",
-      opacity: "0.4",
-      transition: "all 0.3s ease",
-    };
-  }
-
-  return {
-    background: color,
-    borderColor: "var(--color-deep)",
-  };
-};
-
-const getBadgeStyle = (index) => {
-  const bgColors = [
-    "var(--color-orange)",
-    "var(--color-purple)",
-    "var(--color-sky)",
-    "var(--color-mint)",
-  ];
-  const bg = bgColors[index % bgColors.length];
-  const questionId = props.questions[index]?.id;
-  const feedback = feedbackState.value[questionId];
-  const isAnsweredCorrectly = feedback && feedback.isCorrect;
-  const isFocused = index === focusedIndex.value;
-
-  if (isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: "#10b981",
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-    };
-  }
-
-  if (isFocused && !props.showAnswers) {
-    return {
-      background: bg,
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-    };
-  }
-
-  if (!isAnsweredCorrectly && !isFocused && !props.showAnswers) {
-    return {
-      background: bg,
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-      filter: "brightness(0.7)",
-    };
-  }
-
-  return {
-    background: bg,
-    borderColor: "var(--color-deep)",
-    color: "white",
-    opacity: "1",
-  };
-};
-
-const paginateQuestions = (questions, itemsPerPage) => {
-  const pages = [];
-  const questionsWithIndex = questions.map((question, index) => ({
-    ...question,
-    displayIndex: index + 1,
-  }));
-
-  for (let i = 0; i < questionsWithIndex.length; i += itemsPerPage) {
-    pages.push(questionsWithIndex.slice(i, i + itemsPerPage));
-  }
-
-  return pages;
-};
-
-const handleBadgeClick = (index) => {
-  handleBadgeClickHelper(props.questions[index], index);
-};
-</script>
-
 <style scoped>
 @media print {
   .print-horizontal-grid {
@@ -690,6 +589,9 @@ const handleBadgeClick = (index) => {
     display: inline-block;
     min-width: 4em;
     margin-left: 0.3em;
+    border-bottom: 1px solid black;
+    text-align: center;
+    line-height: 0.8;
   }
 }
 </style>

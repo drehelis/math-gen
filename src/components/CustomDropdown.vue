@@ -27,9 +27,10 @@
         class="absolute z-50 w-full mt-2 rounded-2xl border-2 shadow-2xl overflow-hidden"
         :style="dropdownStyle"
       >
-        <template v-for="option in options" :key="option.value">
+        <template v-for="(option, index) in options" :key="option.value">
           <!-- Parent option with children -->
           <div v-if="option.children">
+            <!-- ... existing div ... -->
             <div
               class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 flex items-center justify-between"
               :class="[
@@ -69,28 +70,38 @@
                   :style="{ backgroundColor: props.textColor }"
                 />
                 <div
-                  v-for="child in option.children"
+                  v-for="(child, childIndex) in option.children"
                   :key="child.value"
-                  class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 relative flex items-center"
-                  :class="[
-                    { 'opacity-50': modelValue === child.value },
-                    isRTL
-                      ? 'pr-14 hover:-translate-x-1'
-                      : 'pl-14 hover:translate-x-1',
-                  ]"
-                  :style="{
-                    ...optionStyle,
-                    opacity: modelValue === child.value ? '0.5' : '0.9',
-                  }"
-                  @click="selectOption(child)"
                 >
-                  <!-- Horizontal Tick -->
                   <div
-                    class="absolute top-1/2 -translate-y-1/2 w-6 h-1 rounded-full opacity-25"
-                    :class="isRTL ? 'right-6' : 'left-6'"
-                    :style="{ backgroundColor: props.textColor }"
+                    class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 relative flex items-center"
+                    :class="[
+                      { 'opacity-50': modelValue === child.value },
+                      isRTL
+                        ? 'pr-14 hover:-translate-x-1'
+                        : 'pl-14 hover:translate-x-1',
+                    ]"
+                    :style="{
+                      ...optionStyle,
+                      opacity: modelValue === child.value ? '0.5' : '0.9',
+                    }"
+                    @click="selectOption(child)"
+                  >
+                    <!-- Horizontal Tick -->
+                    <div
+                      class="absolute top-1/2 -translate-y-1/2 w-6 h-1 rounded-full opacity-25"
+                      :class="isRTL ? 'right-6' : 'left-6'"
+                      :style="{ backgroundColor: props.textColor }"
+                    />
+                    {{ child.label }}
+                  </div>
+                  <!-- Child Separator -->
+                  <div
+                    v-if="childIndex < option.children.length - 1"
+                    class="h-px opacity-5 mx-8 rounded-full"
+                    :class="isRTL ? 'mr-14' : 'ml-14'"
+                    :style="{ backgroundColor: textColor }"
                   />
-                  {{ child.label }}
                 </div>
               </div>
             </transition>
@@ -108,45 +119,53 @@
           >
             {{ option.label }}
           </div>
+
+          <!-- Main Separator -->
+          <div
+            v-if="index < options.length - 1"
+            class="h-0.5 opacity-10 mx-4 rounded-full"
+            :style="{ backgroundColor: textColor }"
+          />
         </template>
       </div>
     </transition>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, reactive } from "vue";
 import { useI18n } from "vue-i18n";
 
-const props = defineProps({
-  modelValue: {
-    type: [String, Number],
-    required: true,
-  },
-  options: {
-    type: Array,
-    required: true,
-  },
-  borderColor: {
-    type: String,
-    default: "var(--color-sunshine)",
-  },
-  backgroundColor: {
-    type: String,
-    default: "var(--color-sunshine)",
-  },
-  textColor: {
-    type: String,
-    default: "var(--color-deep)",
-  },
-});
+interface Option {
+  value: string | number;
+  label: string;
+  children?: Option[];
+}
 
-const emit = defineEmits(["update:modelValue"]);
+const props = withDefaults(
+  defineProps<{
+    modelValue: string | number;
+    options: Option[];
+    borderColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+  }>(),
+  {
+    borderColor: "var(--color-sunshine)",
+    backgroundColor: "var(--color-sunshine)",
+    textColor: "var(--color-deep)",
+  },
+);
+
+const emit = defineEmits<{
+  (e: "update:modelValue", value: string | number): void;
+}>();
+
 const { locale } = useI18n();
 
 const isOpen = ref(false);
-const dropdownRef = ref(null);
-const expandedParents = reactive({});
+const dropdownRef = ref<HTMLElement | null>(null);
+const expandedParents = reactive<Record<string, boolean>>({});
 
 const isRTL = computed(() => {
   return locale.value === "he" || document.documentElement.dir === "rtl";
@@ -186,17 +205,17 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value;
 };
 
-const toggleParent = (parentValue) => {
-  expandedParents[parentValue] = !expandedParents[parentValue];
+const toggleParent = (parentValue: string | number) => {
+  expandedParents[String(parentValue)] = !expandedParents[String(parentValue)];
 };
 
-const selectOption = (option) => {
+const selectOption = (option: Option) => {
   emit("update:modelValue", option.value);
   isOpen.value = false;
 };
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+const handleClickOutside = (event: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     isOpen.value = false;
   }
 };

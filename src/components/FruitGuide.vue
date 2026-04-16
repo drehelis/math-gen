@@ -116,7 +116,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 
 const position = ref({ x: 20, y: 150 }); // Default position
@@ -131,11 +131,26 @@ if (typeof navigator !== "undefined") {
   isWindows.value = navigator.userAgent.includes("Windows");
 }
 
-const startDrag = (e) => {
+const props = withDefaults(
+  defineProps<{
+    num1?: number;
+    num2?: number;
+    answer?: number;
+    operation?: string;
+  }>(),
+  {
+    num1: 5,
+    num2: 3,
+    answer: 8,
+    operation: "+",
+  },
+);
+
+const startDrag = (e: MouseEvent | TouchEvent) => {
   isDragging.value = true;
   hasMoved.value = false;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+  const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
   dragOffset.value = {
     x: clientX - position.value.x,
@@ -143,11 +158,11 @@ const startDrag = (e) => {
   };
 };
 
-const onDrag = (e) => {
+const onDrag = (e: MouseEvent | TouchEvent) => {
   if (!isDragging.value) return;
 
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+  const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
   // Check if actually moved
   const newX = clientX - dragOffset.value.x;
@@ -195,13 +210,6 @@ onUnmounted(() => {
   window.removeEventListener("touchend", stopDrag);
 });
 
-const props = defineProps({
-  num1: { type: Number, default: 5 },
-  num2: { type: Number, default: 3 },
-  answer: { type: Number, default: 8 },
-  operation: { type: String, default: "+" },
-});
-
 const titleKey = computed(() =>
   props.operation === "+" ? "fruitGuide.titleAdd" : "fruitGuide.titleSub",
 );
@@ -209,7 +217,7 @@ const tipKey = computed(() =>
   props.operation === "+" ? "fruitGuide.tipAdd" : "fruitGuide.tipSub",
 );
 
-const fruitEmojis = {
+const fruitEmojis: Record<number, string> = {
   1: "🍓", // Strawberry
   2: "🍌", // Banana
   3: "🍎", // Apple
@@ -222,7 +230,7 @@ const fruitEmojis = {
   10: "🥥", // Coconut
 };
 
-const getFruit = (n) => fruitEmojis[n] || fruitEmojis[10];
+const getFruit = (n: number) => fruitEmojis[n] || fruitEmojis[10];
 </script>
 
 <style scoped>
