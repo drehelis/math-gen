@@ -1,9 +1,6 @@
 <template>
   <div class="no-print">
-    <div
-      class="flex gap-1 sm:gap-2 items-center"
-      dir="ltr"
-    >
+    <div class="flex gap-1 sm:gap-2 items-center" dir="ltr">
       <button
         v-for="lang in languages"
         :key="lang.code"
@@ -19,27 +16,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
-const { locale } = useI18n()
+const { locale } = useI18n();
 
-defineEmits(['change-locale'])
+defineEmits(["change-locale"]);
 
 const languages = [
-  { code: 'en', label: 'English' },
-  { code: 'he', label: 'עברית' }
-]
+  { code: "en", label: "English" },
+  { code: "he", label: "עברית" },
+];
 
-const currentLocale = computed(() => locale.value)
+const currentLocale = computed(() => locale.value);
 
 const getButtonStyle = (langCode) => {
-  const isActive = currentLocale.value === langCode
+  const isActive = currentLocale.value === langCode;
   return {
-    background: isActive ? 'var(--color-sky)' : 'var(--color-bg)',
-    borderColor: 'var(--color-deep)',
-    color: isActive ? 'white' : 'var(--color-deep)',
-    borderWidth: '3px'
-  }
-}
+    background: isActive ? "var(--color-sky)" : "var(--color-bg)",
+    borderColor: "var(--color-deep)",
+    color: isActive ? "white" : "var(--color-deep)",
+    borderWidth: "3px",
+  };
+};
 </script>

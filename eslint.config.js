@@ -1,23 +1,23 @@
-import js from '@eslint/js'
-import pluginVue from 'eslint-plugin-vue'
-import globals from 'globals'
+import js from "@eslint/js";
+import pluginVue from "eslint-plugin-vue";
+import globals from "globals";
 
 export default [
   {
-    name: 'app/files-to-lint',
-    files: ['**/*.{js,mjs,jsx,vue}'],
+    name: "app/files-to-lint",
+    files: ["**/*.{js,mjs,jsx,vue}"],
   },
 
   {
-    name: 'app/ignores',
-    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**'],
+    name: "app/ignores",
+    ignores: ["**/dist/**", "**/dist-ssr/**", "**/coverage/**"],
   },
 
   js.configs.recommended,
-  ...pluginVue.configs['flat/recommended'],
+  ...pluginVue.configs["flat/recommended"],
 
   {
-    name: 'app/rules',
+    name: "app/rules",
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -26,7 +26,7 @@ export default [
     },
     rules: {
       // override/add rules settings here, such as:
-      'vue/multi-word-component-names': 'off',
+      "vue/multi-word-component-names": "off",
     },
   },
-]
+];

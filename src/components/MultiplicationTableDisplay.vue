@@ -8,10 +8,7 @@
 
     <div class="print:hidden">
       <!-- Interactive Scrollable Table -->
-      <div
-        class="no-print relative mb-12"
-        dir="ltr"
-      >
+      <div class="no-print relative mb-12" dir="ltr">
         <div class="table-wrapper">
           <div class="scroll-container">
             <table class="interactive-table">
@@ -41,7 +38,9 @@
                   <!-- Row header -->
                   <th
                     class="row-header"
-                    :class="{ 'row-header-highlighted': highlightedRow === row }"
+                    :class="{
+                      'row-header-highlighted': highlightedRow === row,
+                    }"
                   >
                     <span class="header-text">{{ row }}</span>
                   </th>
@@ -54,12 +53,16 @@
                       'cell-diagonal': row === col,
                       'cell-correct': !showAnswers && isCorrect(row, col),
                       'cell-incorrect': !showAnswers && isIncorrect(row, col),
-                      'cell-focused': !showAnswers && focusedCell === getCellKey(row, col) && !isCorrect(row, col) && !isIncorrect(row, col)
+                      'cell-focused':
+                        !showAnswers &&
+                        focusedCell === getCellKey(row, col) &&
+                        !isCorrect(row, col) &&
+                        !isIncorrect(row, col),
                     }"
                   >
                     <input
                       v-show="!showAnswers"
-                      :ref="el => setCellRef(el, row, col)"
+                      :ref="(el) => setCellRef(el, row, col)"
                       v-model="cellValues[getCellKey(row, col)]"
                       type="text"
                       inputmode="numeric"
@@ -70,11 +73,10 @@
                       @keydown="(e) => handleKeydown(e, row, col)"
                       @focus="handleCellFocus(row, col)"
                       @blur="handleCellBlur()"
-                    >
-                    <span
-                      v-show="showAnswers"
-                      class="cell-answer"
-                    >{{ getAnswer(row, col) }}</span>
+                    />
+                    <span v-show="showAnswers" class="cell-answer">{{
+                      getAnswer(row, col)
+                    }}</span>
                   </td>
                 </tr>
               </tbody>
@@ -87,11 +89,8 @@
           v-if="!showAnswers && (correctCount > 0 || incorrectCount > 0)"
           class="mt-6 text-center"
         >
-          <button
-            class="clear-button"
-            @click="clearTable"
-          >
-            {{ $t('table.clearAll') }}
+          <button class="clear-button" @click="clearTable">
+            {{ $t("table.clearAll") }}
           </button>
         </div>
       </div>
@@ -100,27 +99,19 @@
     </div>
 
     <!-- Print Layout -->
-    <div
-      class="hidden print:block"
-      dir="ltr"
-    >
+    <div class="hidden print:block" dir="ltr">
       <div class="print-page">
-        <h2
-          class="text-xl font-bold mb-6 text-center"
-          style="color: black;"
-        >
-          {{ $t('tabs.table') }}
+        <h2 class="text-xl font-bold mb-6 text-center" style="color: black">
+          {{ $t("tabs.table") }}
         </h2>
         <div
           class="print-table"
-          style="font-family: 'Space Mono', monospace;"
+          style="font-family: &quot;Space Mono&quot;, monospace"
         >
           <table class="multiplication-print-table">
             <thead>
               <tr>
-                <th class="print-header-cell">
-                  ×
-                </th>
+                <th class="print-header-cell">×</th>
                 <th
                   v-for="col in tableSize"
                   :key="`print-header-${col}`"
@@ -131,10 +122,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="row in tableSize"
-                :key="`print-row-${row}`"
-              >
+              <tr v-for="row in tableSize" :key="`print-row-${row}`">
                 <th class="print-header-cell">
                   {{ row }}
                 </th>
@@ -156,275 +144,297 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, inject } from 'vue'
-import CompletionOverlay from './CompletionOverlay.vue'
-import PageFooter from './PageFooter.vue'
+import { ref, computed, watch, nextTick, inject } from "vue";
+import CompletionOverlay from "./CompletionOverlay.vue";
+import PageFooter from "./PageFooter.vue";
 
 const props = defineProps({
   showAnswers: {
     type: Boolean,
-    default: false
+    default: false,
   },
   tableSize: {
     type: Number,
-    default: 10
-  }
-})
+    default: 10,
+  },
+});
 
 // Injected from parent
-const multiplicationTableTab = inject('multiplicationTableTab', null)
+const multiplicationTableTab = inject("multiplicationTableTab", null);
 
-const cellRefs = ref({})
-const focusedCell = ref(null)
-const highlightedRow = ref(null)
-const highlightedCol = ref(null)
-const cellValues = ref({})
-const showCompletionOverlay = ref(false)
+const cellRefs = ref({});
+const focusedCell = ref(null);
+const highlightedRow = ref(null);
+const highlightedCol = ref(null);
+const cellValues = ref({});
+const showCompletionOverlay = ref(false);
 const completionStats = ref({
   total: 0,
-  timeInSeconds: 0
-})
-const startTime = ref(null)
+  timeInSeconds: 0,
+});
+const startTime = ref(null);
 
 const handleCellFocus = (row, col) => {
   // If the cell is currently incorrect, clear it upon focus (user click/tap)
   if (isIncorrect(row, col)) {
-    const key = getCellKey(row, col)
-    cellValues.value[key] = ''
+    const key = getCellKey(row, col);
+    cellValues.value[key] = "";
     if (multiplicationTableTab) {
-      multiplicationTableTab.setUserAnswer(row, col, '')
+      multiplicationTableTab.setUserAnswer(row, col, "");
     }
   }
 
-  focusedCell.value = getCellKey(row, col)
-  highlightedRow.value = row
-  highlightedCol.value = col
-}
+  focusedCell.value = getCellKey(row, col);
+  highlightedRow.value = row;
+  highlightedCol.value = col;
+};
 
 const handleCellBlur = () => {
-  focusedCell.value = null
-  highlightedRow.value = null
-  highlightedCol.value = null
-}
+  focusedCell.value = null;
+  highlightedRow.value = null;
+  highlightedCol.value = null;
+};
 
-const getCellKey = (row, col) => `${row}-${col}`
-const getAnswer = (row, col) => row * col
+const getCellKey = (row, col) => `${row}-${col}`;
+const getAnswer = (row, col) => row * col;
 
 const setCellRef = (el, row, col) => {
   if (el) {
-    const key = getCellKey(row, col)
-    cellRefs.value[key] = el
+    const key = getCellKey(row, col);
+    cellRefs.value[key] = el;
   }
-}
+};
 
 // Load saved answers
-watch(() => multiplicationTableTab?.userAnswers.value, (newAnswers) => {
-  if (newAnswers) {
-    cellValues.value = { ...newAnswers }
-  }
-}, { immediate: true, deep: true })
+watch(
+  () => multiplicationTableTab?.userAnswers.value,
+  (newAnswers) => {
+    if (newAnswers) {
+      cellValues.value = { ...newAnswers };
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 const handleInput = (row, col, value) => {
-  const key = getCellKey(row, col)
+  const key = getCellKey(row, col);
 
   // Start timer on first input
   if (!startTime.value && !props.showAnswers) {
-    startTime.value = Date.now()
+    startTime.value = Date.now();
   }
 
   // Only allow numbers
-  const sanitized = value.replace(/[^0-9]/g, '')
-  cellValues.value[key] = sanitized
+  const sanitized = value.replace(/[^0-9]/g, "");
+  cellValues.value[key] = sanitized;
 
   if (multiplicationTableTab) {
-    multiplicationTableTab.setUserAnswer(row, col, sanitized)
+    multiplicationTableTab.setUserAnswer(row, col, sanitized);
   }
 
   // Auto-advance to next cell if the answer is correct
-  const correctAnswer = getAnswer(row, col)
-  const correctAnswerLength = String(correctAnswer).length
-  if (sanitized.length === correctAnswerLength && parseInt(sanitized) === correctAnswer) {
+  const correctAnswer = getAnswer(row, col);
+  const correctAnswerLength = String(correctAnswer).length;
+  if (
+    sanitized.length === correctAnswerLength &&
+    parseInt(sanitized) === correctAnswer
+  ) {
     // Find and focus the next unfilled cell
-    advanceToNextCell(row, col)
+    advanceToNextCell(row, col);
   }
-}
+};
 
 const advanceToNextCell = (currentRow, currentCol) => {
   // Find next unfilled cell, starting from current position
   for (let row = currentRow; row <= props.tableSize; row++) {
-    const startCol = row === currentRow ? currentCol + 1 : 1
+    const startCol = row === currentRow ? currentCol + 1 : 1;
     for (let col = startCol; col <= props.tableSize; col++) {
-      const key = getCellKey(row, col)
-      const value = cellValues.value[key]
-      const correctAnswer = getAnswer(row, col)
-      const correctAnswerLength = String(correctAnswer).length
+      const key = getCellKey(row, col);
+      const value = cellValues.value[key];
+      const correctAnswer = getAnswer(row, col);
+      const correctAnswerLength = String(correctAnswer).length;
       // Skip if already correctly filled
-      if (value && value.length === correctAnswerLength && parseInt(value) === correctAnswer) {
-        continue
+      if (
+        value &&
+        value.length === correctAnswerLength &&
+        parseInt(value) === correctAnswer
+      ) {
+        continue;
       }
       // Focus this cell
-      const nextInput = cellRefs.value[key]
+      const nextInput = cellRefs.value[key];
       if (nextInput) {
         nextTick(() => {
-          nextInput.focus()
-          nextInput.select()
-        })
+          nextInput.focus();
+          nextInput.select();
+        });
       }
-      return
+      return;
     }
   }
   // If no unfilled cell found after current position, wrap to beginning
   for (let row = 1; row <= currentRow; row++) {
-    const endCol = row === currentRow ? currentCol : props.tableSize
+    const endCol = row === currentRow ? currentCol : props.tableSize;
     for (let col = 1; col <= endCol; col++) {
-      const key = getCellKey(row, col)
-      const value = cellValues.value[key]
-      const correctAnswer = getAnswer(row, col)
-      const correctAnswerLength = String(correctAnswer).length
+      const key = getCellKey(row, col);
+      const value = cellValues.value[key];
+      const correctAnswer = getAnswer(row, col);
+      const correctAnswerLength = String(correctAnswer).length;
       // Skip if already correctly filled
-      if (value && value.length === correctAnswerLength && parseInt(value) === correctAnswer) {
-        continue
+      if (
+        value &&
+        value.length === correctAnswerLength &&
+        parseInt(value) === correctAnswer
+      ) {
+        continue;
       }
       // Focus this cell
-      const nextInput = cellRefs.value[key]
+      const nextInput = cellRefs.value[key];
       if (nextInput) {
         nextTick(() => {
-          nextInput.focus()
-          nextInput.select()
-        })
+          nextInput.focus();
+          nextInput.select();
+        });
       }
-      return
+      return;
     }
   }
-}
+};
 
 const isCorrect = (row, col) => {
-  const key = getCellKey(row, col)
-  const userAnswer = cellValues.value[key]
-  if (!userAnswer) return false
-  const correctAnswer = getAnswer(row, col)
-  const correctAnswerLength = String(correctAnswer).length
+  const key = getCellKey(row, col);
+  const userAnswer = cellValues.value[key];
+  if (!userAnswer) return false;
+  const correctAnswer = getAnswer(row, col);
+  const correctAnswerLength = String(correctAnswer).length;
   // Only validate if the user has typed the expected number of digits
-  if (userAnswer.length !== correctAnswerLength) return false
-  return parseInt(userAnswer) === correctAnswer
-}
+  if (userAnswer.length !== correctAnswerLength) return false;
+  return parseInt(userAnswer) === correctAnswer;
+};
 
 const isIncorrect = (row, col) => {
-  const key = getCellKey(row, col)
-  const userAnswer = cellValues.value[key]
-  if (!userAnswer) return false
-  const correctAnswer = getAnswer(row, col)
-  const correctAnswerLength = String(correctAnswer).length
+  const key = getCellKey(row, col);
+  const userAnswer = cellValues.value[key];
+  if (!userAnswer) return false;
+  const correctAnswer = getAnswer(row, col);
+  const correctAnswerLength = String(correctAnswer).length;
   // Only validate if the user has typed the expected number of digits
-  if (userAnswer.length !== correctAnswerLength) return false
-  return parseInt(userAnswer) !== correctAnswer
-}
+  if (userAnswer.length !== correctAnswerLength) return false;
+  return parseInt(userAnswer) !== correctAnswer;
+};
 
-const totalCells = computed(() => props.tableSize * props.tableSize)
+const totalCells = computed(() => props.tableSize * props.tableSize);
 
 const correctCount = computed(() => {
-  let count = 0
+  let count = 0;
   for (let row = 1; row <= props.tableSize; row++) {
     for (let col = 1; col <= props.tableSize; col++) {
-      if (isCorrect(row, col)) count++
+      if (isCorrect(row, col)) count++;
     }
   }
-  return count
-})
+  return count;
+});
 
 const incorrectCount = computed(() => {
-  let count = 0
+  let count = 0;
   for (let row = 1; row <= props.tableSize; row++) {
     for (let col = 1; col <= props.tableSize; col++) {
-      if (isIncorrect(row, col)) count++
+      if (isIncorrect(row, col)) count++;
     }
   }
-  return count
-})
+  return count;
+});
 
 const handleKeydown = (e, row, col) => {
-  const key = e.key
+  const key = e.key;
 
-  let nextRow = row
-  let nextCol = col
+  let nextRow = row;
+  let nextCol = col;
 
-  if (key === 'ArrowRight' || key === 'Tab') {
-    e.preventDefault()
+  if (key === "ArrowRight" || key === "Tab") {
+    e.preventDefault();
     if (col < props.tableSize) {
-      nextCol = col + 1
+      nextCol = col + 1;
     } else if (row < props.tableSize) {
-      nextRow = row + 1
-      nextCol = 1
+      nextRow = row + 1;
+      nextCol = 1;
     }
-  } else if (key === 'ArrowLeft') {
-    e.preventDefault()
+  } else if (key === "ArrowLeft") {
+    e.preventDefault();
     if (col > 1) {
-      nextCol = col - 1
+      nextCol = col - 1;
     } else if (row > 1) {
-      nextRow = row - 1
-      nextCol = props.tableSize
+      nextRow = row - 1;
+      nextCol = props.tableSize;
     }
-  } else if (key === 'ArrowDown') {
-    e.preventDefault()
-    nextRow = row < props.tableSize ? row + 1 : row
-  } else if (key === 'ArrowUp') {
-    e.preventDefault()
-    nextRow = row > 1 ? row - 1 : row
-  } else if (key === 'Enter') {
-    e.preventDefault()
+  } else if (key === "ArrowDown") {
+    e.preventDefault();
+    nextRow = row < props.tableSize ? row + 1 : row;
+  } else if (key === "ArrowUp") {
+    e.preventDefault();
+    nextRow = row > 1 ? row - 1 : row;
+  } else if (key === "Enter") {
+    e.preventDefault();
     // Move to next cell (right, then down)
     if (col < props.tableSize) {
-      nextCol = col + 1
+      nextCol = col + 1;
     } else if (row < props.tableSize) {
-      nextRow = row + 1
-      nextCol = 1
+      nextRow = row + 1;
+      nextCol = 1;
     }
   }
 
   if (nextRow !== row || nextCol !== col) {
-    const nextKey = getCellKey(nextRow, nextCol)
-    const nextInput = cellRefs.value[nextKey]
+    const nextKey = getCellKey(nextRow, nextCol);
+    const nextInput = cellRefs.value[nextKey];
     if (nextInput) {
       nextTick(() => {
-        nextInput.focus()
-        nextInput.select()
-      })
+        nextInput.focus();
+        nextInput.select();
+      });
     }
   }
-}
+};
 
 const clearTable = () => {
-  cellValues.value = {}
+  cellValues.value = {};
   if (multiplicationTableTab) {
-    multiplicationTableTab.clearAllAnswers()
+    multiplicationTableTab.clearAllAnswers();
   }
-}
-
-
+};
 
 // Watch for completion
 watch(correctCount, (newCount) => {
-  const total = totalCells.value
-  if (newCount === total && total > 0 && !props.showAnswers && startTime.value) {
-    const timeInSeconds = Math.floor((Date.now() - startTime.value) / 1000)
+  const total = totalCells.value;
+  if (
+    newCount === total &&
+    total > 0 &&
+    !props.showAnswers &&
+    startTime.value
+  ) {
+    const timeInSeconds = Math.floor((Date.now() - startTime.value) / 1000);
     completionStats.value = {
       total: total,
-      timeInSeconds: timeInSeconds
-    }
+      timeInSeconds: timeInSeconds,
+    };
     setTimeout(() => {
-      showCompletionOverlay.value = true
-    }, 500)
+      showCompletionOverlay.value = true;
+    }, 500);
   }
-})
+});
 
 // Reset timer when cellValues are cleared
-watch(cellValues, (newValues) => {
-  const hasAnyValue = Object.keys(newValues).some(key => newValues[key])
-  if (!hasAnyValue) {
-    startTime.value = null
-    showCompletionOverlay.value = false
-  }
-}, { deep: true })
+watch(
+  cellValues,
+  (newValues) => {
+    const hasAnyValue = Object.keys(newValues).some((key) => newValues[key]);
+    if (!hasAnyValue) {
+      startTime.value = null;
+      showCompletionOverlay.value = false;
+    }
+  },
+  { deep: true },
+);
 </script>
 
 <style scoped>
@@ -601,7 +611,9 @@ watch(cellValues, (newValues) => {
 /* Data cells */
 .data-cell {
   background: white;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
   cursor: text !important;
   position: relative;
 }
@@ -719,7 +731,8 @@ watch(cellValues, (newValues) => {
 }
 
 @keyframes shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   25% {

@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="dropdownRef"
-    class="relative"
-  >
+  <div ref="dropdownRef" class="relative">
     <button
       class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all flex items-center justify-between"
       :class="isOpen ? 'scale-105' : 'hover:scale-105'"
@@ -13,7 +10,8 @@
       <span
         class="text-xl transition-transform duration-300"
         :class="{ 'rotate-180': isOpen }"
-      >▼</span>
+        >▼</span
+      >
     </button>
 
     <transition
@@ -40,7 +38,7 @@
             class="w-6 h-6 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center flex-shrink-0"
             :style="{
               borderColor: textColor,
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
             }"
           >
             <div
@@ -57,103 +55,108 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const props = defineProps({
   modelValue: {
     type: Array,
-    required: true
+    required: true,
   },
   options: {
     type: Array,
-    required: true
+    required: true,
   },
   borderColor: {
     type: String,
-    default: 'var(--color-sunshine)'
+    default: "var(--color-sunshine)",
   },
   backgroundColor: {
     type: String,
-    default: 'var(--color-sunshine)'
+    default: "var(--color-sunshine)",
   },
   textColor: {
     type: String,
-    default: 'var(--color-deep)'
+    default: "var(--color-deep)",
   },
   allowEmpty: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(["update:modelValue"]);
 
-const isOpen = ref(false)
-const dropdownRef = ref(null)
+const isOpen = ref(false);
+const dropdownRef = ref(null);
 
 const selectedLabel = computed(() => {
   if (props.modelValue.length === 0) {
-    return t('controls.none')
+    return t("controls.none");
   }
-  if (props.modelValue.length === props.options.length && props.options.length > 3) {
-    return t('missingOperation.all')
+  if (
+    props.modelValue.length === props.options.length &&
+    props.options.length > 3
+  ) {
+    return t("missingOperation.all");
   }
-  const selectedOptions = props.options.filter(opt => props.modelValue.includes(opt.value))
-  return selectedOptions.map(opt => opt.label).join(', ')
-})
+  const selectedOptions = props.options.filter((opt) =>
+    props.modelValue.includes(opt.value),
+  );
+  return selectedOptions.map((opt) => opt.label).join(", ");
+});
 
 const buttonStyle = computed(() => ({
   borderColor: props.borderColor,
   background: props.backgroundColor,
-  color: props.textColor
-}))
+  color: props.textColor,
+}));
 
 const dropdownStyle = computed(() => ({
   borderColor: props.borderColor,
-  background: props.backgroundColor
-}))
+  background: props.backgroundColor,
+}));
 
 const optionStyle = computed(() => ({
-  color: props.textColor
-}))
+  color: props.textColor,
+}));
 
 const toggleDropdown = () => {
-  isOpen.value = !isOpen.value
-}
+  isOpen.value = !isOpen.value;
+};
 
 const isSelected = (value) => {
-  return props.modelValue.includes(value)
-}
+  return props.modelValue.includes(value);
+};
 
 const toggleOption = (option) => {
-  const newValue = [...props.modelValue]
-  const index = newValue.indexOf(option.value)
+  const newValue = [...props.modelValue];
+  const index = newValue.indexOf(option.value);
 
   if (index > -1) {
     if (props.allowEmpty || newValue.length > 1) {
-      newValue.splice(index, 1)
+      newValue.splice(index, 1);
     }
   } else {
-    newValue.push(option.value)
+    newValue.push(option.value);
   }
 
-  emit('update:modelValue', newValue)
-}
+  emit("update:modelValue", newValue);
+};
 
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-    isOpen.value = false
+    isOpen.value = false;
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
+  document.addEventListener("click", handleClickOutside);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>

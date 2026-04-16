@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="dropdownRef"
-    class="relative"
-  >
+  <div ref="dropdownRef" class="relative">
     <button
       class="w-full px-4 py-3 font-semibold rounded-2xl border-2 focus:outline-none transition-all flex items-center justify-between"
       :class="isOpen ? 'scale-105' : 'hover:scale-105'"
@@ -13,7 +10,8 @@
       <span
         class="text-xl transition-transform duration-300"
         :class="{ 'rotate-180': isOpen }"
-      >▼</span>
+        >▼</span
+      >
     </button>
 
     <transition
@@ -29,17 +27,14 @@
         class="absolute z-50 w-full mt-2 rounded-2xl border-2 shadow-2xl overflow-hidden"
         :style="dropdownStyle"
       >
-        <template
-          v-for="option in options"
-          :key="option.value"
-        >
+        <template v-for="option in options" :key="option.value">
           <!-- Parent option with children -->
           <div v-if="option.children">
             <div
               class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 flex items-center justify-between"
               :class="[
                 { 'opacity-50': modelValue === option.value },
-                isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1'
+                isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1',
               ]"
               :style="optionStyle"
               @click="toggleParent(option.value)"
@@ -47,8 +42,12 @@
               <span>{{ option.label }}</span>
               <span
                 class="text-sm transition-transform duration-200"
-                :class="{ [isRTL ? '-rotate-90' : 'rotate-90']: expandedParents[option.value] }"
-              >{{ isRTL ? '◀' : '▶' }}</span>
+                :class="{
+                  [isRTL ? '-rotate-90' : 'rotate-90']:
+                    expandedParents[option.value],
+                }"
+                >{{ isRTL ? "◀" : "▶" }}</span
+              >
             </div>
             <!-- Nested children with slide animation -->
             <transition
@@ -64,7 +63,7 @@
                 class="overflow-hidden relative"
               >
                 <!-- Indent Line -->
-                <div 
+                <div
                   class="absolute top-0 bottom-6 w-1 rounded-full opacity-25"
                   :class="isRTL ? 'right-6' : 'left-6'"
                   :style="{ backgroundColor: props.textColor }"
@@ -75,13 +74,18 @@
                   class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 relative flex items-center"
                   :class="[
                     { 'opacity-50': modelValue === child.value },
-                    isRTL ? 'pr-14 hover:-translate-x-1' : 'pl-14 hover:translate-x-1'
+                    isRTL
+                      ? 'pr-14 hover:-translate-x-1'
+                      : 'pl-14 hover:translate-x-1',
                   ]"
-                  :style="{ ...optionStyle, opacity: modelValue === child.value ? '0.5' : '0.9' }"
+                  :style="{
+                    ...optionStyle,
+                    opacity: modelValue === child.value ? '0.5' : '0.9',
+                  }"
                   @click="selectOption(child)"
                 >
                   <!-- Horizontal Tick -->
-                  <div 
+                  <div
                     class="absolute top-1/2 -translate-y-1/2 w-6 h-1 rounded-full opacity-25"
                     :class="isRTL ? 'right-6' : 'left-6'"
                     :style="{ backgroundColor: props.textColor }"
@@ -97,7 +101,7 @@
             class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105"
             :class="[
               { 'opacity-50': modelValue === option.value },
-              isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1'
+              isRTL ? 'hover:-translate-x-1' : 'hover:translate-x-1',
             ]"
             :style="optionStyle"
             @click="selectOption(option)"
@@ -111,97 +115,97 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, computed, onMounted, onUnmounted, reactive } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
   modelValue: {
     type: [String, Number],
-    required: true
+    required: true,
   },
   options: {
     type: Array,
-    required: true
+    required: true,
   },
   borderColor: {
     type: String,
-    default: 'var(--color-sunshine)'
+    default: "var(--color-sunshine)",
   },
   backgroundColor: {
     type: String,
-    default: 'var(--color-sunshine)'
+    default: "var(--color-sunshine)",
   },
   textColor: {
     type: String,
-    default: 'var(--color-deep)'
-  }
-})
+    default: "var(--color-deep)",
+  },
+});
 
-const emit = defineEmits(['update:modelValue'])
-const { locale } = useI18n()
+const emit = defineEmits(["update:modelValue"]);
+const { locale } = useI18n();
 
-const isOpen = ref(false)
-const dropdownRef = ref(null)
-const expandedParents = reactive({})
+const isOpen = ref(false);
+const dropdownRef = ref(null);
+const expandedParents = reactive({});
 
 const isRTL = computed(() => {
-  return locale.value === 'he' || document.documentElement.dir === 'rtl'
-})
+  return locale.value === "he" || document.documentElement.dir === "rtl";
+});
 
 const selectedLabel = computed(() => {
-  if (!props.options) return ''
-  const option = props.options.find(opt => opt.value === props.modelValue)
-  if (option) return option.label
-  
+  if (!props.options) return "";
+  const option = props.options.find((opt) => opt.value === props.modelValue);
+  if (option) return option.label;
+
   for (const parent of props.options) {
     if (parent.children) {
-      const child = parent.children.find(c => c.value === props.modelValue)
-      if (child) return child.label
+      const child = parent.children.find((c) => c.value === props.modelValue);
+      if (child) return child.label;
     }
   }
-  
-  return ''
-})
+
+  return "";
+});
 
 const buttonStyle = computed(() => ({
   borderColor: props.borderColor,
   background: props.backgroundColor,
-  color: props.textColor
-}))
+  color: props.textColor,
+}));
 
 const dropdownStyle = computed(() => ({
   borderColor: props.borderColor,
-  background: props.backgroundColor
-}))
+  background: props.backgroundColor,
+}));
 
 const optionStyle = computed(() => ({
-  color: props.textColor
-}))
+  color: props.textColor,
+}));
 
 const toggleDropdown = () => {
-  isOpen.value = !isOpen.value
-}
+  isOpen.value = !isOpen.value;
+};
 
 const toggleParent = (parentValue) => {
-  expandedParents[parentValue] = !expandedParents[parentValue]
-}
+  expandedParents[parentValue] = !expandedParents[parentValue];
+};
 
 const selectOption = (option) => {
-  emit('update:modelValue', option.value)
-  isOpen.value = false
-}
+  emit("update:modelValue", option.value);
+  isOpen.value = false;
+};
 
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-    isOpen.value = false
+    isOpen.value = false;
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
+  document.addEventListener("click", handleClickOutside);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>
