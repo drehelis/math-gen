@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useQuestionFeedback } from "../useQuestionFeedback";
+import confetti from "canvas-confetti";
 import { setupLocalStorageMock } from "./test-utils";
 
 // Mock canvas-confetti
@@ -19,6 +20,7 @@ describe("useQuestionFeedback", () => {
   afterEach(() => {
     storageMock.restore();
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   describe("initial state", () => {
@@ -342,6 +344,35 @@ describe("useQuestionFeedback", () => {
       }
 
       expect(feedback.correctCount.value).toBe(8);
+    });
+
+    it("triggers all confetti effects by reaching multiple milestones", async () => {
+      let now = Date.now();
+      const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => now);
+      vi.useFakeTimers();
+
+      // Simulate 20 correct answers (reaches 5 milestones)
+      for (let i = 1; i <= 20; i++) {
+        feedback.handleFeedback(`q-milestone-${i}`, {
+          isCorrect: true,
+          show: true,
+        });
+      }
+
+      // Wait for Vue watch to trigger
+      await Promise.resolve();
+
+      // Fast-forward time to trigger interval callbacks and satisfy Date.now() checks
+      for (let i = 0; i < 10; i++) {
+        now += 1000;
+        vi.advanceTimersByTime(1000);
+      }
+
+      // Check if confetti was called
+      expect(vi.mocked(confetti)).toHaveBeenCalled();
+
+      dateNowSpy.mockRestore();
+      vi.useRealTimers();
     });
   });
 

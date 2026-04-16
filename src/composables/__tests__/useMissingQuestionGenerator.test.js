@@ -265,6 +265,23 @@ describe("useMissingQuestionGenerator", () => {
       );
       expect(hasLargeNumber).toBe(true);
     });
+
+    it("tens difficulty generates multiples of 10", () => {
+      generator.updateSettings({
+        difficulty: "tens",
+        count: 30,
+        operations: ["addition"],
+        questionFormat: "standard",
+      });
+      generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        expect(q.num1 % 10).toBe(0);
+        expect(q.num2 % 10).toBe(0);
+        expect(q.num1).toBeGreaterThanOrEqual(10);
+        expect(q.num2).toBeGreaterThanOrEqual(10);
+      });
+    });
   });
 
   describe("varySecondNumber option", () => {

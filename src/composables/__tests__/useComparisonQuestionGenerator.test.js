@@ -190,6 +190,30 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
+    it("basic difficulty uses correct ranges", () => {
+      generator.updateSettings({
+        difficulty: "basic",
+        count: 20,
+        operations: ["addition"],
+      });
+      generator.generateQuestions();
+      generator.questions.value.forEach((q) => {
+        expect(q.leftValue).toBeLessThanOrEqual(40); // 20 + 20
+      });
+    });
+
+    it("medium difficulty uses correct ranges", () => {
+      generator.updateSettings({
+        difficulty: "medium",
+        count: 20,
+        operations: ["addition"],
+      });
+      generator.generateQuestions();
+      generator.questions.value.forEach((q) => {
+        expect(q.leftValue).toBeGreaterThanOrEqual(0);
+      });
+    });
+
     it("expression values are computed correctly", () => {
       generator.updateSettings({
         difficulty: "basic",
@@ -205,6 +229,47 @@ describe("useComparisonQuestionGenerator", () => {
         expect(q.leftValue).toBeGreaterThanOrEqual(0);
         expect(q.rightValue).toBeGreaterThanOrEqual(0);
       });
+    });
+  });
+
+  describe("tens difficulty", () => {
+    it("generates multiples of 10", () => {
+      generator.updateSettings({
+        difficulty: "tens",
+        operations: ["addition"],
+        count: 30,
+      });
+      generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        if (q.hasExpression) {
+          if (q.leftSide && q.leftSide.num1 !== undefined) {
+            expect(q.leftSide.num1 % 10).toBe(0);
+            expect(q.leftSide.num2 % 10).toBe(0);
+          }
+          if (q.rightSide && q.rightSide.num1 !== undefined) {
+            expect(q.rightSide.num1 % 10).toBe(0);
+            expect(q.rightSide.num2 % 10).toBe(0);
+          }
+        } else {
+          expect(q.num1 % 10).toBe(0);
+          expect(q.num2 % 10).toBe(0);
+        }
+      });
+    });
+
+    it("generates complex expressions on both sides for tens", () => {
+      generator.updateSettings({
+        difficulty: "tens",
+        operations: ["addition"],
+        count: 20,
+      });
+      generator.generateQuestions();
+
+      const allHaveExpressions = generator.questions.value.every(
+        (q) => q.hasExpression,
+      );
+      expect(allHaveExpressions).toBe(true);
     });
   });
 

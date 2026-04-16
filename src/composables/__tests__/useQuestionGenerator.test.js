@@ -176,6 +176,20 @@ describe("useQuestionGenerator", () => {
       });
     });
 
+    it("beginners difficulty generates numbers 0-10", () => {
+      generator.updateSettings({
+        difficulty: "beginners",
+        count: 50,
+        operation: "addition",
+      });
+      generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        expect(q.num1).toBeGreaterThanOrEqual(0);
+        expect(q.num1).toBeLessThanOrEqual(10);
+      });
+    });
+
     it("basic difficulty generates numbers up to 20", () => {
       generator.updateSettings({
         difficulty: "basic",
@@ -216,6 +230,22 @@ describe("useQuestionGenerator", () => {
         ...generator.questions.value.flatMap((q) => [q.num1, q.num2]),
       );
       expect(maxNum).toBeLessThanOrEqual(1000);
+    });
+
+    it("tens difficulty generates multiples of 10", () => {
+      generator.updateSettings({
+        difficulty: "tens",
+        count: 50,
+        operation: "addition",
+      });
+      generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        expect(q.num1 % 10).toBe(0);
+        expect(q.num2 % 10).toBe(0);
+        expect(q.num1).toBeGreaterThanOrEqual(10);
+        expect(q.num2).toBeGreaterThanOrEqual(10);
+      });
     });
   });
 });
