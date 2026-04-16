@@ -32,28 +32,27 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  modelValue: {
-    type: String,
-    required: true,
-  },
-  tabs: {
-    type: Array,
-    required: true,
-  },
-});
+<script setup lang="ts">
+interface Tab {
+  value: string;
+  label: string;
+}
+
+const props = defineProps<{
+  modelValue: string;
+  tabs: Tab[];
+}>();
 
 defineEmits(["update:modelValue"]);
 
-const tabColors = {
+const tabColors: Record<string, string> = {
   simple: "var(--color-orange)",
   complex: "var(--color-purple)",
   comparison: "var(--color-mint)",
   table: "var(--color-coral)",
 };
 
-const getMobileTabStyle = (tabValue) => {
+const getMobileTabStyle = (tabValue: string) => {
   const isActive = props.modelValue === tabValue;
   const backgroundColor = tabColors[tabValue] || "var(--color-sky)";
 
@@ -78,7 +77,7 @@ const getMobileTabStyle = (tabValue) => {
   }
 };
 
-const getTabStyle = (tabValue) => {
+const getTabStyle = (tabValue: string) => {
   const isActive = props.modelValue === tabValue;
   const backgroundColor = tabColors[tabValue] || "var(--color-sky)";
 

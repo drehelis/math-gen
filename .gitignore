@@ -16,3 +16,5 @@ vitest-summary.md
 
 # AI
 .agent/
+.agents/
+skills-lock.json

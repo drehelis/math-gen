@@ -6,7 +6,7 @@ describe("useSimpleQuestionGenerator", () => {
   let storageMock;
   let generator;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storageMock = setupLocalStorageMock();
     generator = useSimpleQuestionGenerator();
   });
@@ -16,19 +16,19 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("initial state", () => {
-    it("has default settings", () => {
+    it("has default settings", async () => {
       expect(generator.settings.value.count).toBe(20);
       expect(generator.settings.value.difficulty).toBe("easy");
       expect(generator.settings.value.operations).toEqual(["addition"]);
     });
 
-    it("loads empty questions array initially", () => {
+    it("loads empty questions array initially", async () => {
       expect(generator.questions.value).toEqual([]);
     });
   });
 
   describe("settings persistence", () => {
-    it("loads settings from localStorage", () => {
+    it("loads settings from localStorage", async () => {
       localStorage.setItem(
         "math-gen-simple-settings",
         JSON.stringify({
@@ -45,12 +45,12 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("multiple operations support", () => {
-    it("generates questions with mixed operations", () => {
+    it("generates questions with mixed operations", async () => {
       generator.updateSettings({
         operations: ["addition", "subtraction"],
         count: 50,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       const operators = new Set(
         generator.questions.value.map((q) => q.operation),
@@ -58,12 +58,12 @@ describe("useSimpleQuestionGenerator", () => {
       expect(operators.size).toBeGreaterThanOrEqual(1);
     });
 
-    it("all operations come from selected set", () => {
+    it("all operations come from selected set", async () => {
       generator.updateSettings({
         operations: ["addition", "multiplication"],
         count: 30,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(["+", "×"]).toContain(q.operation);
@@ -72,23 +72,23 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("question generation", () => {
-    it("generates correct number of questions", () => {
+    it("generates correct number of questions", async () => {
       generator.updateSettings({ count: 15 });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
       expect(generator.questions.value.length).toBe(15);
     });
 
-    it("questions have userAnswer field initialized", () => {
-      generator.generateQuestions();
+    it("questions have userAnswer field initialized", async () => {
+      await await generator.generateQuestions();
       generator.questions.value.forEach((q) => {
         expect(q).toHaveProperty("userAnswer");
         expect(q.userAnswer).toBe("");
       });
     });
 
-    it("generates unique questions", () => {
+    it("generates unique questions", async () => {
       generator.updateSettings({ count: 20 });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       const keys = generator.questions.value.map(
         (q) => `${q.num1}${q.operation}${q.num2}`,
@@ -99,13 +99,13 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("varySecondNumber option", () => {
-    it("with varySecondNumber disabled, both numbers follow same range", () => {
+    it("with varySecondNumber disabled, both numbers follow same range", async () => {
       generator.updateSettings({
         difficulty: "medium",
         varySecondNumber: false,
         count: 30,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       // In medium difficulty without vary, numbers should be 10-100
       generator.questions.value.forEach((q) => {
@@ -118,13 +118,13 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("edge case handling", () => {
-    it("skips duplicate edge cases (only one 0+0 type question)", () => {
+    it("skips duplicate edge cases (only one 0+0 type question)", async () => {
       generator.updateSettings({
         difficulty: "easy",
         operations: ["addition"],
         count: 50,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       const zeroZeroAdditions = generator.questions.value.filter(
         (q) => q.num1 === 0 && q.num2 === 0 && q.operation === "+",
@@ -134,13 +134,13 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("difficulty levels", () => {
-    it("easy difficulty generates numbers 0-10", () => {
+    it("easy difficulty generates numbers 0-10", async () => {
       generator.updateSettings({
         difficulty: "easy",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num1).toBeLessThanOrEqual(10);
@@ -148,13 +148,13 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("beginners difficulty generates numbers 0-10", () => {
+    it("beginners difficulty generates numbers 0-10", async () => {
       generator.updateSettings({
         difficulty: "beginners",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num1).toBeLessThanOrEqual(10);
@@ -162,13 +162,13 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("basic difficulty generates numbers 1-20", () => {
+    it("basic difficulty generates numbers 1-20", async () => {
       generator.updateSettings({
         difficulty: "basic",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num1).toBeGreaterThanOrEqual(1);
@@ -176,13 +176,13 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("medium difficulty generates numbers 10-100", () => {
+    it("medium difficulty generates numbers 10-100", async () => {
       generator.updateSettings({
         difficulty: "medium",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       const hasLargeNumber = generator.questions.value.some(
         (q) => q.num1 >= 10,
@@ -190,13 +190,13 @@ describe("useSimpleQuestionGenerator", () => {
       expect(hasLargeNumber).toBe(true);
     });
 
-    it("hard difficulty generates numbers 100-900", () => {
+    it("hard difficulty generates numbers 100-900", async () => {
       generator.updateSettings({
         difficulty: "hard",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       const hasLargeNumber = generator.questions.value.some(
         (q) => q.num1 >= 100,
@@ -204,13 +204,13 @@ describe("useSimpleQuestionGenerator", () => {
       expect(hasLargeNumber).toBe(true);
     });
 
-    it("tens difficulty generates multiples of 10", () => {
+    it("tens difficulty generates multiples of 10", async () => {
       generator.updateSettings({
         difficulty: "tens",
         count: 30,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num1 % 10).toBe(0);
@@ -222,53 +222,53 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("varySecondNumber option", () => {
-    it("with varySecondNumber and basic difficulty", () => {
+    it("with varySecondNumber and basic difficulty", async () => {
       generator.updateSettings({
         difficulty: "basic",
         count: 50,
         operations: ["addition"],
         varySecondNumber: true,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBe(50);
     });
 
-    it("with varySecondNumber and medium difficulty", () => {
+    it("with varySecondNumber and medium difficulty", async () => {
       generator.updateSettings({
         difficulty: "medium",
         count: 50,
         operations: ["addition"],
         varySecondNumber: true,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       // Some should have smaller second numbers
       const hasSmall = generator.questions.value.some((q) => q.num2 <= 10);
       expect(hasSmall).toBe(true);
     });
 
-    it("with varySecondNumber and hard difficulty", () => {
+    it("with varySecondNumber and hard difficulty", async () => {
       generator.updateSettings({
         difficulty: "hard",
         count: 50,
         operations: ["addition"],
         varySecondNumber: true,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBe(50);
     });
   });
 
   describe("division operation", () => {
-    it("generates division questions with integer answers", () => {
+    it("generates division questions with integer answers", async () => {
       generator.updateSettings({
         operations: ["division"],
         count: 20,
         difficulty: "easy",
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.operation).toBe("÷");
@@ -277,26 +277,26 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("divisor is never zero", () => {
+    it("divisor is never zero", async () => {
       generator.updateSettings({
         operations: ["division"],
         count: 30,
         difficulty: "easy",
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num2).toBeGreaterThan(0);
       });
     });
 
-    it("handles division with various difficulties", () => {
+    it("handles division with various difficulties", async () => {
       generator.updateSettings({
         operations: ["division"],
         count: 20,
         difficulty: "medium",
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num2).toBeGreaterThan(0);
@@ -304,13 +304,13 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("adjusts dividend for clean division", () => {
+    it("adjusts dividend for clean division", async () => {
       generator.updateSettings({
         operations: ["division"],
         count: 30,
         difficulty: "easy",
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       // All should have clean integer division
       generator.questions.value.forEach((q) => {
@@ -320,13 +320,13 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("subtraction operation", () => {
-    it("ensures num1 >= num2 for non-negative results", () => {
+    it("ensures num1 >= num2 for non-negative results", async () => {
       generator.updateSettings({
         operations: ["subtraction"],
         count: 30,
         difficulty: "easy",
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.num1).toBeGreaterThanOrEqual(q.num2);
@@ -334,12 +334,12 @@ describe("useSimpleQuestionGenerator", () => {
       });
     });
 
-    it("calculates correct subtraction answers", () => {
+    it("calculates correct subtraction answers", async () => {
       generator.updateSettings({
         operations: ["subtraction"],
         count: 20,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.answer).toBe(q.num1 - q.num2);
@@ -348,12 +348,12 @@ describe("useSimpleQuestionGenerator", () => {
   });
 
   describe("multiplication operation", () => {
-    it("generates correct multiplication answers", () => {
+    it("generates correct multiplication answers", async () => {
       generator.updateSettings({
         operations: ["multiplication"],
         count: 20,
       });
-      generator.generateQuestions();
+      await await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.operation).toBe("×");

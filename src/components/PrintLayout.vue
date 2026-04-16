@@ -24,42 +24,36 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 
-const props = defineProps({
-  items: {
-    type: Array,
-    required: true,
-  },
-  title: {
-    type: String,
-    default: "",
-  },
-  itemsPerPage: {
-    type: Number,
-    default: 30,
-  },
-  pageKeyPrefix: {
-    type: String,
-    default: "page",
-  },
-  gapClass: {
-    type: String,
-    default: "print:gap-4",
-  },
-  columnsClass: {
-    type: String,
-    default: "print:grid-cols-2",
-  },
-  forcePageBreak: {
-    type: Boolean,
-    default: false,
-  },
-});
+interface Item {
+  id: string;
+  [key: string]: unknown;
+}
 
-const paginateItems = (items) => {
-  const pages = [];
+const props = withDefaults(
+  defineProps<{
+    items: Item[];
+    title?: string;
+    itemsPerPage?: number;
+    pageKeyPrefix?: string;
+    gapClass?: string;
+    columnsClass?: string;
+    forcePageBreak?: boolean;
+  }>(),
+  {
+    title: "",
+    itemsPerPage: 30,
+    pageKeyPrefix: "page",
+    gapClass: "print:gap-4",
+    columnsClass: "print:grid-cols-2",
+    forcePageBreak: false,
+  },
+);
+
+const paginateItems = (items: Item[]) => {
+  const pages: Item[][] = [];
   const itemsWithIndex = items.map((item, index) => ({
     ...item,
     displayIndex: index + 1,
@@ -74,7 +68,7 @@ const paginateItems = (items) => {
 
 const paginatedItems = computed(() => paginateItems(props.items));
 
-const getPageGridStyle = (itemCount) => {
+const getPageGridStyle = (itemCount: number) => {
   // Extract the number of columns from columnsClass (e.g., "print:grid-cols-4" -> 4)
   const colsMatch = props.columnsClass.match(/grid-cols-(\d+)/);
   const numCols = colsMatch ? parseInt(colsMatch[1]) : 2;

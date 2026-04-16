@@ -26,56 +26,44 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 
-const props = defineProps({
-  correctAnswer: {
-    type: Number,
-    required: true,
-  },
-  modelValue: {
-    type: String,
-    default: "",
-  },
-  difficulty: {
-    type: String,
-    default: "medium",
-  },
-});
+const props = defineProps<{
+  correctAnswer: number;
+  modelValue?: string;
+  difficulty?: string;
+}>();
 
-const emit = defineEmits([
-  "feedback",
-  "update:modelValue",
-  "correctAnswer",
-  "focus",
-  "blur",
-]);
+const emit = defineEmits<{
+  (_e: "feedback", _data: { show: boolean; isCorrect: boolean }): void;
+  (_e: "update:modelValue", _value: string): void;
+  (_e: "correctAnswer"): void;
+  (_e: "focus"): void;
+  (_e: "blur"): void;
+}>();
 
-const inputRefs = ref([]);
+const inputRefs = ref<(HTMLInputElement | null)[]>([]);
 const numFields = computed(() => {
-  // Base number of fields on difficulty, not answer length
   if (props.difficulty === "medium") return 2;
   if (props.difficulty === "hard") return 3;
-  return 2; // default to 2 fields
+  return 2;
 });
 const fields = ref(Array(numFields.value).fill(""));
 const isCorrect = ref(false);
 const showFeedback = ref(false);
 
-const setInputRef = (el, index) => {
+const setInputRef = (el: unknown, index: number) => {
   if (el) {
-    inputRefs.value[index] = el;
+    inputRefs.value[index] = el as HTMLInputElement;
   }
 };
 
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue === "") {
+    if (!newValue) {
       fields.value = Array(numFields.value).fill("");
-    } else if (numFields.value === 1) {
-      fields.value[0] = newValue;
     } else if (numFields.value === 2) {
       const digits = newValue.split("");
       fields.value[0] = digits[digits.length - 1] || "";
@@ -106,7 +94,7 @@ watch(
   },
 );
 
-const handleBeforeInput = (event, index) => {
+const handleBeforeInput = (event: InputEvent, index: number) => {
   const data = event.data;
 
   if (
@@ -159,7 +147,7 @@ const handleBeforeInput = (event, index) => {
   }
 };
 
-const handleKeydown = (event, index) => {
+const handleKeydown = (event: KeyboardEvent, index: number) => {
   if (event.key === "Backspace") {
     const currentValue = fields.value[index];
     if (currentValue === "" && index > 0) {
@@ -182,17 +170,15 @@ const handleKeydown = (event, index) => {
   }
 };
 
-const focusField = (index) => {
+const focusField = (index: number) => {
   if (inputRefs.value[index]) {
-    inputRefs.value[index].focus();
+    inputRefs.value[index]?.focus();
   }
 };
 
 const validateAnswer = () => {
   let answer = "";
-  if (numFields.value === 1) {
-    answer = fields.value[0];
-  } else if (numFields.value === 2) {
+  if (numFields.value === 2) {
     answer = fields.value[1] + fields.value[0];
   } else {
     // 3 fields: concatenate leftmost + middle + rightmost

@@ -69,7 +69,14 @@
                       pattern="[0-9]*"
                       maxlength="3"
                       class="cell-input"
-                      @input="(e) => handleInput(row, col, e.target.value)"
+                      @input="
+                        (e) =>
+                          handleInput(
+                            row,
+                            col,
+                            (e.target as HTMLInputElement).value,
+                          )
+                      "
                       @keydown="(e) => handleKeydown(e, row, col)"
                       @focus="handleCellFocus(row, col)"
                       @blur="handleCellBlur()"
@@ -143,38 +150,47 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, nextTick, inject } from "vue";
 import CompletionOverlay from "./CompletionOverlay.vue";
 import PageFooter from "./PageFooter.vue";
 
-const props = defineProps({
-  showAnswers: {
-    type: Boolean,
-    default: false,
+interface MultiplicationTableTab {
+  userAnswers: { value: Record<string, string> };
+  setUserAnswer: (_row: number, _col: number, _value: string) => void;
+  clearAllAnswers: () => void;
+}
+
+const props = withDefaults(
+  defineProps<{
+    showAnswers?: boolean;
+    tableSize?: number;
+  }>(),
+  {
+    showAnswers: false,
+    tableSize: 10,
   },
-  tableSize: {
-    type: Number,
-    default: 10,
-  },
-});
+);
 
 // Injected from parent
-const multiplicationTableTab = inject("multiplicationTableTab", null);
+const multiplicationTableTab = inject<MultiplicationTableTab | null>(
+  "multiplicationTableTab",
+  null,
+);
 
-const cellRefs = ref({});
-const focusedCell = ref(null);
-const highlightedRow = ref(null);
-const highlightedCol = ref(null);
-const cellValues = ref({});
+const cellRefs = ref<Record<string, HTMLInputElement | null>>({});
+const focusedCell = ref<string | null>(null);
+const highlightedRow = ref<number | null>(null);
+const highlightedCol = ref<number | null>(null);
+const cellValues = ref<Record<string, string>>({});
 const showCompletionOverlay = ref(false);
 const completionStats = ref({
   total: 0,
   timeInSeconds: 0,
 });
-const startTime = ref(null);
+const startTime = ref<number | null>(null);
 
-const handleCellFocus = (row, col) => {
+const handleCellFocus = (row: number, col: number) => {
   // If the cell is currently incorrect, clear it upon focus (user click/tap)
   if (isIncorrect(row, col)) {
     const key = getCellKey(row, col);
@@ -195,13 +211,13 @@ const handleCellBlur = () => {
   highlightedCol.value = null;
 };
 
-const getCellKey = (row, col) => `${row}-${col}`;
-const getAnswer = (row, col) => row * col;
+const getCellKey = (row: number, col: number) => `${row}-${col}`;
+const getAnswer = (row: number, col: number) => row * col;
 
-const setCellRef = (el, row, col) => {
+const setCellRef = (el: unknown, row: number, col: number) => {
   if (el) {
     const key = getCellKey(row, col);
-    cellRefs.value[key] = el;
+    cellRefs.value[key] = el as HTMLInputElement;
   }
 };
 
@@ -216,7 +232,7 @@ watch(
   { immediate: true, deep: true },
 );
 
-const handleInput = (row, col, value) => {
+const handleInput = (row: number, col: number, value: string) => {
   const key = getCellKey(row, col);
 
   // Start timer on first input
@@ -244,11 +260,12 @@ const handleInput = (row, col, value) => {
   }
 };
 
-const advanceToNextCell = (currentRow, currentCol) => {
+const advanceToNextCell = (currentRow: number, currentCol: number) => {
+  const tableSize = props.tableSize || 10;
   // Find next unfilled cell, starting from current position
-  for (let row = currentRow; row <= props.tableSize; row++) {
+  for (let row = currentRow; row <= tableSize; row++) {
     const startCol = row === currentRow ? currentCol + 1 : 1;
-    for (let col = startCol; col <= props.tableSize; col++) {
+    for (let col = startCol; col <= tableSize; col++) {
       const key = getCellKey(row, col);
       const value = cellValues.value[key];
       const correctAnswer = getAnswer(row, col);
@@ -274,7 +291,7 @@ const advanceToNextCell = (currentRow, currentCol) => {
   }
   // If no unfilled cell found after current position, wrap to beginning
   for (let row = 1; row <= currentRow; row++) {
-    const endCol = row === currentRow ? currentCol : props.tableSize;
+    const endCol = row === currentRow ? currentCol : tableSize;
     for (let col = 1; col <= endCol; col++) {
       const key = getCellKey(row, col);
       const value = cellValues.value[key];
@@ -301,7 +318,7 @@ const advanceToNextCell = (currentRow, currentCol) => {
   }
 };
 
-const isCorrect = (row, col) => {
+const isCorrect = (row: number, col: number) => {
   const key = getCellKey(row, col);
   const userAnswer = cellValues.value[key];
   if (!userAnswer) return false;
@@ -312,7 +329,7 @@ const isCorrect = (row, col) => {
   return parseInt(userAnswer) === correctAnswer;
 };
 
-const isIncorrect = (row, col) => {
+const isIncorrect = (row: number, col: number) => {
   const key = getCellKey(row, col);
   const userAnswer = cellValues.value[key];
   if (!userAnswer) return false;
@@ -323,12 +340,16 @@ const isIncorrect = (row, col) => {
   return parseInt(userAnswer) !== correctAnswer;
 };
 
-const totalCells = computed(() => props.tableSize * props.tableSize);
+const totalCells = computed(() => {
+  const size = props.tableSize || 10;
+  return size * size;
+});
 
 const correctCount = computed(() => {
   let count = 0;
-  for (let row = 1; row <= props.tableSize; row++) {
-    for (let col = 1; col <= props.tableSize; col++) {
+  const size = props.tableSize || 10;
+  for (let row = 1; row <= size; row++) {
+    for (let col = 1; col <= size; col++) {
       if (isCorrect(row, col)) count++;
     }
   }
@@ -337,15 +358,16 @@ const correctCount = computed(() => {
 
 const incorrectCount = computed(() => {
   let count = 0;
-  for (let row = 1; row <= props.tableSize; row++) {
-    for (let col = 1; col <= props.tableSize; col++) {
+  const size = props.tableSize || 10;
+  for (let row = 1; row <= size; row++) {
+    for (let col = 1; col <= size; col++) {
       if (isIncorrect(row, col)) count++;
     }
   }
   return count;
 });
 
-const handleKeydown = (e, row, col) => {
+const handleKeydown = (e: KeyboardEvent, row: number, col: number) => {
   const key = e.key;
 
   let nextRow = row;

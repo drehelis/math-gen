@@ -27,8 +27,8 @@
 
           <FeedbackBadge
             v-if="!showAnswers && feedbackState[question.id]?.show"
-            :is-correct="feedbackState[question.id]?.isCorrect"
-            @click="handleBadgeClick(index)"
+            :is-correct="feedbackState[question.id]?.isCorrect ?? false"
+            @click="onBadgeClick(index)"
           />
 
           <div
@@ -141,7 +141,7 @@
               <span class="equation-number">{{ question.displayIndex }})</span>
               <span class="equation">
                 <span class="number">{{ question.num1 }}</span>
-                <span class="answer-blank">_______</span>
+                <span class="answer-blank"></span>
                 <span class="number">{{ question.num2 }}</span>
               </span>
             </div>
@@ -183,27 +183,46 @@
   <PageFooter v-else :show-empty-message="true" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { watch, ref, onMounted } from "vue";
 import CompletionOverlay from "./CompletionOverlay.vue";
 import PageFooter from "./PageFooter.vue";
 import FeedbackBadge from "./FeedbackBadge.vue";
 import { useQuestionFeedback } from "../composables/useQuestionFeedback";
 
-const props = defineProps({
-  questions: {
-    type: Array,
-    required: true,
-  },
-  showAnswers: {
-    type: Boolean,
-    default: false,
-  },
-  difficulty: {
-    type: String,
-    default: "easy",
-  },
-});
+interface Side {
+  display: string;
+  value: number;
+  operation?: string;
+  num1?: number;
+  num2?: number;
+  operatorSymbol?: string;
+}
+
+interface Question {
+  id: string;
+  num1: string | number;
+  num2: string | number;
+  leftValue: number;
+  rightValue: number;
+  correctOperator: string;
+  answer: string;
+  userAnswer: string;
+  hasExpression: boolean;
+  leftSide?: Side;
+  rightSide?: Side;
+  displayIndex?: number;
+}
+
+const props = defineProps<{
+  questions: Question[];
+  showAnswers?: boolean;
+  difficulty?: string;
+}>();
+
+import { useStyles } from "../composables/useStyles";
+
+import type { QuestionFeedback } from "../types/feedback";
 
 const {
   feedbackState,
@@ -212,7 +231,9 @@ const {
   getCompletionStats,
   correctCount,
   handleBadgeClick: handleBadgeClickHelper,
-} = useQuestionFeedback("math-gen-comparison-feedback");
+} = useQuestionFeedback(
+  "math-gen-comparison-feedback",
+) as unknown as QuestionFeedback<Question>;
 
 const showCompletionOverlay = ref(false);
 const completionStats = ref({
@@ -223,45 +244,49 @@ const completionStats = ref({
 });
 const focusedIndex = ref(0);
 
-const handleAnswer = (questionId, clickedNumber, question, index) => {
-  // Get the actual values to compare (either simple numbers or calculated expression values)
-  const leftValue = question.hasExpression ? question.leftValue : question.num1;
-  const rightValue = question.hasExpression
-    ? question.rightValue
-    : question.num2;
+const { getCardStyle, getBadgeStyle, paginateQuestions } = useStyles(
+  props,
+  feedbackState,
+  focusedIndex,
+);
 
-  // Determine the displayed operator based on which number/area was clicked
+const handleAnswer = (
+  questionId: string,
+  clickedNumber: string,
+  question: Question,
+  index: number,
+) => {
+  const leftValue = question.hasExpression
+    ? (question.leftValue as number)
+    : (question.num1 as number);
+  const rightValue = question.hasExpression
+    ? (question.rightValue as number)
+    : (question.num2 as number);
+
   let displayedOperator;
   let isCorrect = false;
 
   if (clickedNumber === "equal") {
-    // User clicked the middle (equal sign)
     displayedOperator = "=";
     isCorrect = leftValue === rightValue;
   } else if (clickedNumber === "num1") {
-    // User clicked first number, so show num1 > num2
     displayedOperator = ">";
     isCorrect = leftValue > rightValue;
   } else {
-    // User clicked second number, so show num1 < num2
     displayedOperator = "<";
     isCorrect = rightValue > leftValue;
   }
 
   handleFeedback(questionId, {
     show: true,
-    isCorrect: isCorrect,
+    isCorrect,
     value: displayedOperator,
   });
 
-  // Auto-advance to next question if correct
-  if (isCorrect) {
-    const nextIndex = index + 1;
-    if (nextIndex < props.questions.length) {
-      setTimeout(() => {
-        focusedIndex.value = nextIndex;
-      }, 300);
-    }
+  if (isCorrect && index + 1 < props.questions.length) {
+    setTimeout(() => {
+      focusedIndex.value = index + 1;
+    }, 300);
   }
 };
 
@@ -283,163 +308,38 @@ watch(
   { deep: true },
 );
 
-watch(correctCount, (newCount) => {
-  if (
-    newCount === props.questions.length &&
-    props.questions.length > 0 &&
-    !props.showAnswers
-  ) {
-    completionStats.value = getCompletionStats(props.questions.length);
-    setTimeout(() => {
-      showCompletionOverlay.value = true;
-    }, 500);
-  }
-});
+watch(
+  () => correctCount.value,
+  (newCount) => {
+    if (
+      newCount === props.questions.length &&
+      props.questions.length > 0 &&
+      !props.showAnswers
+    ) {
+      completionStats.value = getCompletionStats(props.questions.length);
+      setTimeout(() => {
+        showCompletionOverlay.value = true;
+      }, 500);
+    }
+  },
+);
 
 onMounted(() => {
   if (props.questions.length > 0 && !props.showAnswers) {
-    let firstUnsolvedIndex = 0;
-    for (let i = 0; i < props.questions.length; i++) {
-      const questionId = props.questions[i].id;
-      if (!feedbackState.value[questionId]?.isCorrect) {
-        firstUnsolvedIndex = i;
-        break;
-      }
-    }
-    focusedIndex.value = firstUnsolvedIndex;
+    const idx = props.questions.findIndex(
+      (q) => !feedbackState.value[q.id]?.isCorrect,
+    );
+    focusedIndex.value = idx === -1 ? 0 : idx;
   }
 });
 
-const cardColors = [
-  "var(--color-sunshine)",
-  "var(--color-coral)",
-  "var(--color-mint)",
-  "var(--color-sky)",
-];
-
-const getCardStyle = (index) => {
-  const color = cardColors[index % cardColors.length];
-  const questionId = props.questions[index]?.id;
-  const feedback = feedbackState.value[questionId];
-  const isAnsweredCorrectly = feedback && feedback.isCorrect;
-  const isFocused = index === focusedIndex.value;
-  const isUnanswered = !feedback || !feedback.isCorrect;
-
-  if (isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: "#d1fae5",
-      borderColor: "var(--color-deep)",
-      opacity: "0.7",
-      transition: "all 0.3s ease",
-    };
-  }
-
-  if (isFocused && !isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: color,
-      borderColor: "var(--color-deep)",
-      opacity: "1",
-      transform: "scale(1.02)",
-      transition: "all 0.3s ease",
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    };
-  }
-
-  if (isUnanswered && !isFocused && !props.showAnswers) {
-    return {
-      background: color,
-      borderColor: "var(--color-deep)",
-      opacity: "0.4",
-      transition: "all 0.3s ease",
-    };
-  }
-
-  return {
-    background: color,
-    borderColor: "var(--color-deep)",
-  };
-};
-
-const getBadgeStyle = (index) => {
-  const bgColors = [
-    "var(--color-orange)",
-    "var(--color-purple)",
-    "var(--color-sky)",
-    "var(--color-mint)",
-  ];
-  const bg = bgColors[index % bgColors.length];
-  const questionId = props.questions[index]?.id;
-  const feedback = feedbackState.value[questionId];
-  const isAnsweredCorrectly = feedback && feedback.isCorrect;
-  const isFocused = index === focusedIndex.value;
-
-  if (isAnsweredCorrectly && !props.showAnswers) {
-    return {
-      background: "#10b981",
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-    };
-  }
-
-  if (isFocused && !props.showAnswers) {
-    return {
-      background: bg,
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-    };
-  }
-
-  if (!isAnsweredCorrectly && !isFocused && !props.showAnswers) {
-    return {
-      background: bg,
-      borderColor: "var(--color-deep)",
-      color: "white",
-      opacity: "1",
-      filter: "brightness(0.7)",
-    };
-  }
-
-  return {
-    background: bg,
-    borderColor: "var(--color-deep)",
-    color: "white",
-    opacity: "1",
-  };
-};
-
-const paginateQuestions = (questions, itemsPerPage) => {
-  const pages = [];
-  const questionsWithIndex = questions.map((question, index) => ({
-    ...question,
-    displayIndex: index + 1,
-  }));
-
-  for (let i = 0; i < questionsWithIndex.length; i += itemsPerPage) {
-    pages.push(questionsWithIndex.slice(i, i + itemsPerPage));
-  }
-
-  return pages;
-};
-
-const handleBadgeClick = (index) => {
-  const question = props.questions[index];
+const onBadgeClick = (index: number) => {
+  const q = props.questions[index];
   handleBadgeClickHelper(
-    question,
+    q,
     index,
-    // Custom reset logic
-    () => {
-      handleFeedback(question.id, {
-        show: false,
-        isCorrect: false,
-        value: null,
-      });
-    },
-    // Custom focus logic
-    () => {
-      focusedIndex.value = index;
-    },
+    () => handleFeedback(q.id, { show: false, isCorrect: false, value: "" }),
+    () => (focusedIndex.value = index),
   );
 };
 </script>
@@ -491,6 +391,9 @@ const handleBadgeClick = (index) => {
     min-width: 4em;
     margin-left: 0.3em;
     margin-right: 0.3em;
+    border-bottom: 1px solid black;
+    text-align: center;
+    line-height: 0.8;
   }
 }
 </style>

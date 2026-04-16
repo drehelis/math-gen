@@ -15,7 +15,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
@@ -30,7 +30,7 @@ const languages = [
 
 const currentLocale = computed(() => locale.value);
 
-const getButtonStyle = (langCode) => {
+const getButtonStyle = (langCode: string) => {
   const isActive = currentLocale.value === langCode;
   return {
     background: isActive ? "var(--color-sky)" : "var(--color-bg)",
