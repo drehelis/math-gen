@@ -6,7 +6,7 @@ describe("useComparisonQuestionGenerator", () => {
   let storageMock;
   let generator;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storageMock = setupLocalStorageMock();
     generator = useComparisonQuestionGenerator();
   });
@@ -16,31 +16,31 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("initial state", () => {
-    it("has default settings", () => {
+    it("has default settings", async () => {
       expect(generator.settings.value.count).toBe(20);
       expect(generator.settings.value.difficulty).toBe("beginners");
       expect(generator.settings.value.operations).toEqual(["none"]);
     });
 
-    it("has empty questions array initially", () => {
+    it("has empty questions array initially", async () => {
       expect(generator.questions.value).toEqual([]);
     });
   });
 
   describe("simple number comparison (beginners/easy)", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       generator.updateSettings({
         count: 20,
         difficulty: "beginners",
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
     });
 
-    it("generates the correct number of questions", () => {
+    it("generates the correct number of questions", async () => {
       expect(generator.questions.value.length).toBe(20);
     });
 
-    it("each question has required fields", () => {
+    it("each question has required fields", async () => {
       generator.questions.value.forEach((q) => {
         expect(q).toHaveProperty("id");
         expect(q).toHaveProperty("num1");
@@ -50,13 +50,13 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
-    it("correctOperator is one of <, >, =", () => {
+    it("correctOperator is one of <, >, =", async () => {
       generator.questions.value.forEach((q) => {
         expect(["<", ">", "="]).toContain(q.correctOperator);
       });
     });
 
-    it("comparison operator matches numeric values", () => {
+    it("comparison operator matches numeric values", async () => {
       generator.questions.value.forEach((q) => {
         const leftValue = q.num1;
         const rightValue = q.num2;
@@ -71,7 +71,7 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
-    it("does not have expressions for beginners", () => {
+    it("does not have expressions for beginners", async () => {
       generator.questions.value.forEach((q) => {
         expect(q.hasExpression).toBe(false);
       });
@@ -79,23 +79,23 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("expression comparison (basic/medium)", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["addition"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
     });
 
-    it("generates questions with expressions", () => {
+    it("generates questions with expressions", async () => {
       const withExpressions = generator.questions.value.filter(
         (q) => q.hasExpression,
       );
       expect(withExpressions.length).toBeGreaterThan(0);
     });
 
-    it("expression questions have leftSide and rightSide", () => {
+    it("expression questions have leftSide and rightSide", async () => {
       const withExpressions = generator.questions.value.filter(
         (q) => q.hasExpression,
       );
@@ -107,7 +107,7 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
-    it("expression sides have display and value", () => {
+    it("expression sides have display and value", async () => {
       const withExpressions = generator.questions.value.filter(
         (q) => q.hasExpression,
       );
@@ -121,26 +121,26 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("updateSettings", () => {
-    it("updates count", () => {
+    it("updates count", async () => {
       generator.updateSettings({ count: 15 });
       expect(generator.settings.value.count).toBe(15);
     });
 
-    it("updates difficulty", () => {
+    it("updates difficulty", async () => {
       generator.updateSettings({ difficulty: "medium" });
       expect(generator.settings.value.difficulty).toBe("medium");
     });
 
-    it("updates operations", () => {
+    it("updates operations", async () => {
       generator.updateSettings({ operations: ["multiplication"] });
       expect(generator.settings.value.operations).toEqual(["multiplication"]);
     });
   });
 
   describe("uniqueness", () => {
-    it("generates unique questions", () => {
+    it("generates unique questions", async () => {
       generator.updateSettings({ count: 20 });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       const ids = generator.questions.value.map((q) => q.id);
       const uniqueIds = new Set(ids);
@@ -149,7 +149,7 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("persistence", () => {
-    it("loads settings from localStorage", () => {
+    it("loads settings from localStorage", async () => {
       localStorage.setItem(
         "math-gen-comparison-settings",
         JSON.stringify({
@@ -165,12 +165,12 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("arithmetic correctness", () => {
-    it("simple comparison values are numbers", () => {
+    it("simple comparison values are numbers", async () => {
       generator.updateSettings({
         difficulty: "beginners",
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(typeof q.num1).toBe("number");
@@ -178,49 +178,49 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
-    it("easy difficulty values are numbers", () => {
+    it("easy difficulty values are numbers", async () => {
       generator.updateSettings({
         difficulty: "easy",
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(typeof q.num1).toBe("number");
       });
     });
 
-    it("basic difficulty uses correct ranges", () => {
+    it("basic difficulty uses correct ranges", async () => {
       generator.updateSettings({
         difficulty: "basic",
         count: 20,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
       generator.questions.value.forEach((q) => {
         expect(q.leftValue).toBeLessThanOrEqual(40); // 20 + 20
       });
     });
 
-    it("medium difficulty uses correct ranges", () => {
+    it("medium difficulty uses correct ranges", async () => {
       generator.updateSettings({
         difficulty: "medium",
         count: 20,
         operations: ["addition"],
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
       generator.questions.value.forEach((q) => {
         expect(q.leftValue).toBeGreaterThanOrEqual(0);
       });
     });
 
-    it("expression values are computed correctly", () => {
+    it("expression values are computed correctly", async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["addition"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       const withExpressions = generator.questions.value.filter(
         (q) => q.hasExpression,
@@ -233,13 +233,13 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("tens difficulty", () => {
-    it("generates multiples of 10", () => {
+    it("generates multiples of 10", async () => {
       generator.updateSettings({
         difficulty: "tens",
         operations: ["addition"],
         count: 30,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         if (q.hasExpression) {
@@ -258,13 +258,13 @@ describe("useComparisonQuestionGenerator", () => {
       });
     });
 
-    it("generates complex expressions on both sides for tens", () => {
+    it("generates complex expressions on both sides for tens", async () => {
       generator.updateSettings({
         difficulty: "tens",
         operations: ["addition"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       const allHaveExpressions = generator.questions.value.every(
         (q) => q.hasExpression,
@@ -274,13 +274,13 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("medium difficulty", () => {
-    it("generates complex expressions on both sides", () => {
+    it("generates complex expressions on both sides", async () => {
       generator.updateSettings({
         difficulty: "medium",
         operations: ["addition"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       const allHaveExpressions = generator.questions.value.every(
         (q) => q.hasExpression,
@@ -288,13 +288,13 @@ describe("useComparisonQuestionGenerator", () => {
       expect(allHaveExpressions).toBe(true);
     });
 
-    it("values are in expected range for medium", () => {
+    it("values are in expected range for medium", async () => {
       generator.updateSettings({
         difficulty: "medium",
         operations: ["addition"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       generator.questions.value.forEach((q) => {
         expect(q.leftValue).toBeGreaterThanOrEqual(0);
@@ -304,46 +304,46 @@ describe("useComparisonQuestionGenerator", () => {
   });
 
   describe("all operations", () => {
-    it("subtraction expressions work correctly", () => {
+    it("subtraction expressions work correctly", async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["subtraction"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBeGreaterThan(0);
     });
 
-    it("multiplication expressions work correctly", () => {
+    it("multiplication expressions work correctly", async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["multiplication"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBeGreaterThan(0);
     });
 
-    it("division expressions work correctly", () => {
+    it("division expressions work correctly", async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["division"],
         count: 20,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBeGreaterThan(0);
     });
 
-    it("mixed operations work correctly", () => {
+    it("mixed operations work correctly", async () => {
       generator.updateSettings({
         difficulty: "basic",
         operations: ["addition", "subtraction", "multiplication"],
         count: 30,
       });
-      generator.generateQuestions();
+      await generator.generateQuestions();
 
       expect(generator.questions.value.length).toBe(30);
     });

@@ -250,8 +250,6 @@ const { getCardStyle, getBadgeStyle, paginateQuestions } = useStyles(
   focusedIndex,
 );
 
-
-
 const handleAnswer = (
   questionId: string,
   clickedNumber: string,
@@ -310,18 +308,21 @@ watch(
   { deep: true },
 );
 
-watch(() => correctCount.value, (newCount) => {
-  if (
-    newCount === props.questions.length &&
-    props.questions.length > 0 &&
-    !props.showAnswers
-  ) {
-    completionStats.value = getCompletionStats(props.questions.length);
-    setTimeout(() => {
-      showCompletionOverlay.value = true;
-    }, 500);
-  }
-});
+watch(
+  () => correctCount.value,
+  (newCount) => {
+    if (
+      newCount === props.questions.length &&
+      props.questions.length > 0 &&
+      !props.showAnswers
+    ) {
+      completionStats.value = getCompletionStats(props.questions.length);
+      setTimeout(() => {
+        showCompletionOverlay.value = true;
+      }, 500);
+    }
+  },
+);
 
 onMounted(() => {
   if (props.questions.length > 0 && !props.showAnswers) {

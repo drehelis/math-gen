@@ -69,7 +69,14 @@
                       pattern="[0-9]*"
                       maxlength="3"
                       class="cell-input"
-                      @input="(e) => handleInput(row, col, (e.target as HTMLInputElement).value)"
+                      @input="
+                        (e) =>
+                          handleInput(
+                            row,
+                            col,
+                            (e.target as HTMLInputElement).value,
+                          )
+                      "
                       @keydown="(e) => handleKeydown(e, row, col)"
                       @focus="handleCellFocus(row, col)"
                       @blur="handleCellBlur()"

@@ -119,18 +119,21 @@ watch(
   },
 );
 
-watch(() => correctCount.value, (newCount) => {
-  if (
-    newCount === props.questions.length &&
-    props.questions.length > 0 &&
-    !props.showAnswers
-  ) {
-    completionStats.value = getCompletionStats(props.questions.length);
-    setTimeout(() => {
-      showCompletionOverlay.value = true;
-    }, 500);
-  }
-});
+watch(
+  () => correctCount.value,
+  (newCount) => {
+    if (
+      newCount === props.questions.length &&
+      props.questions.length > 0 &&
+      !props.showAnswers
+    ) {
+      completionStats.value = getCompletionStats(props.questions.length);
+      setTimeout(() => {
+        showCompletionOverlay.value = true;
+      }, 500);
+    }
+  },
+);
 
 const handleBadgeClick = (index: number) =>
   handleBadgeClickHelper(props.questions[index], index);
