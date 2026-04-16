@@ -47,8 +47,8 @@
               <span>{{ option.label }}</span>
               <span
                 class="text-sm transition-transform duration-200"
-                :class="{ 'rotate-90': expandedParents[option.value] }"
-              >▶</span>
+                :class="{ [isRTL ? '-rotate-90' : 'rotate-90']: expandedParents[option.value] }"
+              >{{ isRTL ? '◀' : '▶' }}</span>
             </div>
             <!-- Nested children with slide animation -->
             <transition
@@ -61,19 +61,31 @@
             >
               <div
                 v-if="expandedParents[option.value]"
-                class="overflow-hidden"
+                class="overflow-hidden relative"
               >
+                <!-- Indent Line -->
+                <div 
+                  class="absolute top-0 bottom-6 w-1 rounded-full opacity-25"
+                  :class="isRTL ? 'right-6' : 'left-6'"
+                  :style="{ backgroundColor: props.textColor }"
+                />
                 <div
                   v-for="child in option.children"
                   :key="child.value"
-                  class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105"
+                  class="px-4 py-3 font-semibold cursor-pointer transition-all hover:scale-105 relative flex items-center"
                   :class="[
                     { 'opacity-50': modelValue === child.value },
-                    isRTL ? 'pr-8 hover:-translate-x-1' : 'pl-8 hover:translate-x-1'
+                    isRTL ? 'pr-14 hover:-translate-x-1' : 'pl-14 hover:translate-x-1'
                   ]"
                   :style="{ ...optionStyle, opacity: modelValue === child.value ? '0.5' : '0.9' }"
                   @click="selectOption(child)"
                 >
+                  <!-- Horizontal Tick -->
+                  <div 
+                    class="absolute top-1/2 -translate-y-1/2 w-6 h-1 rounded-full opacity-25"
+                    :class="isRTL ? 'right-6' : 'left-6'"
+                    :style="{ backgroundColor: props.textColor }"
+                  />
                   {{ child.label }}
                 </div>
               </div>
@@ -100,6 +112,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   modelValue: {
@@ -125,13 +138,14 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+const { locale } = useI18n()
 
 const isOpen = ref(false)
 const dropdownRef = ref(null)
 const expandedParents = reactive({})
 
 const isRTL = computed(() => {
-  return document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('lang') === 'he'
+  return locale.value === 'he' || document.documentElement.dir === 'rtl'
 })
 
 const selectedLabel = computed(() => {

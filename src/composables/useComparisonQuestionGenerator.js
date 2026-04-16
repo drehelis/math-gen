@@ -40,6 +40,14 @@ export function useComparisonQuestionGenerator() {
     let min = 0
     let maxVal = max || 10
 
+    if (settings.value.difficulty === 'tens') {
+      min = 10
+      maxVal = max || 200
+      if (maxVal < 10) maxVal = 10 // Ensure range is valid
+      const range = Math.floor((maxVal - min) / 10)
+      return (Math.floor(Math.random() * (range + 1)) * 10) + min
+    }
+
     if (!max) {
       if (settings.value.difficulty === 'beginners') {
         min = 0
@@ -164,13 +172,13 @@ export function useComparisonQuestionGenerator() {
   }
 
   const generateQuestion = () => {
-    if (settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium') {
+    if (settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium' || settings.value.difficulty === 'tens') {
       // For basic and medium difficulty, create expressions with arithmetic
       let leftSide, rightSide, leftValue, rightValue
       
-      const maxNum = (settings.value.difficulty === 'medium') ? 100 : 20
+      const maxNum = (settings.value.difficulty === 'medium' || settings.value.difficulty === 'tens') ? 100 : 20
       
-      if (settings.value.difficulty === 'medium') {
+      if (settings.value.difficulty === 'medium' || settings.value.difficulty === 'tens') {
         // For medium: always both sides have expressions
         leftSide = generateExpression()
         rightSide = generateExpression()
@@ -248,11 +256,11 @@ export function useComparisonQuestionGenerator() {
       const question = generateQuestion()
       
       // Check edge cases for basic and medium difficulty with expressions
-      if ((settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium') && question.hasExpression) {
+      if ((settings.value.difficulty === 'basic' || settings.value.difficulty === 'medium' || settings.value.difficulty === 'tens') && question.hasExpression) {
         let shouldSkip = false
         
         // For medium difficulty, check if values are too far apart (makes comparison too obvious)
-        if (settings.value.difficulty === 'medium') {
+        if (settings.value.difficulty === 'medium' || settings.value.difficulty === 'tens') {
           const diff = Math.abs(question.leftValue - question.rightValue)
           const avgValue = (question.leftValue + question.rightValue) / 2
           

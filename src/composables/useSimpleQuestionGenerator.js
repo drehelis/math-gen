@@ -78,6 +78,11 @@ export function useSimpleQuestionGenerator() {
           max = 100
         }
       }
+    } else if (settings.value.difficulty === 'tens') {
+      min = 10
+      max = 200
+      const range = (max - min) / 10
+      return (Math.floor(Math.random() * (range + 1)) * 10) + min
     }
 
     return Math.floor(Math.random() * (max - min + 1)) + min

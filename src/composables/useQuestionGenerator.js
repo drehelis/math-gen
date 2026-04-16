@@ -32,6 +32,12 @@ export function useQuestionGenerator() {
       case 'hard':
         max = 1000
         break
+      case 'tens': {
+        min = 10
+        max = 200
+        const tensRange = (max - min) / 10
+        return (Math.floor(Math.random() * (tensRange + 1)) * 10) + min
+      }
     }
     return Math.floor(Math.random() * (max - min + 1)) + min
   }

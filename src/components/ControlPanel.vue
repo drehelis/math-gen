@@ -496,7 +496,8 @@ const difficultyOptions = computed(() => {
       label: t('difficulty.easy'),
       children: [
         { value: 'beginners', label: t('difficulty.beginners') },
-        { value: 'basic', label: t('difficulty.basic') }
+        { value: 'basic', label: t('difficulty.basic') },
+        { value: 'tens', label: t('difficulty.tens') }
       ]
     },
     { value: 'medium', label: t('difficulty.medium') }
