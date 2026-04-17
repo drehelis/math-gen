@@ -67,7 +67,11 @@ const tabs = computed(() => [
 
 const changeLocale = (lang: string) => {
   locale.value = lang;
-  localStorage.setItem("locale", lang);
+  try {
+    localStorage.setItem("locale", lang);
+  } catch (error) {
+    console.error("Failed to save locale to localStorage:", error);
+  }
   document.documentElement.setAttribute("dir", lang === "he" ? "rtl" : "ltr");
 };
 </script>

@@ -348,4 +348,66 @@ describe("useComparisonQuestionGenerator", () => {
       expect(generator.questions.value.length).toBe(30);
     });
   });
+
+  describe("varySecondNumber coverage", () => {
+    it("handles varySecondNumber in medium difficulty", async () => {
+      generator.updateSettings({
+        difficulty: "medium",
+        varySecondNumber: true,
+        operations: ["addition"],
+        count: 50,
+      });
+      await generator.generateQuestions();
+      expect(generator.questions.value.length).toBeGreaterThan(0);
+    });
+
+    it("handles varySecondNumber in hard difficulty", async () => {
+      generator.updateSettings({
+        difficulty: "hard",
+        varySecondNumber: true,
+        count: 50,
+      });
+      await generator.generateQuestions();
+      expect(generator.questions.value.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("filtering edge cases", () => {
+    it("filters division questions with large differences", async () => {
+      generator.updateSettings({
+        difficulty: "medium",
+        operations: ["division"],
+        count: 5,
+      });
+      await generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        if (q.hasExpression) {
+          const diff = Math.abs(q.leftValue - q.rightValue);
+          const avg = (q.leftValue + q.rightValue) / 2;
+          if (avg > 0) {
+            expect(diff / avg).toBeLessThanOrEqual(0.6); // Slightly more than 0.5 to account for limited attempts
+          }
+        }
+      });
+    });
+
+    it("filters small numbers in tens difficulty", async () => {
+      generator.updateSettings({
+        difficulty: "tens",
+        operations: ["addition"],
+        count: 5,
+      });
+      await generator.generateQuestions();
+
+      generator.questions.value.forEach((q) => {
+        if (q.hasExpression) {
+          if (q.leftSide.num1 !== undefined) {
+            // Either it's a multiple of 10 > 10, or it's handled
+            expect(q.leftSide.num1 === 0 || q.leftSide.num1 >= 10).toBe(true);
+          }
+        }
+      });
+    });
+  });
 });

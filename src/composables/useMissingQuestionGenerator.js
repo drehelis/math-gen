@@ -1,24 +1,23 @@
-import { ref, watch } from "vue";
-import { useLocalStorage } from "./useLocalStorage";
+import { usePersistentRef } from "./usePersistentRef";
+import { getRandomInRange } from "../utils/mathUtils";
+import { generateUniqueItems } from "../utils/generatorUtils";
 
 let idCounter = 0;
-const settingsStorage = useLocalStorage("math-gen-missing-settings");
-const questionsStorage = useLocalStorage("math-gen-missing-questions", []);
 
 export function useMissingQuestionGenerator() {
-  const questions = ref(questionsStorage.load());
-  const savedSettings = settingsStorage.load();
-  const settings = ref({
+  const defaultSettings = {
     count: 20,
     difficulty: "easy",
     operations: ["addition"],
     questionFormat: "standard",
     varySecondNumber: false,
-    ...(savedSettings || {}),
-  });
+  };
 
-  watch(settings, (s) => settingsStorage.save(s), { deep: true });
-  watch(questions, (q) => questionsStorage.save(q), { deep: true });
+  const questions = usePersistentRef("math-gen-missing-questions", []);
+  const settings = usePersistentRef(
+    "math-gen-missing-settings",
+    defaultSettings,
+  );
 
   const getRand = (limit = 0) => {
     const { difficulty: d, varySecondNumber: v } = settings.value;
@@ -29,8 +28,9 @@ export function useMissingQuestionGenerator() {
     else if (d === "hard")
       [min, max] =
         limit && v ? (Math.random() < 0.5 ? [1, 10] : [10, 100]) : [100, 900];
-    else if (d === "tens") return (Math.floor(Math.random() * 20) + 1) * 10;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    else if (d === "tens") return getRandomInRange(1, 20) * 10;
+
+    return getRandomInRange(min, max);
   };
 
   const genSide = (op) => {
@@ -68,7 +68,7 @@ export function useMissingQuestionGenerator() {
       r = genSide(op2),
       attempts = 0;
     while (l.val !== r.val && attempts++ < 100) r = genSide(op2);
-    if (l.val !== r.val) r = { n1: l.val, n2: 0, val: l.val, sym: r.sym }; // Fallback with same operator but simple arithmetic
+    if (l.val !== r.val) r = { n1: l.val, n2: 0, val: l.val, sym: r.sym };
 
     const pos = ["left-first", "left-second", "right-first", "right-second"][
       Math.floor(Math.random() * 4)
@@ -97,26 +97,12 @@ export function useMissingQuestionGenerator() {
   };
 
   const generateQuestions = async () => {
-    const res = [],
-      seen = new Set();
-    const maxAttempts = settings.value.count * 10;
-    let attempts = 0;
-
-    while (res.length < settings.value.count && attempts < maxAttempts) {
-      attempts++;
-      const q = generateQuestion();
-      const key = `${q.format}-${q.num1}-${q.operation}-${q.num2}-${q.num3}-${q.operation2}-${q.num4}-${q.missingPosition}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        res.push(q);
-      }
-
-      // Yield every 50 questions to keep UI responsive
-      if (res.length % 50 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    }
-    questions.value = res;
+    questions.value = await generateUniqueItems({
+      count: settings.value.count,
+      generateItem: generateQuestion,
+      getKey: (q) =>
+        `${q.format}-${q.num1}-${q.operation}-${q.num2}-${q.num3}-${q.operation2}-${q.num4}-${q.missingPosition}`,
+    });
   };
 
   return {

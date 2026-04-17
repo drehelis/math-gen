@@ -1,15 +1,19 @@
-import { ref } from "vue";
+import { usePersistentRef } from "./usePersistentRef";
+import { getRandomInRange } from "../utils/mathUtils";
+import { generateUniqueItems } from "../utils/generatorUtils";
 
 let idCounter = 0;
 
 export function useQuestionGenerator() {
-  const questions = ref([]);
-  const settings = ref({
+  const defaultSettings = {
     count: 20,
     difficulty: "easy",
     operation: "addition",
     showAnswers: false,
-  });
+  };
+
+  const questions = usePersistentRef("math-gen-questions", []);
+  const settings = usePersistentRef("math-gen-settings", defaultSettings);
 
   const getRandomNumber = () => {
     let min = 0;
@@ -39,7 +43,7 @@ export function useQuestionGenerator() {
         return Math.floor(Math.random() * (tensRange + 1)) * 10 + min;
       }
     }
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return getRandomInRange(min, max);
   };
 
   const generateQuestion = () => {
@@ -49,21 +53,15 @@ export function useQuestionGenerator() {
     let operation;
 
     if (settings.value.operation === "subtraction") {
-      if (num1 < num2) {
-        [num1, num2] = [num2, num1];
-      }
+      if (num1 < num2) [num1, num2] = [num2, num1];
       answer = num1 - num2;
       operation = "-";
     } else if (settings.value.operation === "multiplication") {
       answer = num1 * num2;
       operation = "×";
     } else if (settings.value.operation === "division") {
-      let divisorMax = 12;
-      if (settings.value.difficulty === "easy") {
-        divisorMax = 10;
-      }
-
-      num2 = Math.floor(Math.random() * divisorMax) + 1;
+      let divisorMax = settings.value.difficulty === "easy" ? 10 : 12;
+      num2 = getRandomInRange(1, divisorMax);
 
       if (num1 % num2 !== 0) {
         num1 = num2 * Math.floor(num1 / num2);
@@ -86,42 +84,28 @@ export function useQuestionGenerator() {
     };
   };
 
-  const generateQuestions = () => {
-    const newQuestions = [];
-    const seen = new Set();
-    const maxAttempts = settings.value.count * 10;
-    let attempts = 0;
+  const generateQuestions = async () => {
     let hasZeroDivision = false;
     let hasOneDivision = false;
 
-    while (
-      newQuestions.length < settings.value.count &&
-      attempts < maxAttempts
-    ) {
-      attempts++;
-      const question = generateQuestion();
-      const key = `${question.num1}${question.operation}${question.num2}`;
-
-      if (settings.value.operation === "division" && question.num1 === 0) {
-        if (hasZeroDivision) continue;
-        hasZeroDivision = true;
-      }
-
-      if (
-        settings.value.operation === "division" &&
-        question.num1 === question.num2
-      ) {
-        if (hasOneDivision) continue;
-        hasOneDivision = true;
-      }
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        newQuestions.push(question);
-      }
-    }
-
-    questions.value = newQuestions;
+    questions.value = await generateUniqueItems({
+      count: settings.value.count,
+      generateItem: generateQuestion,
+      getKey: (q) => `${q.num1}${q.operation}${q.num2}`,
+      isValid: (q) => {
+        if (settings.value.operation === "division") {
+          if (q.num1 === 0) {
+            if (hasZeroDivision) return false;
+            hasZeroDivision = true;
+          }
+          if (q.num1 === q.num2) {
+            if (hasOneDivision) return false;
+            hasOneDivision = true;
+          }
+        }
+        return true;
+      },
+    });
   };
 
   const updateSettings = (newSettings) => {

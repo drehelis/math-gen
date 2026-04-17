@@ -19,10 +19,10 @@
           @click="focusedIndex = index"
         >
           <div
-            class="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center font-bold border-4"
+            class="absolute -top-4 -left-3 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold border-4"
             :style="getBadgeStyle(index)"
           >
-            <span>{{ index + 1 }}</span>
+            <span class="text-sm sm:text-base">{{ index + 1 }}</span>
           </div>
 
           <FeedbackBadge
@@ -32,12 +32,12 @@
           />
 
           <div
-            class="flex items-center justify-center pt-2"
+            class="flex items-center justify-center pt-6 sm:pt-5"
             style="font-family: &quot;Space Mono&quot;, monospace"
             dir="ltr"
           >
             <div
-              class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap flex items-baseline"
+              class="text-base sm:text-lg md:text-xl xl:text-2xl font-bold whitespace-nowrap flex items-baseline"
               style="color: var(--color-deep)"
             >
               <template v-if="!showAnswers">

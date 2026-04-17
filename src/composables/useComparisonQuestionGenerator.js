@@ -1,92 +1,77 @@
-import { ref, watch } from "vue";
 import { checkEdgeCases } from "./useEdgeCaseRules";
-import { useLocalStorage } from "./useLocalStorage";
+import { usePersistentRef } from "./usePersistentRef";
+import { getRandomInRange } from "../utils/mathUtils";
+import { generateUniqueItems } from "../utils/generatorUtils";
 
 let idCounter = 0;
 
-const settingsStorage = useLocalStorage("math-gen-comparison-settings");
-const questionsStorage = useLocalStorage("math-gen-comparison-questions", []);
-
 export function useComparisonQuestionGenerator() {
-  const questions = ref(questionsStorage.load());
-  const savedSettings = settingsStorage.load();
-
-  let initialSettings = {
+  const initialSettings = {
     count: 20,
     difficulty: "beginners",
     operation: "none",
     operations: ["none"],
     showAnswers: false,
+    varySecondNumber: false,
   };
 
-  if (savedSettings) {
-    initialSettings = {
-      ...initialSettings,
-      ...savedSettings,
-    };
-  }
-
-  const settings = ref(initialSettings);
-
-  watch(
-    settings,
-    (newSettings) => {
-      settingsStorage.save(newSettings);
-    },
-    { deep: true },
+  const questions = usePersistentRef("math-gen-comparison-questions", []);
+  const settings = usePersistentRef(
+    "math-gen-comparison-settings",
+    initialSettings,
   );
 
-  watch(
-    questions,
-    (newQuestions) => {
-      questionsStorage.save(newQuestions);
-    },
-    { deep: true },
-  );
-
-  const getRandomNumber = (max) => {
+  const getRandomNumber = (max, isSecond = false) => {
     const d = settings.value.difficulty;
     let [min, maxVal] = [0, max || 10];
     if (d === "tens") {
       min = 10;
       maxVal = max || 200;
-      return (
-        Math.floor(Math.random() * (Math.floor((maxVal - 10) / 10) + 1)) * 10 +
-        10
-      );
+      return Math.floor(getRandomInRange(min, maxVal) / 10) * 10;
     }
     if (!max) {
       if (d === "beginners") [min, maxVal] = [0, 10];
-      else if (d === "basic" || d === "medium") [min, maxVal] = [1, 20];
+      else if (["basic", "medium"].includes(d)) [min, maxVal] = [1, 20];
       else if (d === "easy") [min, maxVal] = [1, 10];
     }
-    return Math.floor(Math.random() * (maxVal - min + 1)) + min;
+    if (
+      isSecond &&
+      settings.value.varySecondNumber &&
+      !["easy", "beginners"].includes(d)
+    ) {
+      if (d === "hard")
+        [min, maxVal] = Math.random() < 0.5 ? [1, 10] : [10, 100];
+      else if (Math.random() < 0.5) [min, maxVal] = [1, 10];
+    }
+    return getRandomInRange(min, maxVal);
   };
 
   const generateExpression = () => {
     const ops = settings.value.operations || ["addition"];
     const op = ops[Math.floor(Math.random() * ops.length)];
-    const limit = settings.value.difficulty === "medium" ? 100 : 20;
+    const limit = ["medium", "tens"].includes(settings.value.difficulty)
+      ? 100
+      : 20;
     let n1, n2, val, sym;
 
     if (op === "multiplication") {
       n1 = getRandomNumber(10);
-      n2 = getRandomNumber(10);
+      n2 = getRandomNumber(10, true);
       val = n1 * n2;
       sym = "×";
     } else if (op === "division") {
-      n2 = Math.floor(Math.random() * 10) + 1;
-      val = Math.floor(Math.random() * 10) + 1;
+      n2 = getRandomInRange(1, 10);
+      val = getRandomInRange(1, 10);
       n1 = n2 * val;
       sym = "÷";
     } else if (op === "addition") {
       n1 = getRandomNumber(limit);
-      n2 = getRandomNumber(limit);
+      n2 = getRandomNumber(limit, true);
       val = n1 + n2;
       sym = "+";
     } else {
       n1 = getRandomNumber(limit);
-      n2 = getRandomNumber(limit);
+      n2 = getRandomNumber(limit, true);
       if (n1 < n2) [n1, n2] = [n2, n1];
       val = n1 - n2;
       sym = "-";
@@ -103,11 +88,11 @@ export function useComparisonQuestionGenerator() {
 
   const generateQuestion = () => {
     const d = settings.value.difficulty;
-    if (d === "basic" || d === "medium" || d === "tens") {
+    if (["basic", "medium", "tens"].includes(d)) {
       let l, r, lv, rv;
-      const limit = d === "medium" || d === "tens" ? 100 : 20;
+      const limit = ["medium", "tens"].includes(d) ? 100 : 20;
 
-      if (d === "medium" || d === "tens") {
+      if (["medium", "tens"].includes(d)) {
         l = generateExpression();
         r = generateExpression();
         lv = l.value;
@@ -145,7 +130,7 @@ export function useComparisonQuestionGenerator() {
       };
     }
     const n1 = getRandomNumber(),
-      n2 = getRandomNumber();
+      n2 = getRandomNumber(undefined, true);
     const op = n1 < n2 ? "<" : n1 > n2 ? ">" : "=";
     return {
       id: `q-${Date.now()}-${++idCounter}`,
@@ -159,140 +144,84 @@ export function useComparisonQuestionGenerator() {
   };
 
   const generateQuestions = async () => {
-    const newQuestions = [];
-    const seen = new Set();
-    const maxAttempts = settings.value.count * 10;
-    let attempts = 0;
-    const edgeCaseTracker = {};
     const availableOperations = settings.value.operations || ["none"];
+    const edgeCaseTracker = {};
 
-    while (
-      newQuestions.length < settings.value.count &&
-      attempts < maxAttempts
-    ) {
-      attempts++;
-      const question = generateQuestion();
-
-      // Check edge cases for basic and medium difficulty with expressions
-      if (
-        (settings.value.difficulty === "basic" ||
-          settings.value.difficulty === "medium" ||
-          settings.value.difficulty === "tens") &&
-        question.hasExpression
-      ) {
-        let shouldSkip = false;
-
-        // For medium difficulty, check if values are too far apart (makes comparison too obvious)
+    questions.value = await generateUniqueItems({
+      count: settings.value.count,
+      generateItem: generateQuestion,
+      getKey: (q) =>
+        q.hasExpression
+          ? `${q.leftValue}:${q.rightValue}:${q.correctOperator}:${q.num1}:${q.num2}`
+          : `${q.num1}:${q.num2}:${q.correctOperator}`,
+      isValid: (question) => {
         if (
-          settings.value.difficulty === "medium" ||
-          settings.value.difficulty === "tens"
+          !["basic", "medium", "tens"].includes(settings.value.difficulty) ||
+          !question.hasExpression
         ) {
+          return true;
+        }
+
+        const difficulty = settings.value.difficulty;
+        const isAdvanced = ["medium", "tens"].includes(difficulty);
+
+        if (isAdvanced) {
           const diff = Math.abs(question.leftValue - question.rightValue);
           const avgValue = (question.leftValue + question.rightValue) / 2;
-
-          // Only apply range checks if not using division (division has smaller results)
           const hasDivision =
-            (question.leftSide && question.leftSide.operation === "division") ||
-            (question.rightSide && question.rightSide.operation === "division");
+            question.leftSide?.operation === "division" ||
+            question.rightSide?.operation === "division";
 
           if (!hasDivision) {
-            // Skip if difference is more than 40% of average, or if values are outside 30-80 range
+            const minAccepted = difficulty === "tens" ? 10 : 30;
+            const maxAccepted = difficulty === "tens" ? 200 : 80;
+
             if (
               diff > avgValue * 0.4 ||
-              question.leftValue < 30 ||
-              question.rightValue < 30 ||
-              question.leftValue > 80 ||
-              question.rightValue > 80
+              question.leftValue < minAccepted ||
+              question.rightValue < minAccepted ||
+              question.leftValue > maxAccepted ||
+              question.rightValue > maxAccepted
             ) {
-              shouldSkip = true;
+              return false;
             }
-
-            // Skip if either side has very small numbers (< 10) that make it trivial
-            if (question.leftSide.num1 < 10 && question.leftSide.num2 < 10) {
-              shouldSkip = true;
-            }
-            if (question.rightSide.num1 < 10 && question.rightSide.num2 < 10) {
-              shouldSkip = true;
-            }
-          } else {
-            // For division, just check if difference is too obvious (more than 50% of average)
-            if (diff > avgValue * 0.5) {
-              shouldSkip = true;
-            }
+            if (question.leftSide.num1 < 10 && question.leftSide.num2 < 10)
+              return false;
+            if (question.rightSide.num1 < 10 && question.rightSide.num2 < 10)
+              return false;
+          } else if (diff > avgValue * 0.5) {
+            return false;
           }
         }
 
-        if (shouldSkip) continue;
+        // Check side expressions for edge cases
+        const checkSide = (side, trackerPrefix) => {
+          if (!side?.operatorSymbol) return true;
 
-        // Check left side if it has an expression
-        if (question.leftSide && question.leftSide.operatorSymbol) {
-          const leftTracker = {};
+          const tracker = {};
           Object.keys(edgeCaseTracker)
-            .filter((key) => key.startsWith("left_"))
-            .forEach((key) => {
-              leftTracker[key.replace("left_", "")] = edgeCaseTracker[key];
-            });
+            .filter((k) => k.startsWith(trackerPrefix))
+            .forEach(
+              (k) =>
+                (tracker[k.replace(trackerPrefix, "")] = edgeCaseTracker[k]),
+            );
 
-          const result = checkEdgeCases(
-            question.leftSide,
-            availableOperations,
-            leftTracker,
+          const result = checkEdgeCases(side, availableOperations, tracker);
+          if (result.shouldSkip) return false;
+
+          // Update global tracker with side findings
+          Object.keys(tracker).forEach(
+            (k) => (edgeCaseTracker[`${trackerPrefix}${k}`] = tracker[k]),
           );
-          if (result.shouldSkip) {
-            shouldSkip = true;
-          } else {
-            Object.keys(leftTracker).forEach((key) => {
-              edgeCaseTracker[`left_${key}`] = leftTracker[key];
-            });
-          }
-        }
+          return true;
+        };
 
-        // Check right side if it has an expression
-        if (
-          !shouldSkip &&
-          question.rightSide &&
-          question.rightSide.operatorSymbol
-        ) {
-          const rightTracker = {};
-          Object.keys(edgeCaseTracker)
-            .filter((key) => key.startsWith("right_"))
-            .forEach((key) => {
-              rightTracker[key.replace("right_", "")] = edgeCaseTracker[key];
-            });
-
-          const result = checkEdgeCases(
-            question.rightSide,
-            availableOperations,
-            rightTracker,
-          );
-          if (result.shouldSkip) {
-            shouldSkip = true;
-          } else {
-            Object.keys(rightTracker).forEach((key) => {
-              edgeCaseTracker[`right_${key}`] = rightTracker[key];
-            });
-          }
-        }
-
-        if (shouldSkip) continue;
-      }
-
-      const key = question.hasExpression
-        ? `${question.leftValue}:${question.rightValue}:${question.correctOperator}:${question.num1}:${question.num2}`
-        : `${question.num1}:${question.num2}:${question.correctOperator}`;
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        newQuestions.push(question);
-      }
-
-      // Yield every 50 questions to keep UI responsive
-      if (newQuestions.length % 50 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    }
-
-    questions.value = newQuestions;
+        return (
+          checkSide(question.leftSide, "left_") &&
+          checkSide(question.rightSide, "right_")
+        );
+      },
+    });
   };
 
   const updateSettings = (newSettings) => {
