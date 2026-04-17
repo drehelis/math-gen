@@ -1,39 +1,19 @@
-import { ref, watch } from "vue";
-import { useLocalStorage } from "./useLocalStorage";
-
-const settingsStorage = useLocalStorage("math-gen-table-settings");
-const answersStorage = useLocalStorage("math-gen-table-answers", {});
+import { ref } from "vue";
+import { usePersistentRef } from "./usePersistentRef";
 
 export function useMultiplicationTableGenerator() {
-  const userAnswers = ref(answersStorage.load());
-  const savedSettings = settingsStorage.load();
-  const settings = ref(
-    savedSettings || {
-      showAnswers: false,
-      prefillPercentage: 0,
-      tableSize: 10,
-    },
-  );
+  const defaultSettings = {
+    showAnswers: false,
+    prefillPercentage: 0,
+    tableSize: 10,
+  };
+
+  const userAnswers = usePersistentRef("math-gen-table-answers", {});
+  const settings = usePersistentRef("math-gen-table-settings", defaultSettings);
 
   // We don't use a "questions" array like other tabs
   // Instead, we just track the grid state
   const questions = ref([]); // Keep for compatibility with ControlPanel
-
-  watch(
-    settings,
-    (newSettings) => {
-      settingsStorage.save(newSettings);
-    },
-    { deep: true },
-  );
-
-  watch(
-    userAnswers,
-    (newAnswers) => {
-      answersStorage.save(newAnswers);
-    },
-    { deep: true },
-  );
 
   const generateQuestions = () => {
     // For the multiplication table, we don't "generate" questions
@@ -94,8 +74,6 @@ export function useMultiplicationTableGenerator() {
     } else {
       userAnswers.value[key] = value;
     }
-    // Trigger reactivity
-    userAnswers.value = { ...userAnswers.value };
   };
 
   const clearAllAnswers = () => {

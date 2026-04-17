@@ -1,16 +1,11 @@
-import { ref, watch } from "vue";
 import { checkEdgeCases } from "./useEdgeCaseRules";
-import { useLocalStorage } from "./useLocalStorage";
+import { usePersistentRef } from "./usePersistentRef";
+import { getRandomInRange } from "../utils/mathUtils";
+import { generateUniqueItems } from "../utils/generatorUtils";
 
 let idCounter = 0;
 
-const settingsStorage = useLocalStorage("math-gen-simple-settings");
-const questionsStorage = useLocalStorage("math-gen-simple-questions", []);
-
 export function useSimpleQuestionGenerator() {
-  const questions = ref(questionsStorage.load());
-  const savedSettings = settingsStorage.load();
-
   const defaultSettings = {
     count: 20,
     difficulty: "easy",
@@ -22,23 +17,8 @@ export function useSimpleQuestionGenerator() {
     inputMode: "native",
   };
 
-  const settings = ref({ ...defaultSettings, ...(savedSettings || {}) });
-
-  watch(
-    settings,
-    (newSettings) => {
-      settingsStorage.save(newSettings);
-    },
-    { deep: true },
-  );
-
-  watch(
-    questions,
-    (newQuestions) => {
-      questionsStorage.save(newQuestions);
-    },
-    { deep: true },
-  );
+  const questions = usePersistentRef("math-gen-simple-questions", []);
+  const settings = usePersistentRef("math-gen-simple-settings", defaultSettings);
 
   const getRandomNumber = (isSecond = false) => {
     const d = settings.value.difficulty;
@@ -60,20 +40,17 @@ export function useSimpleQuestionGenerator() {
       if (d === "hard") [min, max] = Math.random() < 0.5 ? [1, 10] : [10, 100];
       else if (Math.random() < 0.5) [min, max] = [1, 10];
     }
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return getRandomInRange(min, max);
   };
 
   const generateQuestion = () => {
     const ops = settings.value.operations || [settings.value.operation];
     const op = ops[Math.floor(Math.random() * ops.length)];
     const vary = settings.value.varySecondNumber;
-    let n1 = getRandomNumber(vary && Math.random() < 0.5);
-    let n2 = getRandomNumber(vary && !vary); // Wait, varySecondNumber && !varyFirst
-
-    // Correction: let n1 = getRandomNumber(vary && varyFirst);
+    
     const varyFirst = Math.random() < 0.5;
-    n1 = getRandomNumber(vary && varyFirst);
-    n2 = getRandomNumber(vary && !varyFirst);
+    let n1 = getRandomNumber(vary && varyFirst);
+    let n2 = getRandomNumber(vary && !varyFirst);
 
     let ans, symbol;
     if (op === "subtraction") {
@@ -84,10 +61,7 @@ export function useSimpleQuestionGenerator() {
       ans = n1 * n2;
       symbol = "×";
     } else if (op === "division") {
-      n2 =
-        Math.floor(
-          Math.random() * (settings.value.difficulty === "easy" ? 10 : 12),
-        ) + 1;
+      n2 = getRandomInRange(1, settings.value.difficulty === "easy" ? 10 : 12);
       if (n1 % n2 !== 0) n1 = n2 * Math.floor(n1 / n2) || n2;
       ans = n1 / n2;
       symbol = "÷";
@@ -107,43 +81,20 @@ export function useSimpleQuestionGenerator() {
   };
 
   const generateQuestions = async () => {
-    const newQuestions = [];
-    const seen = new Set();
-    const maxAttempts = settings.value.count * 10;
-    let attempts = 0;
-
     const availableOperations = settings.value.operations || [
       settings.value.operation,
     ];
     const edgeCaseTracker = {};
 
-    while (
-      newQuestions.length < settings.value.count &&
-      attempts < maxAttempts
-    ) {
-      attempts++;
-      const question = generateQuestion();
-      const key = `${question.num1}${question.operation}${question.num2}`;
-
-      const result = checkEdgeCases(
-        question,
-        availableOperations,
-        edgeCaseTracker,
-      );
-      if (result.shouldSkip) continue;
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        newQuestions.push(question);
-      }
-
-      // Yield every 50 questions to keep UI responsive
-      if (newQuestions.length % 50 === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    }
-
-    questions.value = newQuestions;
+    questions.value = await generateUniqueItems({
+      count: settings.value.count,
+      generateItem: generateQuestion,
+      getKey: (q) => `${q.num1}${q.operation}${q.num2}`,
+      isValid: (q) => {
+        const result = checkEdgeCases(q, availableOperations, edgeCaseTracker);
+        return !result.shouldSkip;
+      },
+    });
   };
 
   const updateSettings = (newSettings) => {
