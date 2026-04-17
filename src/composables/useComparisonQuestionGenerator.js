@@ -12,6 +12,7 @@ export function useComparisonQuestionGenerator() {
     operation: "none",
     operations: ["none"],
     showAnswers: false,
+    varySecondNumber: false,
   };
 
   const questions = usePersistentRef("math-gen-comparison-questions", []);
@@ -45,7 +46,7 @@ export function useComparisonQuestionGenerator() {
 
     if (op === "multiplication") {
       n1 = getRandomNumber(10);
-      n2 = getRandomNumber(10);
+      n2 = getRandomNumber(10, true);
       val = n1 * n2;
       sym = "×";
     } else if (op === "division") {
@@ -55,12 +56,12 @@ export function useComparisonQuestionGenerator() {
       sym = "÷";
     } else if (op === "addition") {
       n1 = getRandomNumber(limit);
-      n2 = getRandomNumber(limit);
+      n2 = getRandomNumber(limit, true);
       val = n1 + n2;
       sym = "+";
     } else {
       n1 = getRandomNumber(limit);
-      n2 = getRandomNumber(limit);
+      n2 = getRandomNumber(limit, true);
       if (n1 < n2) [n1, n2] = [n2, n1];
       val = n1 - n2;
       sym = "-";
@@ -119,7 +120,7 @@ export function useComparisonQuestionGenerator() {
       };
     }
     const n1 = getRandomNumber(),
-      n2 = getRandomNumber();
+      n2 = getRandomNumber(undefined, true);
     const op = n1 < n2 ? "<" : n1 > n2 ? ">" : "=";
     return {
       id: `q-${Date.now()}-${++idCounter}`,
