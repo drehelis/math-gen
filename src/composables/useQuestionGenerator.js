@@ -104,7 +104,7 @@ export function useQuestionGenerator() {
           }
         }
         return true;
-      }
+      },
     });
   };
 

@@ -380,8 +380,8 @@ describe("useComparisonQuestionGenerator", () => {
         count: 5,
       });
       await generator.generateQuestions();
-      
-      generator.questions.value.forEach(q => {
+
+      generator.questions.value.forEach((q) => {
         if (q.hasExpression) {
           const diff = Math.abs(q.leftValue - q.rightValue);
           const avg = (q.leftValue + q.rightValue) / 2;
@@ -399,12 +399,12 @@ describe("useComparisonQuestionGenerator", () => {
         count: 5,
       });
       await generator.generateQuestions();
-      
-      generator.questions.value.forEach(q => {
+
+      generator.questions.value.forEach((q) => {
         if (q.hasExpression) {
           if (q.leftSide.num1 !== undefined) {
-             // Either it's a multiple of 10 > 10, or it's handled
-             expect(q.leftSide.num1 === 0 || q.leftSide.num1 >= 10).toBe(true);
+            // Either it's a multiple of 10 > 10, or it's handled
+            expect(q.leftSide.num1 === 0 || q.leftSide.num1 >= 10).toBe(true);
           }
         }
       });

@@ -18,7 +18,10 @@ export function useSimpleQuestionGenerator() {
   };
 
   const questions = usePersistentRef("math-gen-simple-questions", []);
-  const settings = usePersistentRef("math-gen-simple-settings", defaultSettings);
+  const settings = usePersistentRef(
+    "math-gen-simple-settings",
+    defaultSettings,
+  );
 
   const getRandomNumber = (isSecond = false) => {
     const d = settings.value.difficulty;
@@ -47,7 +50,7 @@ export function useSimpleQuestionGenerator() {
     const ops = settings.value.operations || [settings.value.operation];
     const op = ops[Math.floor(Math.random() * ops.length)];
     const vary = settings.value.varySecondNumber;
-    
+
     const varyFirst = Math.random() < 0.5;
     let n1 = getRandomNumber(vary && varyFirst);
     let n2 = getRandomNumber(vary && !varyFirst);

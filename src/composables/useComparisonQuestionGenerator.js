@@ -16,7 +16,10 @@ export function useComparisonQuestionGenerator() {
   };
 
   const questions = usePersistentRef("math-gen-comparison-questions", []);
-  const settings = usePersistentRef("math-gen-comparison-settings", initialSettings);
+  const settings = usePersistentRef(
+    "math-gen-comparison-settings",
+    initialSettings,
+  );
 
   const getRandomNumber = (max, isSecond = false) => {
     const d = settings.value.difficulty;
@@ -31,8 +34,13 @@ export function useComparisonQuestionGenerator() {
       else if (["basic", "medium"].includes(d)) [min, maxVal] = [1, 20];
       else if (d === "easy") [min, maxVal] = [1, 10];
     }
-    if (isSecond && settings.value.varySecondNumber && !["easy", "beginners"].includes(d)) {
-      if (d === "hard") [min, maxVal] = Math.random() < 0.5 ? [1, 10] : [10, 100];
+    if (
+      isSecond &&
+      settings.value.varySecondNumber &&
+      !["easy", "beginners"].includes(d)
+    ) {
+      if (d === "hard")
+        [min, maxVal] = Math.random() < 0.5 ? [1, 10] : [10, 100];
       else if (Math.random() < 0.5) [min, maxVal] = [1, 10];
     }
     return getRandomInRange(min, maxVal);
@@ -41,7 +49,9 @@ export function useComparisonQuestionGenerator() {
   const generateExpression = () => {
     const ops = settings.value.operations || ["addition"];
     const op = ops[Math.floor(Math.random() * ops.length)];
-    const limit = ["medium", "tens"].includes(settings.value.difficulty) ? 100 : 20;
+    const limit = ["medium", "tens"].includes(settings.value.difficulty)
+      ? 100
+      : 20;
     let n1, n2, val, sym;
 
     if (op === "multiplication") {
@@ -140,35 +150,45 @@ export function useComparisonQuestionGenerator() {
     questions.value = await generateUniqueItems({
       count: settings.value.count,
       generateItem: generateQuestion,
-      getKey: (q) => q.hasExpression
-        ? `${q.leftValue}:${q.rightValue}:${q.correctOperator}:${q.num1}:${q.num2}`
-        : `${q.num1}:${q.num2}:${q.correctOperator}`,
+      getKey: (q) =>
+        q.hasExpression
+          ? `${q.leftValue}:${q.rightValue}:${q.correctOperator}:${q.num1}:${q.num2}`
+          : `${q.num1}:${q.num2}:${q.correctOperator}`,
       isValid: (question) => {
-        if (!["basic", "medium", "tens"].includes(settings.value.difficulty) || !question.hasExpression) {
+        if (
+          !["basic", "medium", "tens"].includes(settings.value.difficulty) ||
+          !question.hasExpression
+        ) {
           return true;
         }
 
         const difficulty = settings.value.difficulty;
         const isAdvanced = ["medium", "tens"].includes(difficulty);
-        
+
         if (isAdvanced) {
           const diff = Math.abs(question.leftValue - question.rightValue);
           const avgValue = (question.leftValue + question.rightValue) / 2;
-          const hasDivision = question.leftSide?.operation === "division" || question.rightSide?.operation === "division";
+          const hasDivision =
+            question.leftSide?.operation === "division" ||
+            question.rightSide?.operation === "division";
 
           if (!hasDivision) {
             const minAccepted = difficulty === "tens" ? 10 : 30;
             const maxAccepted = difficulty === "tens" ? 200 : 80;
 
-            if (diff > avgValue * 0.4 || 
-                question.leftValue < minAccepted || 
-                question.rightValue < minAccepted || 
-                question.leftValue > maxAccepted || 
-                question.rightValue > maxAccepted) {
+            if (
+              diff > avgValue * 0.4 ||
+              question.leftValue < minAccepted ||
+              question.rightValue < minAccepted ||
+              question.leftValue > maxAccepted ||
+              question.rightValue > maxAccepted
+            ) {
               return false;
             }
-            if (question.leftSide.num1 < 10 && question.leftSide.num2 < 10) return false;
-            if (question.rightSide.num1 < 10 && question.rightSide.num2 < 10) return false;
+            if (question.leftSide.num1 < 10 && question.leftSide.num2 < 10)
+              return false;
+            if (question.rightSide.num1 < 10 && question.rightSide.num2 < 10)
+              return false;
           } else if (diff > avgValue * 0.5) {
             return false;
           }
@@ -177,22 +197,30 @@ export function useComparisonQuestionGenerator() {
         // Check side expressions for edge cases
         const checkSide = (side, trackerPrefix) => {
           if (!side?.operatorSymbol) return true;
-          
+
           const tracker = {};
           Object.keys(edgeCaseTracker)
-            .filter(k => k.startsWith(trackerPrefix))
-            .forEach(k => tracker[k.replace(trackerPrefix, "")] = edgeCaseTracker[k]);
-          
+            .filter((k) => k.startsWith(trackerPrefix))
+            .forEach(
+              (k) =>
+                (tracker[k.replace(trackerPrefix, "")] = edgeCaseTracker[k]),
+            );
+
           const result = checkEdgeCases(side, availableOperations, tracker);
           if (result.shouldSkip) return false;
-          
+
           // Update global tracker with side findings
-          Object.keys(tracker).forEach(k => edgeCaseTracker[`${trackerPrefix}${k}`] = tracker[k]);
+          Object.keys(tracker).forEach(
+            (k) => (edgeCaseTracker[`${trackerPrefix}${k}`] = tracker[k]),
+          );
           return true;
         };
 
-        return checkSide(question.leftSide, "left_") && checkSide(question.rightSide, "right_");
-      }
+        return (
+          checkSide(question.leftSide, "left_") &&
+          checkSide(question.rightSide, "right_")
+        );
+      },
     });
   };
 

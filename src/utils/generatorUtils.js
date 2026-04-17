@@ -16,14 +16,14 @@ export async function generateUniqueItems({
   while (items.length < count && attempts < maxAttempts) {
     attempts++;
     const item = generateItem();
-    
+
     if (!isValid(item)) continue;
 
     const key = getKey(item);
     if (!seen.has(key)) {
       seen.add(key);
       items.push(item);
-      
+
       // Yield to keep UI responsive every 50 items
       if (items.length % 50 === 0) {
         await new Promise((resolve) => setTimeout(resolve, 0));

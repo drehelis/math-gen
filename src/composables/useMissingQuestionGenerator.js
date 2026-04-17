@@ -14,7 +14,10 @@ export function useMissingQuestionGenerator() {
   };
 
   const questions = usePersistentRef("math-gen-missing-questions", []);
-  const settings = usePersistentRef("math-gen-missing-settings", defaultSettings);
+  const settings = usePersistentRef(
+    "math-gen-missing-settings",
+    defaultSettings,
+  );
 
   const getRand = (limit = 0) => {
     const { difficulty: d, varySecondNumber: v } = settings.value;
@@ -26,7 +29,7 @@ export function useMissingQuestionGenerator() {
       [min, max] =
         limit && v ? (Math.random() < 0.5 ? [1, 10] : [10, 100]) : [100, 900];
     else if (d === "tens") return getRandomInRange(1, 20) * 10;
-    
+
     return getRandomInRange(min, max);
   };
 
@@ -97,7 +100,8 @@ export function useMissingQuestionGenerator() {
     questions.value = await generateUniqueItems({
       count: settings.value.count,
       generateItem: generateQuestion,
-      getKey: (q) => `${q.format}-${q.num1}-${q.operation}-${q.num2}-${q.num3}-${q.operation2}-${q.num4}-${q.missingPosition}`,
+      getKey: (q) =>
+        `${q.format}-${q.num1}-${q.operation}-${q.num2}-${q.num3}-${q.operation2}-${q.num4}-${q.missingPosition}`,
     });
   };
 
